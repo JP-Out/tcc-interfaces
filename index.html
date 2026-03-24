@@ -3,394 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SGOA - Tela Inicial</title>
-  <link rel="stylesheet" href="src/styles.css">
+  <title>SGOA - Versões de Interface</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --line: #bfd4f3;
+      --accent: #1463ff;
+      --accent-soft: rgba(20, 99, 255, 0.08);
+      --text: #10213d;
+      --muted: #52627d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(20, 99, 255, 0.12), transparent 28%),
+        linear-gradient(180deg, #f7faff 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .launcher {
+      width: min(960px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 56px;
+    }
+
+    .launcher h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1;
+    }
+
+    .launcher p {
+      max-width: 760px;
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .launcher-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .launcher-card {
+      display: block;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 16px 36px rgba(16, 33, 61, 0.08);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .launcher-card:hover,
+    .launcher-card:focus-visible {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 42px rgba(16, 33, 61, 0.12);
+      outline: none;
+    }
+
+    .launcher-tag {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .launcher-card h2 {
+      margin: 16px 0 10px;
+      font-size: 1.5rem;
+    }
+
+    .launcher-list {
+      padding-left: 20px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="app-header">
-      <div class="brand-area">
-        <img
-          class="brand-logo"
-          src="assets/images/logo-sgoa.svg"
-          alt="Logo do Sistema de Gestão de Oficinas Acadêmicas"
-        >
-      </div>
+  <main class="launcher">
+    <h1>SGOA - Interfaces de Pesquisa</h1>
+    <p>
+      Este projeto agora possui duas entradas independentes para testes de usabilidade. Cada versão mantém
+      o mesmo objetivo funcional e a mesma lógica de tarefas, mas com apresentação visual isolada.
+    </p>
 
-      <div class="header-title-area">
-        <h1 id="screen-title">Olá, Seja Bem Vindo</h1>
-      </div>
+    <section class="launcher-grid" aria-label="Versões disponíveis">
+      <a class="launcher-card" href="v1/index.html">
+        <span class="launcher-tag">v1</span>
+        <h2>Interface ruim</h2>
+        <ul class="launcher-list">
+          <li>Versão baseada na interface original do protótipo</li>
+          <li>Mesmo fluxo funcional já existente</li>
+          <li>Métricas básicas registradas em sessão própria</li>
+        </ul>
+      </a>
 
-      <div class="header-action-area">
-        <button class="header-link nav-trigger" type="button" data-view="identificacao">
-          Identificação
-        </button>
-      </div>
-    </header>
-
-    <div class="app-body">
-      <aside class="sidebar">
-        <button
-          class="sidebar-toggle"
-          id="sidebar-toggle"
-          type="button"
-          aria-expanded="true"
-          aria-controls="sidebar-nav"
-          aria-label="Recolher menu principal"
-        >
-          <span class="sidebar-toggle-icon" aria-hidden="true"></span>
-        </button>
-
-        <nav class="sidebar-nav" id="sidebar-nav" aria-label="Menu principal">
-          <button class="sidebar-link nav-trigger is-active" type="button" data-view="home" aria-current="page">
-            Informações Gerais
-          </button>
-          <button class="sidebar-link nav-trigger" type="button" data-view="participante">
-            Área do Participante
-          </button>
-          <button class="sidebar-link nav-trigger" type="button" data-view="gerenciar">
-            Gerenciar Oficinas
-          </button>
-          <button class="sidebar-link nav-trigger" type="button" data-view="oficinas">
-            Oficinas Cadastradas
-          </button>
-        </nav>
-
-      </aside>
-
-      <main class="content-area">
-        <section class="content-view is-active" id="view-home" aria-labelledby="home-heading">
-          <div class="home-layout">
-            <div class="home-copy">
-              <h2 id="home-heading">Bem-vindo ao Sistema de Gestão de Oficinas Acadêmicas.</h2>
-
-              <p class="home-intro-line">
-                Este sistema apresenta informações relacionadas às oficinas disponíveis e às atividades vinculadas ao seu perfil.
-              </p>
-
-              <p>
-                Para visualizar conteúdos ou acessar funcionalidades, utilize as opções disponíveis no menu.
-              </p>
-
-              <section class="carousel" aria-label="Destaques do sistema">
-                <div class="carousel-viewport">
-                  <div class="carousel-track">
-                    <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-action="prev" aria-label="Imagem anterior">
-                      &lt;
-                    </button>
-
-                    <figure class="carousel-slide is-active">
-                      <img src="assets/images/carousel/Container.png" alt="Participantes reunidos em uma oficina acadêmica com computador central">
-                    </figure>
-                    <figure class="carousel-slide">
-                      <img src="assets/images/carousel/Container-1.png" alt="Participantes utilizando recursos acadêmicos em uma oficina colaborativa">
-                    </figure>
-                    <figure class="carousel-slide">
-                      <img src="assets/images/carousel/Container-2.png" alt="Cena ilustrativa de interação com o sistema de oficinas acadêmicas">
-                    </figure>
-
-                    <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-action="next" aria-label="Próxima imagem">
-                      &gt;
-                    </button>
-                  </div>
-                </div>
-
-                <div class="carousel-controls">
-                  <div class="carousel-dots" aria-label="Indicadores do carrossel">
-                    <button class="carousel-dot is-active" type="button" aria-label="Imagem 1" aria-pressed="true" data-carousel-index="0"></button>
-                    <button class="carousel-dot" type="button" aria-label="Imagem 2" aria-pressed="false" data-carousel-index="1"></button>
-                    <button class="carousel-dot" type="button" aria-label="Imagem 3" aria-pressed="false" data-carousel-index="2"></button>
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            <aside class="recent-access" aria-labelledby="recent-access-heading">
-              <h3 id="recent-access-heading">Últimos Acessos:</h3>
-
-              <ul class="access-list">
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001235</a>
-                  <span>há 2min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001235</a>
-                  <span>há 8min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001235</a>
-                  <span>há 14min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2021001236</a>
-                  <span>há 15min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2024001237</a>
-                  <span>há 16min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2025001238</a>
-                  <span>há 22min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001239</a>
-                  <span>há 25min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2021001240</a>
-                  <span>há 28min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2026001241</a>
-                  <span>há 35min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2021001242</a>
-                  <span>há 38min</span>
-                </li>
-                <li>
-                  <img src="assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2019001243</a>
-                  <span>há 47min</span>
-                </li>
-              </ul>
-            </aside>
-          </div>
-
-          <p class="prototype-note">
-            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
-            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
-          </p>
-        </section>
-
-        <section class="content-view participant-view" id="view-participante" aria-labelledby="participante-heading" hidden>
-          <div class="participant-layout">
-            <section class="participant-column participant-info-column" aria-labelledby="participante-heading">
-              <h2 id="participante-heading">Informações</h2>
-
-              <div class="participant-card">
-                <p>Nome: <span id="participant-name">2022667789</span></p>
-                <p>Identificador: <span id="participant-identifier">1145</span></p>
-                <p>Situação: <span id="participant-status">Ativo</span></p>
-                <p>Primeiro Acesso: <span id="participant-first-access">21/03/2026</span></p>
-
-                <p class="participant-last-access">
-                  Último Acesso: <span id="participant-last-access">21/03/2026 - 23:31</span>
-                </p>
-              </div>
-
-              <button class="participant-link" type="button">
-                Fazer Modificações
-              </button>
-            </section>
-
-            <section class="participant-column participant-records-column" aria-labelledby="participant-records-heading">
-              <h2 id="participant-records-heading">Registros</h2>
-
-              <div class="participant-records">
-                <div class="participant-records-header">
-                  <span>Nº Ordem</span>
-                  <span>Atividade</span>
-                </div>
-
-                <div class="participant-records-body" id="participant-records-body"></div>
-              </div>
-            </section>
-          </div>
-
-          <p class="prototype-note">
-            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
-            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
-          </p>
-        </section>
-
-        <section class="content-view manage-view" id="view-gerenciar" aria-labelledby="gerenciar-heading" hidden>
-          <div class="manage-copy">
-            <h2 id="gerenciar-heading">Aqui estão as participações vinculadas ao seu perfil:</h2>
-            <p>Algumas informações podem depender de atualizações e disponibilidades do sistema.</p>
-            <p>
-              Caso necessário explore diferentes áreas para encontrar as opções desejadas quanto a inscrições e
-              visualizações de demais Oficinas publicadas no sistema.
-            </p>
-            <p>
-              Em caso de dúvidas, consulte a seção de ajuda ou entre em contato com o suporte técnico para obter
-              assistência adicional.
-            </p>
-          </div>
-
-          <div class="manage-filters" aria-label="Filtros">
-            <div class="manage-filter">
-              <span>Filtros:</span>
-              <button class="manage-select" type="button">
-                <span>Todos</span>
-                <span class="manage-caret" aria-hidden="true"></span>
-              </button>
-            </div>
-
-            <div class="manage-filter">
-              <span>Período:</span>
-              <button class="manage-select manage-select-small" type="button">
-                <span>Atual</span>
-                <span class="manage-caret" aria-hidden="true"></span>
-              </button>
-            </div>
-
-            <button class="manage-apply" type="button">Definir</button>
-          </div>
-
-          <section class="manage-panel" aria-label="Oficina vinculada">
-            <div class="manage-panel-header">Oficina Vinculada</div>
-            <div class="manage-panel-body" id="manage-linked-workshops"></div>
-          </section>
-
-          <p class="prototype-note">
-            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
-            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
-          </p>
-        </section>
-
-        <section class="content-view offices-view" id="view-oficinas" aria-labelledby="oficinas-heading" hidden>
-          <div class="offices-table" aria-labelledby="oficinas-heading">
-            <div class="offices-table-header">
-              <span>Cod.</span>
-              <span id="oficinas-heading">Título da Oficina</span>
-              <span>Período</span>
-            </div>
-
-            <div class="offices-table-body" id="offices-table-body"></div>
-          </div>
-
-          <p class="prototype-note">
-            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
-            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
-          </p>
-        </section>
-
-        <section class="content-view login-screen" id="view-identificacao" aria-labelledby="identificacao-heading" hidden>
-          <div class="login-hero">
-            <div class="login-title-block">
-              <h2 class="login-title" id="identificacao-heading">Sistema</h2>
-              <p class="login-subtitle">Gerenciamento De Oficinas</p>
-            </div>
-
-            <img
-              class="login-logo"
-              src="assets/images/logo-sgoa.svg"
-              alt="Logo do Sistema de Gestão de Oficinas Acadêmicas"
-            >
-          </div>
-
-          <div class="login-body">
-            <input
-              class="login-input"
-              id="login-user-input"
-              type="text"
-              placeholder="Identificador único do usuário"
-            >
-
-            <div class="login-actions">
-              <button class="login-button" id="login-submit" type="button">
-                Menu Inicial
-              </button>
-
-              <button class="login-button" id="login-reset" type="button">
-                Início
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
-
-  <div class="office-modal" id="office-modal" hidden>
-    <div class="office-modal-backdrop" data-modal-close="true"></div>
-    <section class="office-modal-dialog" aria-labelledby="office-modal-title" aria-modal="true" role="dialog">
-      <div class="office-modal-header">
-        <h2 id="office-modal-title">Automação com CLPs Básicos</h2>
-        <button class="office-modal-close" id="office-modal-close" type="button" aria-label="Fechar">
-          x
-        </button>
-      </div>
-
-      <div class="office-modal-body">
-        <div class="office-modal-description" id="office-modal-description">
-          Sobre a oficina de Automação com CLPs Básicos e seus conceitos abordados e resultados práticos.
-        </div>
-
-        <div class="office-modal-grid">
-          <button class="office-modal-participate" id="office-modal-participate" type="button">
-            Participar
-          </button>
-
-          <button class="office-modal-cancel-link" id="office-modal-cancel-link" type="button" hidden>
-            Cancelar
-          </button>
-
-          <div class="office-modal-field">
-            <span>Código:</span>
-            <div id="office-modal-code">ELT-4462</div>
-          </div>
-
-          <div class="office-modal-field">
-            <span>Carga Horária:</span>
-            <div id="office-modal-hours">33 Hrs</div>
-          </div>
-
-          <div class="office-modal-field">
-            <span>Modalidade:</span>
-            <div id="office-modal-modality">EaD</div>
-          </div>
-
-          <div class="office-modal-field">
-            <span>Situação:</span>
-            <div id="office-modal-status">Ativa</div>
-          </div>
-
-          <div class="office-modal-field">
-            <span>Data:</span>
-            <div id="office-modal-period">18/03 a 19/04</div>
-          </div>
-        </div>
-      </div>
+      <a class="launcher-card" href="v2/index.html">
+        <span class="launcher-tag">v2</span>
+        <h2>Interface boa</h2>
+        <ul class="launcher-list">
+          <li>Nova camada visual totalmente separada da v1</li>
+          <li>Mesma lógica funcional compartilhada</li>
+          <li>Métricas básicas registradas em sessão própria</li>
+        </ul>
+      </a>
     </section>
-  </div>
-
-  <div class="confirm-modal" id="confirm-modal" hidden>
-    <div class="confirm-modal-backdrop" data-confirm-close="true"></div>
-    <section class="confirm-modal-dialog" aria-labelledby="confirm-modal-title" aria-modal="true" role="dialog">
-      <div class="confirm-modal-header">
-        <h2 id="confirm-modal-title">Confirmação</h2>
-        <button class="confirm-modal-close" id="confirm-modal-close" type="button" aria-label="Fechar">
-          x
-        </button>
-      </div>
-
-      <div class="confirm-modal-message">
-        Você realmente tem certeza de deseja fazer esta operação?
-      </div>
-
-      <div class="confirm-modal-actions">
-        <button class="confirm-modal-button" id="confirm-modal-submit" type="button">
-          Confirmo
-        </button>
-      </div>
-    </section>
-  </div>
-
-  <script src="src/app.js"></script>
+  </main>
 </body>
 </html>

@@ -1,0 +1,27 @@
+(function attachCommonState(global) {
+  const { DEFAULT_PARTICIPANT } = global.SGOAData;
+
+  function createInitialState() {
+    return {
+      isResearchStarted: false,
+      activeView: "home",
+      isSidebarCollapsed: true,
+      isLoggedIn: false,
+      currentUserIdentifier: "",
+      currentParticipantCode: DEFAULT_PARTICIPANT.identifier,
+      currentFirstAccessDate: DEFAULT_PARTICIPANT.firstAccessDate,
+      currentLastAccessDateTime: DEFAULT_PARTICIPANT.lastAccessDateTime,
+      participantRecords: [],
+      participantRecordCounter: 0,
+      linkedWorkshopCodes: [],
+      selectedWorkshopCode: "",
+      isOfficeModalOpen: false,
+      isConfirmModalOpen: false,
+      carouselIndex: 0,
+    };
+  }
+
+  global.SGOAState = {
+    createInitialState,
+  };
+}(window));
