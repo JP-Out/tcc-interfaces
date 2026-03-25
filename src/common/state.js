@@ -14,10 +14,10 @@
       participantRecords: [],
       participantRecordCounter: 0,
       linkedWorkshopCodes: [],
+      pinnedWorkshopCodes: [],
       selectedWorkshopCode: "",
       isOfficeModalOpen: false,
       isConfirmModalOpen: false,
-      carouselIndex: 0,
     };
   }
 

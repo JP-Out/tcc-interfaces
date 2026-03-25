@@ -20,18 +20,53 @@
 
   function createLinkedWorkshopsMarkup(state) {
     if (!state.linkedWorkshopCodes.length) {
-      return '<div class="manage-panel-empty"></div>';
+      return '<div class="manage-panel-empty">Nenhuma oficina vinculada no momento.</div>';
     }
 
     return state.linkedWorkshopCodes
       .map((code) => state.workshops.find((item) => item.cod === code))
       .filter(Boolean)
       .map((workshop) => `
-        <button class="manage-panel-row" type="button" data-workshop-code="${workshop.cod}">
-          ${workshop.title}
-        </button>
+        <div class="manage-panel-row">
+          <button class="manage-panel-link" type="button" data-workshop-code="${workshop.cod}">
+            <span>${workshop.title}</span>
+            <small>${workshop.period}</small>
+          </button>
+          <button
+            class="manage-pin-button${state.pinnedWorkshopCodes.includes(workshop.cod) ? " is-active" : ""}"
+            type="button"
+            data-pin-workshop-action="toggle"
+            data-pin-workshop-code="${workshop.cod}"
+            aria-pressed="${state.pinnedWorkshopCodes.includes(workshop.cod) ? "true" : "false"}"
+          >
+            ${state.pinnedWorkshopCodes.includes(workshop.cod) ? "Desfixar" : "Fixar"}
+          </button>
+        </div>
       `)
       .join("");
+  }
+
+  function createQuickMenuMarkup(state) {
+    if (!state.linkedWorkshopCodes.length) {
+      return '<li><p class="quick-menu-empty">Nenhum componente vinculado</p></li>';
+    }
+
+    const pinnedWorkshops = state.pinnedWorkshopCodes
+      .map((code) => state.workshops.find((item) => item.cod === code))
+      .filter(Boolean);
+
+    if (!pinnedWorkshops.length) {
+      return '<li><p class="quick-menu-empty">Use o botao Fixar em oficinas vinculadas para destacar seus atalhos aqui.</p></li>';
+    }
+
+    return pinnedWorkshops.map((workshop) => `
+      <li class="quick-menu-item">
+        <button class="quick-menu-link" type="button" data-workshop-code="${workshop.cod}">
+          <span class="quick-menu-title">${workshop.title}</span>
+          <span class="quick-menu-meta">${workshop.cod} - ${workshop.period}</span>
+        </button>
+      </li>
+    `).join("");
   }
 
   function createWorkshopsMarkup(workshops) {
@@ -61,6 +96,7 @@
       participantLastAccess: documentRef.querySelector("#participant-last-access"),
       participantRecordsBody: documentRef.querySelector("#participant-records-body"),
       manageLinkedWorkshops: documentRef.querySelector("#manage-linked-workshops"),
+      quickMenuList: documentRef.querySelector("#quick-menu-list"),
       officesTableBody: documentRef.querySelector("#offices-table-body"),
       toastStack: documentRef.querySelector("#toast-stack"),
       officeModal: documentRef.querySelector("#office-modal"),
@@ -72,10 +108,7 @@
       officeModalStatus: documentRef.querySelector("#office-modal-status"),
       officeModalPeriod: documentRef.querySelector("#office-modal-period"),
       officeModalParticipate: documentRef.querySelector("#office-modal-participate"),
-      officeModalCancelLink: documentRef.querySelector("#office-modal-cancel-link"),
       confirmModal: documentRef.querySelector("#confirm-modal"),
-      carouselSlides: Array.from(documentRef.querySelectorAll(".carousel-slide")),
-      carouselDots: Array.from(documentRef.querySelectorAll(".carousel-dot")),
     };
 
     return {
@@ -157,6 +190,10 @@
           elements.manageLinkedWorkshops.innerHTML = createLinkedWorkshopsMarkup(state);
         }
 
+        if (elements.quickMenuList) {
+          elements.quickMenuList.innerHTML = createQuickMenuMarkup(state);
+        }
+
         if (elements.officesTableBody) {
           elements.officesTableBody.innerHTML = createWorkshopsMarkup(state.workshops);
         }
@@ -176,7 +213,6 @@
             elements.officeModalPeriod.textContent = state.selectedWorkshop.period;
             elements.officeModalParticipate.disabled = state.selectedWorkshop.status === "Fechada"
               || state.selectedWorkshopIsLinked;
-            elements.officeModalCancelLink.hidden = !state.selectedWorkshopIsLinked;
           }
         }
 
@@ -184,15 +220,6 @@
           elements.confirmModal.hidden = !state.isConfirmModalOpen;
         }
 
-        elements.carouselSlides.forEach((slide, index) => {
-          slide.classList.toggle("is-active", index === state.carouselIndex);
-        });
-
-        elements.carouselDots.forEach((dot, index) => {
-          const isActive = index === state.carouselIndex;
-          dot.classList.toggle("is-active", isActive);
-          dot.setAttribute("aria-pressed", String(isActive));
-        });
       },
 
       showToast(toast) {

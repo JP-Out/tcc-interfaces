@@ -50,6 +50,7 @@
         workshops: MOCK_WORKSHOPS.map((workshop) => ({ ...workshop })),
         participantRecords: state.participantRecords.map((record) => ({ ...record })),
         linkedWorkshopCodes: state.linkedWorkshopCodes.slice(),
+        pinnedWorkshopCodes: state.pinnedWorkshopCodes.slice(),
         selectedWorkshop,
         selectedWorkshopIsLinked: selectedWorkshop
           ? state.linkedWorkshopCodes.includes(selectedWorkshop.cod)
@@ -192,6 +193,7 @@
         state.participantRecords = [];
         state.participantRecordCounter = 0;
         state.linkedWorkshopCodes = [];
+        state.pinnedWorkshopCodes = [];
         state.selectedWorkshopCode = "";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
@@ -210,6 +212,7 @@
         state.participantRecords = [];
         state.participantRecordCounter = 0;
         state.linkedWorkshopCodes = [];
+        state.pinnedWorkshopCodes = [];
         state.selectedWorkshopCode = "";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
@@ -308,6 +311,7 @@
 
         if (linkedIndex >= 0) {
           state.linkedWorkshopCodes.splice(linkedIndex, 1);
+          state.pinnedWorkshopCodes = state.pinnedWorkshopCodes.filter((code) => code !== workshop.cod);
           addParticipantRecord(`Cancelou inscrição em oficina “${workshop.title}”`);
         }
 
@@ -318,19 +322,29 @@
         return true;
       },
 
-      nextCarousel() {
-        state.carouselIndex = (state.carouselIndex + 1) % 3;
-        notify();
-      },
+      togglePinnedWorkshop(workshopCode) {
+        if (!state.linkedWorkshopCodes.includes(workshopCode)) {
+          return false;
+        }
 
-      previousCarousel() {
-        state.carouselIndex = (state.carouselIndex + 2) % 3;
-        notify();
-      },
+        const workshop = getWorkshopByCode(workshopCode);
 
-      goToCarousel(index) {
-        state.carouselIndex = index;
+        if (!workshop) {
+          return false;
+        }
+
+        const pinnedIndex = state.pinnedWorkshopCodes.indexOf(workshopCode);
+
+        if (pinnedIndex >= 0) {
+          state.pinnedWorkshopCodes.splice(pinnedIndex, 1);
+          addParticipantRecord(`Desfixou oficina "${workshop.title}" do Menu Rapido`);
+        } else {
+          state.pinnedWorkshopCodes.unshift(workshopCode);
+          addParticipantRecord(`Fixou oficina "${workshop.title}" no Menu Rapido`);
+        }
+
         notify();
+        return true;
       },
 
       finishMetrics() {

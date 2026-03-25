@@ -22,15 +22,12 @@
         </div>
       </div>
 
-      <div class="header-title-area">
-        <h1 id="screen-title">Olá, Seja Bem Vindo</h1>
-      </div>
-
       <div class="header-action-area">
         <button class="header-link nav-trigger" type="button" data-view="identificacao">
           Identificação
         </button>
       </div>
+
     </header>
 
     <div class="app-body">
@@ -66,7 +63,6 @@
         <section class="content-view is-active" id="view-home" aria-labelledby="home-heading">
           <div class="good-home-grid">
             <section class="good-hero-panel">
-              <span class="good-eyebrow">Interface boa</span>
               <h2 id="home-heading">Bem-vindo ao Sistema de Gestão de Oficinas Acadêmicas.</h2>
 
               <p class="home-intro-line">
@@ -77,11 +73,6 @@
                 Para visualizar conteúdos ou acessar funcionalidades, utilize as opções disponíveis no menu.
               </p>
 
-              <div class="good-pill-row" aria-label="Recursos principais">
-                <span class="good-pill">Navegação simplificada</span>
-                <span class="good-pill">Acesso por tarefas</span>
-                <span class="good-pill">Fluxo funcional equivalente</span>
-              </div>
             </section>
 
             <aside class="recent-access good-side-panel" aria-labelledby="recent-access-heading">
@@ -127,36 +118,14 @@
             </aside>
           </div>
 
-          <section class="good-carousel-panel carousel" aria-label="Destaques do sistema">
-            <div class="carousel-viewport">
-              <div class="carousel-track">
-                <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-action="prev" aria-label="Imagem anterior">
-                  &lt;
-                </button>
-
-                <figure class="carousel-slide is-active">
-                  <img src="../assets/images/carousel/Container.png" alt="Participantes reunidos em uma oficina acadêmica com computador central">
-                </figure>
-                <figure class="carousel-slide">
-                  <img src="../assets/images/carousel/Container-1.png" alt="Participantes utilizando recursos acadêmicos em uma oficina colaborativa">
-                </figure>
-                <figure class="carousel-slide">
-                  <img src="../assets/images/carousel/Container-2.png" alt="Cena ilustrativa de interação com o sistema de oficinas acadêmicas">
-                </figure>
-
-                <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-action="next" aria-label="Próxima imagem">
-                  &gt;
-                </button>
+          <section class="good-quick-menu-panel good-side-panel" aria-labelledby="quick-menu-heading">
+            <div class="quick-menu-header">
+              <div>
+                <h3 id="quick-menu-heading">Menu Rápido</h3>
               </div>
             </div>
 
-            <div class="carousel-controls">
-              <div class="carousel-dots" aria-label="Indicadores do carrossel">
-                <button class="carousel-dot is-active" type="button" aria-label="Imagem 1" aria-pressed="true"></button>
-                <button class="carousel-dot" type="button" aria-label="Imagem 2" aria-pressed="false"></button>
-                <button class="carousel-dot" type="button" aria-label="Imagem 3" aria-pressed="false"></button>
-              </div>
-            </div>
+            <ul class="quick-menu-list" id="quick-menu-list"></ul>
           </section>
 
           <p class="prototype-note">
@@ -167,8 +136,7 @@
 
         <section class="content-view participant-view" id="view-participante" aria-labelledby="participante-heading" hidden>
           <div class="good-section-head">
-            <span class="good-eyebrow">Participante</span>
-            <h2 id="participante-heading">Informações do seu perfil</h2>
+            <h2 id="participante-heading">Informações</h2>
           </div>
 
           <div class="participant-layout">
@@ -206,12 +174,12 @@
 
         <section class="content-view manage-view" id="view-gerenciar" aria-labelledby="gerenciar-heading" hidden>
           <div class="good-section-head">
-            <span class="good-eyebrow">Gerenciamento</span>
-            <h2 id="gerenciar-heading">Oficinas vinculadas ao seu perfil</h2>
+            <h2 id="gerenciar-heading">Participações vinculadas ao perfil.</h2>
           </div>
 
           <div class="manage-copy">
-            <p>Confira rapidamente os vínculos atuais, filtre por período e acesse outras áreas para complementar suas ações.</p>
+            <p>Algumas informações podem depender de atualizações e disponibilidades do sistema.</p>
+            <p>Caso necessário explore diferentes áreas para encontrar as opções desejadas quanto a inscrições e visualizações de demais Oficinas publicadas no sistema.</p>
           </div>
 
           <div class="manage-filters" aria-label="Filtros">
@@ -247,8 +215,6 @@
 
         <section class="content-view offices-view" id="view-oficinas" aria-labelledby="oficinas-heading" hidden>
           <div class="good-section-head">
-            <span class="good-eyebrow">Catálogo</span>
-            <h2 id="oficinas-heading">Oficinas cadastradas</h2>
           </div>
 
           <div class="offices-table">
@@ -270,8 +236,7 @@
         <section class="content-view login-screen" id="view-identificacao" aria-labelledby="identificacao-heading" hidden>
           <div class="login-hero">
             <div class="login-title-block">
-              <span class="good-eyebrow">Acesso</span>
-              <h2 class="login-title" id="identificacao-heading">Identificação</h2>
+              <h2 class="login-title" id="identificacao-heading">Gerenciamento de Oficinas</h2>
               <p class="login-subtitle">Informe seu identificador para continuar</p>
             </div>
 
@@ -292,11 +257,11 @@
 
             <div class="login-actions">
               <button class="login-button" id="login-submit" type="button">
-                Entrar
+                Menu Inicial
               </button>
 
               <button class="login-button login-button-secondary" id="login-reset" type="button">
-                Limpar
+                Início
               </button>
             </div>
           </div>
@@ -338,10 +303,6 @@
         <div class="office-modal-grid">
           <button class="office-modal-participate" id="office-modal-participate" type="button">
             Participar
-          </button>
-
-          <button class="office-modal-cancel-link" id="office-modal-cancel-link" type="button" hidden>
-            Cancelar
           </button>
 
           <div class="office-modal-field">
