@@ -1,10 +1,10 @@
-(function bootstrapV2App(global, documentRef) {
+(function bootstrapv2App(global, documentRef) {
   const { createAppController } = global.SGOALogic;
   const { createMetricsSession } = global.SGOAMetrics;
   const { flushQueuedMetricExports, queueMetricsExport } = global.SGOAExporter;
-  const { createV2Renderer } = global.SGOARenderers;
+  const { createv2Renderer } = global.SGOARenderers;
 
-  const renderer = createV2Renderer(documentRef);
+  const renderer = createv2Renderer(documentRef);
   const metrics = createMetricsSession({
     uiVersion: "v2",
     taskId: "main-flow",
@@ -25,9 +25,14 @@
   const officeModalClose = documentRef.querySelector("#office-modal-close");
   const officeModal = documentRef.querySelector("#office-modal");
   const officeModalParticipate = documentRef.querySelector("#office-modal-participate");
+  const officeModalCancelLink = documentRef.querySelector("#office-modal-cancel-link");
   const confirmModal = documentRef.querySelector("#confirm-modal");
   const confirmModalSubmit = documentRef.querySelector("#confirm-modal-submit");
   const confirmModalClose = documentRef.querySelector("#confirm-modal-close");
+  const carouselActions = Array.from(documentRef.querySelectorAll("[data-carousel-action]"));
+  const carouselDots = Array.from(documentRef.querySelectorAll(".carousel-dot"));
+
+  let carouselIntervalId = null;
   let hasQueuedMetricsExport = false;
 
   function bindGlobalClickMetrics() {
@@ -44,6 +49,16 @@
       metrics.trackClick();
     }
     });
+  }
+
+  function restartCarousel() {
+    if (carouselIntervalId) {
+      global.clearInterval(carouselIntervalId);
+    }
+
+    carouselIntervalId = global.setInterval(() => {
+      controller.nextCarousel();
+    }, 4500);
   }
 
   function bindNavigation() {
@@ -110,13 +125,6 @@
         return;
       }
 
-      const pinButton = event.target.closest("[data-pin-workshop-action]");
-
-      if (pinButton) {
-        controller.togglePinnedWorkshop(pinButton.dataset.pinWorkshopCode || "");
-        return;
-      }
-
       const workshopButton = event.target.closest("[data-workshop-code]");
 
       if (workshopButton) {
@@ -144,6 +152,12 @@
       });
     }
 
+    if (officeModalCancelLink) {
+      officeModalCancelLink.addEventListener("click", () => {
+        controller.openConfirmModal();
+      });
+    }
+
     if (confirmModal) {
       confirmModal.addEventListener("click", (event) => {
         if (event.target instanceof HTMLElement && event.target.dataset.confirmClose === "true") {
@@ -163,6 +177,27 @@
         controller.confirmWorkshopCancellation();
       });
     }
+  }
+
+  function bindCarousel() {
+    carouselActions.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.dataset.carouselAction === "prev") {
+          controller.previousCarousel();
+        } else {
+          controller.nextCarousel();
+        }
+
+        restartCarousel();
+      });
+    });
+
+    carouselDots.forEach((dot, index) => {
+      dot.addEventListener("click", () => {
+        controller.goToCarousel(index);
+        restartCarousel();
+      });
+    });
   }
 
   function bindMetricsExport() {
@@ -188,7 +223,9 @@
   bindNavigation();
   bindAuth();
   bindWorkshopInteractions();
+  bindCarousel();
   bindMetricsExport();
   controller.subscribe((state) => renderer.render(state));
   controller.init();
+  restartCarousel();
 }(window, document));

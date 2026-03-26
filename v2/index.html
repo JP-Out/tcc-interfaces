@@ -3,23 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SGOA - Interface Boa</title>
+  <title>SGOA - Tela Inicial</title>
   <link rel="stylesheet" href="../src/v2/styles.css">
 </head>
-<body data-ui="v2">
-  <div class="app-shell app-shell-good">
+<body>
+  <div class="app-shell">
     <header class="app-header">
-      <div class="good-brand-block">
+      <div class="brand-area">
         <img
           class="brand-logo"
           src="../assets/images/logo-sgoa.svg"
           alt="Logo do Sistema de Gestão de Oficinas Acadêmicas"
         >
+      </div>
 
-        <div>
-          <p class="good-brand-tag">Protótipo de pesquisa</p>
-          <strong>Sistema de Gestão de Oficinas Acadêmicas</strong>
-        </div>
+      <div class="header-title-area">
+        <h1 id="screen-title">Olá, Seja Bem Vindo</h1>
       </div>
 
       <div class="header-action-area">
@@ -27,7 +26,6 @@
           Identificação
         </button>
       </div>
-
     </header>
 
     <div class="app-body">
@@ -57,12 +55,13 @@
             Oficinas Cadastradas
           </button>
         </nav>
+
       </aside>
 
       <main class="content-area">
         <section class="content-view is-active" id="view-home" aria-labelledby="home-heading">
-          <div class="good-home-grid">
-            <section class="good-hero-panel">
+          <div class="home-layout">
+            <div class="home-copy">
               <h2 id="home-heading">Bem-vindo ao Sistema de Gestão de Oficinas Acadêmicas.</h2>
 
               <p class="home-intro-line">
@@ -73,10 +72,41 @@
                 Para visualizar conteúdos ou acessar funcionalidades, utilize as opções disponíveis no menu.
               </p>
 
-            </section>
+              <section class="carousel" aria-label="Destaques do sistema">
+                <div class="carousel-viewport">
+                  <div class="carousel-track">
+                    <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-action="prev" aria-label="Imagem anterior">
+                      &lt;
+                    </button>
 
-            <aside class="recent-access good-side-panel" aria-labelledby="recent-access-heading">
-              <h3 id="recent-access-heading">Últimos Acessos</h3>
+                    <figure class="carousel-slide is-active">
+                      <img src="../assets/images/carousel/Container.png" alt="Participantes reunidos em uma oficina acadêmica com computador central">
+                    </figure>
+                    <figure class="carousel-slide">
+                      <img src="../assets/images/carousel/Container-1.png" alt="Participantes utilizando recursos acadêmicos em uma oficina colaborativa">
+                    </figure>
+                    <figure class="carousel-slide">
+                      <img src="../assets/images/carousel/Container-2.png" alt="Cena ilustrativa de interação com o sistema de oficinas acadêmicas">
+                    </figure>
+
+                    <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-action="next" aria-label="Próxima imagem">
+                      &gt;
+                    </button>
+                  </div>
+                </div>
+
+                <div class="carousel-controls">
+                  <div class="carousel-dots" aria-label="Indicadores do carrossel">
+                    <button class="carousel-dot is-active" type="button" aria-label="Imagem 1" aria-pressed="true" data-carousel-index="0"></button>
+                    <button class="carousel-dot" type="button" aria-label="Imagem 2" aria-pressed="false" data-carousel-index="1"></button>
+                    <button class="carousel-dot" type="button" aria-label="Imagem 3" aria-pressed="false" data-carousel-index="2"></button>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <aside class="recent-access" aria-labelledby="recent-access-heading">
+              <h3 id="recent-access-heading">Últimos Acessos:</h3>
 
               <ul class="access-list">
                 <li>
@@ -114,19 +144,29 @@
                   <a href="#">2022001239</a>
                   <span>há 25min</span>
                 </li>
+                <li>
+                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
+                  <a href="#">2021001240</a>
+                  <span>há 28min</span>
+                </li>
+                <li>
+                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
+                  <a href="#">2026001241</a>
+                  <span>há 35min</span>
+                </li>
+                <li>
+                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
+                  <a href="#">2021001242</a>
+                  <span>há 38min</span>
+                </li>
+                <li>
+                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
+                  <a href="#">2019001243</a>
+                  <span>há 47min</span>
+                </li>
               </ul>
             </aside>
           </div>
-
-          <section class="good-quick-menu-panel good-side-panel" aria-labelledby="quick-menu-heading">
-            <div class="quick-menu-header">
-              <div>
-                <h3 id="quick-menu-heading">Menu Rápido</h3>
-              </div>
-            </div>
-
-            <ul class="quick-menu-list" id="quick-menu-list"></ul>
-          </section>
 
           <p class="prototype-note">
             Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
@@ -135,18 +175,19 @@
         </section>
 
         <section class="content-view participant-view" id="view-participante" aria-labelledby="participante-heading" hidden>
-          <div class="good-section-head">
-            <h2 id="participante-heading">Informações</h2>
-          </div>
-
           <div class="participant-layout">
-            <section class="participant-column participant-info-column">
+            <section class="participant-column participant-info-column" aria-labelledby="participante-heading">
+              <h2 id="participante-heading">Informações</h2>
+
               <div class="participant-card">
                 <p>Nome: <span id="participant-name">2022667789</span></p>
                 <p>Identificador: <span id="participant-identifier">1145</span></p>
                 <p>Situação: <span id="participant-status">Ativo</span></p>
                 <p>Primeiro Acesso: <span id="participant-first-access">21/03/2026</span></p>
-                <p class="participant-last-access">Último Acesso: <span id="participant-last-access">21/03/2026 - 23:31</span></p>
+
+                <p class="participant-last-access">
+                  Último Acesso: <span id="participant-last-access">21/03/2026 - 23:31</span>
+                </p>
               </div>
 
               <button class="participant-link" type="button">
@@ -154,7 +195,9 @@
               </button>
             </section>
 
-            <section class="participant-column participant-records-column">
+            <section class="participant-column participant-records-column" aria-labelledby="participant-records-heading">
+              <h2 id="participant-records-heading">Registros</h2>
+
               <div class="participant-records">
                 <div class="participant-records-header">
                   <span>Nº Ordem</span>
@@ -173,13 +216,17 @@
         </section>
 
         <section class="content-view manage-view" id="view-gerenciar" aria-labelledby="gerenciar-heading" hidden>
-          <div class="good-section-head">
-            <h2 id="gerenciar-heading">Participações vinculadas ao perfil.</h2>
-          </div>
-
           <div class="manage-copy">
+            <h2 id="gerenciar-heading">Aqui estão as participações vinculadas ao seu perfil:</h2>
             <p>Algumas informações podem depender de atualizações e disponibilidades do sistema.</p>
-            <p>Caso necessário explore diferentes áreas para encontrar as opções desejadas quanto a inscrições e visualizações de demais Oficinas publicadas no sistema.</p>
+            <p>
+              Caso necessário explore diferentes áreas para encontrar as opções desejadas quanto a inscrições e
+              visualizações de demais Oficinas publicadas no sistema.
+            </p>
+            <p>
+              Em caso de dúvidas, consulte a seção de ajuda ou entre em contato com o suporte técnico para obter
+              assistência adicional.
+            </p>
           </div>
 
           <div class="manage-filters" aria-label="Filtros">
@@ -214,13 +261,10 @@
         </section>
 
         <section class="content-view offices-view" id="view-oficinas" aria-labelledby="oficinas-heading" hidden>
-          <div class="good-section-head">
-          </div>
-
-          <div class="offices-table">
+          <div class="offices-table" aria-labelledby="oficinas-heading">
             <div class="offices-table-header">
               <span>Cod.</span>
-              <span>Título da Oficina</span>
+              <span id="oficinas-heading">Título da Oficina</span>
               <span>Período</span>
             </div>
 
@@ -236,8 +280,8 @@
         <section class="content-view login-screen" id="view-identificacao" aria-labelledby="identificacao-heading" hidden>
           <div class="login-hero">
             <div class="login-title-block">
-              <h2 class="login-title" id="identificacao-heading">Gerenciamento de Oficinas</h2>
-              <p class="login-subtitle">Informe seu identificador para continuar</p>
+              <h2 class="login-title" id="identificacao-heading">Sistema</h2>
+              <p class="login-subtitle">Gerenciamento De Oficinas</p>
             </div>
 
             <img
@@ -260,7 +304,7 @@
                 Menu Inicial
               </button>
 
-              <button class="login-button login-button-secondary" id="login-reset" type="button">
+              <button class="login-button" id="login-reset" type="button">
                 Início
               </button>
             </div>
@@ -272,10 +316,9 @@
 
   <div class="research-gate" id="research-gate" aria-labelledby="research-gate-title">
     <div class="research-gate-panel">
-      <p class="research-gate-tag">Pesquisa de usabilidade</p>
       <h2 id="research-gate-title">Iniciar pesquisa</h2>
       <p>
-        Quando estiver pronto para começar, pressione o botão abaixo e siga com as tarefas da sessão.
+        Quando o pesquisador orientar, pressione o botão abaixo para iniciar a sessão.
       </p>
       <button class="research-gate-button" id="research-start-button" type="button">
         Iniciar pesquisa
@@ -303,6 +346,10 @@
         <div class="office-modal-grid">
           <button class="office-modal-participate" id="office-modal-participate" type="button">
             Participar
+          </button>
+
+          <button class="office-modal-cancel-link" id="office-modal-cancel-link" type="button" hidden>
+            Cancelar
           </button>
 
           <div class="office-modal-field">

@@ -1,10 +1,10 @@
-(function bootstrapV1App(global, documentRef) {
+(function bootstrapv1App(global, documentRef) {
   const { createAppController } = global.SGOALogic;
   const { createMetricsSession } = global.SGOAMetrics;
   const { flushQueuedMetricExports, queueMetricsExport } = global.SGOAExporter;
-  const { createV1Renderer } = global.SGOARenderers;
+  const { createv1Renderer } = global.SGOARenderers;
 
-  const renderer = createV1Renderer(documentRef);
+  const renderer = createv1Renderer(documentRef);
   const metrics = createMetricsSession({
     uiVersion: "v1",
     taskId: "main-flow",
@@ -29,10 +29,6 @@
   const confirmModal = documentRef.querySelector("#confirm-modal");
   const confirmModalSubmit = documentRef.querySelector("#confirm-modal-submit");
   const confirmModalClose = documentRef.querySelector("#confirm-modal-close");
-  const carouselActions = Array.from(documentRef.querySelectorAll("[data-carousel-action]"));
-  const carouselDots = Array.from(documentRef.querySelectorAll(".carousel-dot"));
-
-  let carouselIntervalId = null;
   let hasQueuedMetricsExport = false;
 
   function bindGlobalClickMetrics() {
@@ -49,16 +45,6 @@
       metrics.trackClick();
     }
     });
-  }
-
-  function restartCarousel() {
-    if (carouselIntervalId) {
-      global.clearInterval(carouselIntervalId);
-    }
-
-    carouselIntervalId = global.setInterval(() => {
-      controller.nextCarousel();
-    }, 4500);
   }
 
   function bindNavigation() {
@@ -125,6 +111,13 @@
         return;
       }
 
+      const pinButton = event.target.closest("[data-pin-workshop-action]");
+
+      if (pinButton) {
+        controller.togglePinnedWorkshop(pinButton.dataset.pinWorkshopCode || "");
+        return;
+      }
+
       const workshopButton = event.target.closest("[data-workshop-code]");
 
       if (workshopButton) {
@@ -179,27 +172,6 @@
     }
   }
 
-  function bindCarousel() {
-    carouselActions.forEach((button) => {
-      button.addEventListener("click", () => {
-        if (button.dataset.carouselAction === "prev") {
-          controller.previousCarousel();
-        } else {
-          controller.nextCarousel();
-        }
-
-        restartCarousel();
-      });
-    });
-
-    carouselDots.forEach((dot, index) => {
-      dot.addEventListener("click", () => {
-        controller.goToCarousel(index);
-        restartCarousel();
-      });
-    });
-  }
-
   function bindMetricsExport() {
     function queueMetricsOnExit() {
       if (hasQueuedMetricsExport || !controller.hasResearchStarted()) {
@@ -223,9 +195,7 @@
   bindNavigation();
   bindAuth();
   bindWorkshopInteractions();
-  bindCarousel();
   bindMetricsExport();
   controller.subscribe((state) => renderer.render(state));
   controller.init();
-  restartCarousel();
 }(window, document));
