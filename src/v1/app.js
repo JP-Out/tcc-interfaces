@@ -30,21 +30,48 @@
   const confirmModalSubmit = documentRef.querySelector("#confirm-modal-submit");
   const confirmModalClose = documentRef.querySelector("#confirm-modal-close");
   let hasQueuedMetricsExport = false;
+  let currentViewName = "home";
+
+  function getViewportSnapshot() {
+    return {
+      width: global.innerWidth || documentRef.documentElement.clientWidth || 0,
+      height: global.innerHeight || documentRef.documentElement.clientHeight || 0,
+      devicePixelRatio: global.devicePixelRatio || 1,
+    };
+  }
 
   function bindGlobalClickMetrics() {
     documentRef.addEventListener("click", (event) => {
-    if (!(event.target instanceof HTMLElement)) {
-      return;
-    }
+      if (!(event.target instanceof HTMLElement)) {
+        return;
+      }
 
-    if (event.target.closest("#research-gate")) {
-      return;
-    }
+      if (event.target.closest("#research-gate")) {
+        return;
+      }
 
-    if (event.target.closest("button, a, input, [role='button']")) {
-      metrics.trackClick();
-    }
+      if (event.target.closest("button, a, input, [role='button']")) {
+        metrics.trackClick({
+          x: event.clientX,
+          y: event.clientY,
+          viewName: currentViewName,
+        });
+      }
     });
+  }
+
+  function bindMouseTracking() {
+    documentRef.addEventListener("mousemove", (event) => {
+      metrics.trackMousePosition({
+        x: event.clientX,
+        y: event.clientY,
+        viewName: currentViewName,
+      });
+    }, { passive: true });
+
+    global.addEventListener("resize", () => {
+      metrics.trackViewport(getViewportSnapshot());
+    }, { passive: true });
   }
 
   function bindNavigation() {
@@ -78,7 +105,11 @@
   function bindAuth() {
     if (researchStartButton) {
       researchStartButton.addEventListener("click", () => {
-        controller.startResearchSession();
+        const started = controller.startResearchSession();
+
+        if (started) {
+          metrics.trackViewport(getViewportSnapshot());
+        }
       });
     }
 
@@ -192,10 +223,14 @@
   }
 
   bindGlobalClickMetrics();
+  bindMouseTracking();
   bindNavigation();
   bindAuth();
   bindWorkshopInteractions();
   bindMetricsExport();
-  controller.subscribe((state) => renderer.render(state));
+  controller.subscribe((state) => {
+    currentViewName = state.activeView;
+    renderer.render(state);
+  });
   controller.init();
 }(window, document));

@@ -1,5 +1,30 @@
 (function attachCommonMetrics(global) {
-  function createMetricsSession({ uiVersion, taskId = "main-flow" }) {
+  const DEFAULT_MOUSE_TRACKING_OPTIONS = {
+    sampleIntervalMs: 120,
+    minDistancePx: 10,
+    maxSamples: 6000,
+    maxClickEvents: 500,
+    maxViewportEvents: 24,
+  };
+
+  function normalizeNumber(value) {
+    return Number.isFinite(value) ? Math.round(value) : null;
+  }
+
+  function normalizeDevicePixelRatio(value) {
+    return Number.isFinite(value) ? Number(value.toFixed(2)) : 1;
+  }
+
+  function createMetricsSession({
+    uiVersion,
+    taskId = "main-flow",
+    mouseTrackingOptions = {},
+  }) {
+    const mouseTrackingConfig = {
+      ...DEFAULT_MOUSE_TRACKING_OPTIONS,
+      ...mouseTrackingOptions,
+    };
+
     const metrics = {
       sessionId: `${uiVersion}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       uiVersion,
@@ -10,12 +35,58 @@
       errorCount: 0,
       navigationPath: [],
       errors: [],
+      currentView: null,
+      mouseTracking: {
+        enabled: true,
+        sampleIntervalMs: mouseTrackingConfig.sampleIntervalMs,
+        minDistancePx: mouseTrackingConfig.minDistancePx,
+        maxSamples: mouseTrackingConfig.maxSamples,
+        maxClickEvents: mouseTrackingConfig.maxClickEvents,
+        pointSchema: ["elapsedMs", "x", "y", "viewIndex"],
+        clickSchema: ["elapsedMs", "x", "y", "viewIndex"],
+        viewportSchema: ["elapsedMs", "width", "height", "devicePixelRatio"],
+        views: [],
+        points: [],
+        clickEvents: [],
+        viewportChanges: [],
+        droppedSamples: 0,
+        droppedClickEvents: 0,
+        droppedViewportChanges: 0,
+      },
     };
+    let startedAtMs = null;
+    let lastMouseSample = null;
+    let lastViewportSnapshot = null;
 
     function ensureStart() {
       if (!metrics.startedAt) {
+        startedAtMs = Date.now();
         metrics.startedAt = new Date().toISOString();
       }
+    }
+
+    function isActive() {
+      return Boolean(metrics.startedAt) && !metrics.finishedAt;
+    }
+
+    function getElapsedMs(nowMs = Date.now()) {
+      return startedAtMs ? Math.max(0, nowMs - startedAtMs) : 0;
+    }
+
+    function ensureViewIndex(viewName) {
+      if (!viewName) {
+        return -1;
+      }
+
+      const knownViews = metrics.mouseTracking.views;
+      const existingIndex = knownViews.indexOf(viewName);
+
+      if (existingIndex >= 0) {
+        return existingIndex;
+      }
+
+      knownViews.push(viewName);
+      return knownViews.length - 1;
     }
 
     return {
@@ -29,16 +100,36 @@
       },
 
       trackClick() {
-        if (!metrics.startedAt || metrics.finishedAt) {
+        let details = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+        if (!isActive()) {
           return;
         }
 
         ensureStart();
         metrics.clickCount += 1;
+
+        if (!details || metrics.mouseTracking.clickEvents.length >= mouseTrackingConfig.maxClickEvents) {
+          if (details && metrics.mouseTracking.clickEvents.length >= mouseTrackingConfig.maxClickEvents) {
+            metrics.mouseTracking.droppedClickEvents += 1;
+          }
+          return;
+        }
+
+        const x = normalizeNumber(details.x);
+        const y = normalizeNumber(details.y);
+
+        if (x === null || y === null) {
+          return;
+        }
+
+        const nowMs = Date.now();
+        const viewIndex = ensureViewIndex(details.viewName || metrics.currentView);
+        metrics.mouseTracking.clickEvents.push([getElapsedMs(nowMs), x, y, viewIndex]);
       },
 
       trackError(type = "generic") {
-        if (!metrics.startedAt || metrics.finishedAt) {
+        if (!isActive()) {
           return;
         }
 
@@ -51,7 +142,7 @@
       },
 
       trackView(viewName) {
-        if (!metrics.startedAt || metrics.finishedAt) {
+        if (!isActive()) {
           return;
         }
 
@@ -61,11 +152,102 @@
           return;
         }
 
+        metrics.currentView = viewName;
+        ensureViewIndex(viewName);
+
         const lastView = metrics.navigationPath[metrics.navigationPath.length - 1];
 
         if (lastView !== viewName) {
           metrics.navigationPath.push(viewName);
         }
+      },
+
+      trackMousePosition(details = null) {
+        if (!isActive() || !details) {
+          return;
+        }
+
+        const x = normalizeNumber(details.x);
+        const y = normalizeNumber(details.y);
+
+        if (x === null || y === null) {
+          return;
+        }
+
+        ensureStart();
+
+        const nowMs = Date.now();
+        const elapsedMs = getElapsedMs(nowMs);
+        const viewIndex = ensureViewIndex(details.viewName || metrics.currentView);
+
+        if (lastMouseSample) {
+          const elapsedSinceLastSample = nowMs - lastMouseSample.recordedAtMs;
+          const deltaX = x - lastMouseSample.x;
+          const deltaY = y - lastMouseSample.y;
+          const distance = Math.hypot(deltaX, deltaY);
+
+          if (
+            elapsedSinceLastSample < mouseTrackingConfig.sampleIntervalMs
+            || distance < mouseTrackingConfig.minDistancePx
+          ) {
+            return;
+          }
+        }
+
+        if (metrics.mouseTracking.points.length >= mouseTrackingConfig.maxSamples) {
+          metrics.mouseTracking.droppedSamples += 1;
+          return;
+        }
+
+        metrics.mouseTracking.points.push([elapsedMs, x, y, viewIndex]);
+        lastMouseSample = {
+          recordedAtMs: nowMs,
+          x,
+          y,
+        };
+      },
+
+      trackViewport(details = null) {
+        if (!isActive() || !details) {
+          return;
+        }
+
+        const width = normalizeNumber(details.width);
+        const height = normalizeNumber(details.height);
+
+        if (width === null || height === null) {
+          return;
+        }
+
+        ensureStart();
+
+        const snapshot = {
+          width,
+          height,
+          devicePixelRatio: normalizeDevicePixelRatio(details.devicePixelRatio),
+        };
+
+        if (
+          lastViewportSnapshot
+          && lastViewportSnapshot.width === snapshot.width
+          && lastViewportSnapshot.height === snapshot.height
+          && lastViewportSnapshot.devicePixelRatio === snapshot.devicePixelRatio
+        ) {
+          return;
+        }
+
+        if (metrics.mouseTracking.viewportChanges.length >= mouseTrackingConfig.maxViewportEvents) {
+          metrics.mouseTracking.droppedViewportChanges += 1;
+          return;
+        }
+
+        metrics.mouseTracking.viewportChanges.push([
+          getElapsedMs(),
+          snapshot.width,
+          snapshot.height,
+          snapshot.devicePixelRatio,
+        ]);
+        lastViewportSnapshot = snapshot;
       },
 
       finish() {
@@ -93,6 +275,23 @@
           errorCount: metrics.errorCount,
           navigationPath: metrics.navigationPath.slice(),
           errors: metrics.errors.map((error) => ({ ...error })),
+          mouseTracking: {
+            enabled: metrics.mouseTracking.enabled,
+            sampleIntervalMs: metrics.mouseTracking.sampleIntervalMs,
+            minDistancePx: metrics.mouseTracking.minDistancePx,
+            maxSamples: metrics.mouseTracking.maxSamples,
+            maxClickEvents: metrics.mouseTracking.maxClickEvents,
+            pointSchema: metrics.mouseTracking.pointSchema.slice(),
+            clickSchema: metrics.mouseTracking.clickSchema.slice(),
+            viewportSchema: metrics.mouseTracking.viewportSchema.slice(),
+            views: metrics.mouseTracking.views.slice(),
+            points: metrics.mouseTracking.points.map((point) => point.slice()),
+            clickEvents: metrics.mouseTracking.clickEvents.map((click) => click.slice()),
+            viewportChanges: metrics.mouseTracking.viewportChanges.map((change) => change.slice()),
+            droppedSamples: metrics.mouseTracking.droppedSamples,
+            droppedClickEvents: metrics.mouseTracking.droppedClickEvents,
+            droppedViewportChanges: metrics.mouseTracking.droppedViewportChanges,
+          },
         };
       },
     };
