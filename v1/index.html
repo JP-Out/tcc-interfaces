@@ -47,6 +47,9 @@
           <button class="sidebar-link nav-trigger is-active" type="button" data-view="home" aria-current="page">
             Informações Gerais
           </button>
+          <button class="sidebar-link nav-trigger" type="button" data-view="pesquisa-geral">
+            Pesquisa Geral
+          </button>
           <button class="sidebar-link nav-trigger" type="button" data-view="participante">
             Área do Participante
           </button>
@@ -164,6 +167,120 @@
                 <div class="participant-records-body" id="participant-records-body"></div>
               </div>
             </section>
+          </div>
+
+          <p class="prototype-note">
+            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
+            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
+          </p>
+        </section>
+
+        <section class="content-view search-view" id="view-pesquisa-geral" aria-labelledby="pesquisa-geral-heading" hidden>
+          <div class="good-section-head">
+            <h2 id="pesquisa-geral-heading">Pesquisa Geral</h2>
+          </div>
+
+          <div class="search-layout">
+            <section class="search-card search-primary-card" aria-labelledby="search-form-heading">
+              <div class="search-card-header">
+                <h3 id="search-form-heading">Configuração de Pesquisa</h3>
+                <p>
+                  Defina os critérios desejados para localizar oficinas de maneira ampla e segmentada.
+                </p>
+              </div>
+
+              <label class="search-field" for="general-search-input">
+                <span>Busca Textual</span>
+                <input
+                  class="search-text-input"
+                  id="general-search-input"
+                  type="text"
+                  placeholder="Digite expressões, combinações ou partes aproximadas do conteúdo"
+                >
+              </label>
+
+              <div class="search-controls-grid">
+                <div class="search-menu-block">
+                  <button
+                    class="search-menu-button"
+                    id="search-manage-button"
+                    type="button"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="search-manage-menu"
+                  >
+                    <span class="search-menu-button-text">
+                      <strong>Gerenciar Busca</strong>
+                      <small id="search-manage-current">Codigo de Indetificação da Ofc.</small>
+                    </span>
+                    <span class="manage-caret" aria-hidden="true"></span>
+                  </button>
+
+                  <div class="search-menu-panel" id="search-manage-menu" hidden>
+                    <p class="search-menu-title">Escopo principal</p>
+
+                    <label class="search-option">
+                      <input
+                        type="radio"
+                        name="search-mode"
+                        value="code"
+                        data-search-label="Codigo de Indetificação da Ofc."
+                        checked
+                      >
+                      <span>Codigo de Indetificação da Ofc.</span>
+                    </label>
+
+                    <label class="search-option">
+                      <input
+                        type="radio"
+                        name="search-mode"
+                        value="broad"
+                        data-search-label="Termos de Busca Amplos"
+                      >
+                      <span>Termos de Busca Amplos</span>
+                    </label>
+
+                    <label class="search-option">
+                      <input
+                        type="radio"
+                        name="search-mode"
+                        value="hours"
+                        data-search-label="Num. da Carga de Horas"
+                      >
+                      <span>Num. da Carga de Horas</span>
+                    </label>
+                  </div>
+
+                  <button class="search-submit-button" id="search-submit-button" type="button">
+                    Realizar Pesquisa
+                  </button>
+                </div>
+
+                <fieldset class="search-filter-group">
+                  <legend>Filtro</legend>
+
+                  <label class="search-option">
+                    <input type="radio" name="search-filter" value="open" checked>
+                    <span>Situação Ofc. Aberta</span>
+                  </label>
+
+                  <label class="search-option">
+                    <input type="radio" name="search-filter" value="physical">
+                    <span>Formato OFc. Fisico</span>
+                  </label>
+                </fieldset>
+              </div>
+            </section>
+
+            <aside class="search-card search-side-card" aria-labelledby="search-side-heading">
+              <h3 id="search-side-heading">Resumo de Consulta</h3>
+              <p>
+                A utilização combinada dos controles acima pode alterar significativamente a abrangência dos resultados retornados.
+              </p>
+              <p>
+                Para maior complexidade operacional, recomenda-se alternar o escopo da busca antes de redefinir o filtro selecionado.
+              </p>
+            </aside>
           </div>
 
           <p class="prototype-note">

@@ -6,6 +6,7 @@
     BLOCKED_VIEWS: new Set(["participante", "gerenciar"]),
     VIEW_LABELS: {
       home: "Informações Gerais",
+      "pesquisa-geral": "Pesquisa Geral",
       participante: "Área do Participante",
       gerenciar: "Gerenciar Oficinas",
       oficinas: "Oficinas Cadastradas",
