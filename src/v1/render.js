@@ -79,6 +79,87 @@
     `).join("");
   }
 
+  function escapeHTML(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function createSearchSummaryMarkup(state, defaultMarkup) {
+    if (!state.hasWorkshopSearch) {
+      return defaultMarkup;
+    }
+
+    const modeLabel = state.workshopSearchMode === "broad"
+      ? "Termos de Busca Amplos"
+      : state.workshopSearchMode === "hours"
+        ? "Num. da Carga de Horas"
+        : "Codigo de Indetificação da Ofc.";
+    const filterLabel = state.workshopSearchFilter === "physical"
+      ? "Formato OFc. Fisico"
+      : "Situação Ofc. Aberta";
+    const matchedTermsMarkup = state.workshopSearchMatchedTerms.length
+      ? state.workshopSearchMatchedTerms.map((term) => `
+          <li class="search-term-chip">${escapeHTML(term)}</li>
+        `).join("")
+      : '<li class="search-term-chip search-term-chip-muted">Sem termo derivado</li>';
+    const searchResultsMarkup = state.workshopSearchResults.length
+      ? state.workshopSearchResults
+        .map((result, index) => {
+          const workshop = state.workshops.find((item) => item.cod === result.code);
+
+          if (!workshop) {
+            return "";
+          }
+
+          const resultLabel = state.workshopSearchMode === "code"
+            ? (index === 0 ? "Oficina mais relevante" : "Código parecido identificado")
+            : (index === 0 ? "Correspondência principal" : "Correspondência adicional");
+
+          return `
+            <button class="search-result-card" type="button" data-workshop-code="${escapeHTML(workshop.cod)}">
+              <span class="search-result-label">${resultLabel}</span>
+              <strong>${escapeHTML(workshop.title)}</strong>
+              <span class="search-result-meta">${escapeHTML(workshop.cod)} | ${escapeHTML(workshop.hours)} | ${escapeHTML(workshop.modality)}</span>
+              <span class="search-result-reason">${escapeHTML(result.reason)}</span>
+            </button>
+          `;
+        })
+        .join("")
+      : `
+          <div class="search-result-empty">
+            Nenhuma oficina permaneceu compatível após cruzar o campo de busca com o filtro atualmente selecionado.
+          </div>
+        `;
+
+    return `
+      <h3 id="search-side-heading">Resumo de Consulta</h3>
+      <p>
+        Os elementos abaixo foram reorganizados segundo o modo de busca informado e o filtro mantido em operação.
+      </p>
+
+      <div class="search-summary-meta">
+        <span><strong>Entrada:</strong> ${escapeHTML(state.workshopSearchQuery)}</span>
+        <span><strong>Escopo:</strong> ${escapeHTML(modeLabel)}</span>
+        <span><strong>Filtro:</strong> ${escapeHTML(filterLabel)}</span>
+      </div>
+
+      <div class="search-summary-block">
+        <p class="search-summary-label">Termos mais relevantes</p>
+        <ul class="search-term-list">
+          ${matchedTermsMarkup}
+        </ul>
+      </div>
+
+      <div class="search-results-list">
+        ${searchResultsMarkup}
+      </div>
+    `;
+  }
+
   function createv1Renderer(documentRef) {
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
@@ -98,6 +179,7 @@
       manageLinkedWorkshops: documentRef.querySelector("#manage-linked-workshops"),
       quickMenuList: documentRef.querySelector("#quick-menu-list"),
       officesTableBody: documentRef.querySelector("#offices-table-body"),
+      searchSideCard: documentRef.querySelector(".search-side-card"),
       toastStack: documentRef.querySelector("#toast-stack"),
       officeModal: documentRef.querySelector("#office-modal"),
       officeModalTitle: documentRef.querySelector("#office-modal-title"),
@@ -111,6 +193,9 @@
       officeModalCancelLink: documentRef.querySelector("#office-modal-cancel-link"),
       confirmModal: documentRef.querySelector("#confirm-modal"),
     };
+    const searchSideCardDefaultMarkup = elements.searchSideCard
+      ? elements.searchSideCard.innerHTML
+      : "";
 
     return {
       elements,
@@ -197,6 +282,10 @@
 
         if (elements.officesTableBody) {
           elements.officesTableBody.innerHTML = createWorkshopsMarkup(state.workshops);
+        }
+
+        if (elements.searchSideCard) {
+          elements.searchSideCard.innerHTML = createSearchSummaryMarkup(state, searchSideCardDefaultMarkup);
         }
 
         if (elements.officeModal) {
