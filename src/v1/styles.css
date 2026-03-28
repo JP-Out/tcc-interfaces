@@ -399,6 +399,13 @@ body[data-ui="v1"] .participant-card {
   padding: 24px;
 }
 
+body[data-ui="v1"] .participant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
 body[data-ui="v1"] .participant-records-column {
   display: flex;
 }
@@ -429,7 +436,6 @@ body[data-ui="v1"] .confirm-modal-button {
 }
 
 body[data-ui="v1"] .participant-link {
-  margin-top: 14px;
   padding: 14px 18px;
   background: #e8efff;
   color: var(--accent-dark);
@@ -1212,6 +1218,10 @@ body[data-ui="v1"] .research-gate {
 
 body[data-ui="v1"] .research-gate[hidden] {
   display: none;
+}
+
+body[data-ui="v1"] .thank-you-gate-panel {
+  width: min(580px, 100%);
 }
 
 body[data-ui="v1"] .research-gate-panel {

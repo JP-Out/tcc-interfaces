@@ -67,7 +67,15 @@
     }, 150);
   }
 
+  function downloadMetricsPayload(payload) {
+    triggerDownload({
+      filename: buildFilename(payload),
+      payload,
+    });
+  }
+
   global.SGOAExporter = {
+    downloadMetricsPayload,
     queueMetricsExport,
     flushQueuedMetricExports,
   };

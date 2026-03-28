@@ -1,7 +1,7 @@
 (function bootstrapv1App(global, documentRef) {
   const { createAppController } = global.SGOALogic;
   const { createMetricsSession } = global.SGOAMetrics;
-  const { flushQueuedMetricExports, queueMetricsExport } = global.SGOAExporter;
+  const { downloadMetricsPayload, flushQueuedMetricExports, queueMetricsExport } = global.SGOAExporter;
   const { createv1Renderer } = global.SGOARenderers;
 
   const renderer = createv1Renderer(documentRef);
@@ -22,6 +22,8 @@
   const loginSubmitButton = documentRef.querySelector("#login-submit");
   const loginResetButton = documentRef.querySelector("#login-reset");
   const participantModifyButton = documentRef.querySelector(".participant-link");
+  const participantExitButton = documentRef.querySelector("#participant-exit-button");
+  const thankYouGate = documentRef.querySelector("#thank-you-gate");
   const officeModalClose = documentRef.querySelector("#office-modal-close");
   const officeModal = documentRef.querySelector("#office-modal");
   const officeModalParticipate = documentRef.querySelector("#office-modal-participate");
@@ -94,6 +96,14 @@
           return;
         }
 
+        if (viewName === "identificacao" && controller.getState().isLoggedIn) {
+          renderer.showToast({
+            title: "Operação Redundante:",
+            message: "Sessão já inicializada para este perfil.",
+          });
+          return;
+        }
+
         const opened = controller.openView(viewName);
 
         if (opened && trigger.classList.contains("sidebar-link")) {
@@ -126,6 +136,14 @@
 
     if (loginSubmitButton) {
       loginSubmitButton.addEventListener("click", () => {
+        if (controller.getState().isLoggedIn) {
+          renderer.showToast({
+            title: "Operação Redundante:",
+            message: "Sessão já inicializada para este perfil.",
+          });
+          return;
+        }
+
         controller.login(loginUserInput ? loginUserInput.value : "");
       });
     }
@@ -145,6 +163,17 @@
     if (participantModifyButton) {
       participantModifyButton.addEventListener("click", () => {
         controller.showParticipantOperationFailure();
+      });
+    }
+
+    if (participantExitButton) {
+      participantExitButton.addEventListener("click", () => {
+        hasQueuedMetricsExport = true;
+        downloadMetricsPayload(controller.finishMetrics());
+
+        if (thankYouGate) {
+          thankYouGate.hidden = false;
+        }
       });
     }
 

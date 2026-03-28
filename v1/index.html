@@ -152,9 +152,15 @@
                 <p class="participant-last-access">Último Acesso: <span id="participant-last-access">21/03/2026 - 23:31</span></p>
               </div>
 
-              <button class="participant-link" type="button">
-                Fazer Modificações
-              </button>
+              <div class="participant-actions">
+                <button class="participant-link" type="button">
+                  Fazer Modificações
+                </button>
+
+                <button class="participant-link" id="participant-exit-button" type="button">
+                  Encerrar/Sair
+                </button>
+              </div>
             </section>
 
             <section class="participant-column participant-records-column">
@@ -423,6 +429,15 @@
       <button class="research-gate-button" id="research-start-button" type="button">
         Iniciar pesquisa
       </button>
+    </div>
+  </div>
+
+  <div class="research-gate thank-you-gate" id="thank-you-gate" aria-labelledby="thank-you-title" hidden>
+    <div class="research-gate-panel thank-you-gate-panel">
+      <h2 id="thank-you-title">Obrigado pela sua participação!</h2>
+      <p>
+        Sua colaboração foi registrada com sucesso.
+      </p>
     </div>
   </div>
 
