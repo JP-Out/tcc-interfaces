@@ -290,15 +290,15 @@
           <div class="search-summary-block search-detail-action-block">
             <p class="search-summary-label">Ação disponível</p>
             <div class="search-detail-action-buttons">
+              <button class="header-link search-detail-cancel-link" type="button" data-search-detail-action="system-records">
+                Registros do Sistema
+              </button>
               <button
                 class="header-link search-detail-link-action${state.selectedWorkshopIsLinked ? " is-linked" : ""}"
                 type="button"
                 data-search-detail-action="participate"
               >
                 Vincular
-              </button>
-              <button class="header-link search-detail-cancel-link" type="button" data-search-detail-action="cancel">
-                Cancelar
               </button>
             </div>
           </div>

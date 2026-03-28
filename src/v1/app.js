@@ -267,22 +267,8 @@
           return;
         }
 
-        if (searchDetailActionButton.dataset.searchDetailAction === "cancel") {
-          const state = controller.getState();
-
-          if (
-            state.activeView === "pesquisa-detalhes"
-            && state.selectedWorkshop
-            && !state.selectedWorkshopIsLinked
-          ) {
-            renderer.showToast({
-              title: "Não foi possível:",
-              message: "Nenhum vínculo encontrado para realizar esta ação.",
-            });
-            return;
-          }
-
-          controller.openConfirmModal();
+        if (searchDetailActionButton.dataset.searchDetailAction === "system-records") {
+          controller.openView("oficinas");
           return;
         }
       }
