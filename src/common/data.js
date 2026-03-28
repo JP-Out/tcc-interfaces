@@ -16,9 +16,11 @@
     },
     DEFAULT_PARTICIPANT: {
       identifier: "1145",
+      course: "Eletro-mecânica",
       firstAccessDate: "21/03/2026",
       lastAccessDateTime: "21/03/2026 - 23:31",
     },
+    SYSTEM_VERSION: "SGOA 1.7.4",
     TOAST_MESSAGES: {
       blockedAccess: {
         title: "Ação interrompida:",

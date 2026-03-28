@@ -6,6 +6,7 @@
     MAX_VISIBLE_RECORDS,
     MOCK_WORKSHOPS,
     SIDEBAR_FIRST_OPEN_PREFIX,
+    SYSTEM_VERSION,
     TOAST_MESSAGES,
     VIEW_LABELS,
   } = global.SGOAData;
@@ -25,6 +26,18 @@
 
   function generateParticipantCode() {
     return String(Math.floor(1000 + Math.random() * 9000));
+  }
+
+  function generateSessionReference() {
+    const now = new Date();
+    const datePart = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+    ].join("");
+    const randomPart = String(Math.floor(100000 + Math.random() * 900000));
+
+    return `SGOA-${datePart}-${randomPart}`;
   }
 
   function getWorkshopByCode(code) {
@@ -328,15 +341,23 @@
       const selectedWorkshop = getWorkshopByCode(state.selectedWorkshopCode);
       const searchDetailTotal = state.workshopSearchNavigationCodes.length;
       const searchDetailIndex = state.workshopSearchDetailIndex;
+      const linkedWorkshops = state.linkedWorkshopCodes
+        .map((code) => getWorkshopByCode(code))
+        .filter(Boolean);
+      const completedWorkshopCount = state.completedWorkshopCodes.length;
 
       return {
         ...state,
         uiVersion,
         taskId,
+        systemVersion: SYSTEM_VERSION,
         workshops: MOCK_WORKSHOPS.map((workshop) => ({ ...workshop })),
         participantRecords: state.participantRecords.map((record) => ({ ...record })),
         linkedWorkshopCodes: state.linkedWorkshopCodes.slice(),
+        completedWorkshopCodes: state.completedWorkshopCodes.slice(),
         pinnedWorkshopCodes: state.pinnedWorkshopCodes.slice(),
+        linkedWorkshopCount: linkedWorkshops.length,
+        completedWorkshopCount,
         workshopSearchFilters: state.workshopSearchFilters.slice(),
         workshopSearchHistory: state.workshopSearchHistory.map((entry) => ({
           ...entry,
@@ -349,6 +370,8 @@
         selectedWorkshopIsLinked: selectedWorkshop
           ? state.linkedWorkshopCodes.includes(selectedWorkshop.cod)
           : false,
+        lastManageWorkshopAccessTitle: state.lastManageWorkshopAccessTitle
+          || "Nenhuma oficina consultada nesta área.",
         searchDetailPosition: searchDetailIndex >= 0 ? searchDetailIndex + 1 : 0,
         searchDetailTotal,
         searchDetailHasPrevious: searchDetailIndex > 0,
@@ -454,6 +477,7 @@
       },
 
       init() {
+        state.currentSessionId = generateSessionReference();
         state.isSidebarCollapsed = !shouldStartWithSidebarOpen();
         notify();
       },
@@ -515,11 +539,15 @@
           ? identifier.trim()
           : DEFAULT_LOGIN_IDENTIFIER;
         state.currentParticipantCode = generateParticipantCode();
+        state.currentParticipantCourse = DEFAULT_PARTICIPANT.course;
         state.currentFirstAccessDate = formatDate(new Date());
         state.currentLastAccessDateTime = formatDateTime(new Date());
+        state.currentSessionId = generateSessionReference();
+        state.lastManageWorkshopAccessTitle = "";
         state.participantRecords = [];
         state.participantRecordCounter = 0;
         state.linkedWorkshopCodes = [];
+        state.completedWorkshopCodes = [];
         state.pinnedWorkshopCodes = [];
         state.hasWorkshopSearch = false;
         state.workshopSearchQuery = "";
@@ -542,11 +570,15 @@
         state.isLoggedIn = false;
         state.currentUserIdentifier = "";
         state.currentParticipantCode = DEFAULT_PARTICIPANT.identifier;
+        state.currentParticipantCourse = DEFAULT_PARTICIPANT.course;
         state.currentFirstAccessDate = DEFAULT_PARTICIPANT.firstAccessDate;
         state.currentLastAccessDateTime = DEFAULT_PARTICIPANT.lastAccessDateTime;
+        state.currentSessionId = generateSessionReference();
+        state.lastManageWorkshopAccessTitle = "";
         state.participantRecords = [];
         state.participantRecordCounter = 0;
         state.linkedWorkshopCodes = [];
+        state.completedWorkshopCodes = [];
         state.pinnedWorkshopCodes = [];
         state.hasWorkshopSearch = false;
         state.workshopSearchQuery = "";
@@ -598,6 +630,7 @@
         }
 
         state.selectedWorkshopCode = workshop.cod;
+        state.lastManageWorkshopAccessTitle = workshop.title;
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         setActiveView("gerenciar-detalhes");
@@ -785,6 +818,9 @@
 
         if (linkedIndex >= 0) {
           state.linkedWorkshopCodes.splice(linkedIndex, 1);
+          if (!state.completedWorkshopCodes.includes(workshop.cod)) {
+            state.completedWorkshopCodes.unshift(workshop.cod);
+          }
           state.pinnedWorkshopCodes = state.pinnedWorkshopCodes.filter((code) => code !== workshop.cod);
           addParticipantRecord(`Cancelou inscrição em oficina “${workshop.title}”`);
         }

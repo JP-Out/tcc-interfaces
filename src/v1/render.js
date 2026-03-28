@@ -417,9 +417,15 @@
       researchGate: documentRef.querySelector("#research-gate"),
       participantName: documentRef.querySelector("#participant-name"),
       participantIdentifier: documentRef.querySelector("#participant-identifier"),
+      participantCourse: documentRef.querySelector("#participant-course"),
       participantStatus: documentRef.querySelector("#participant-status"),
       participantFirstAccess: documentRef.querySelector("#participant-first-access"),
       participantLastAccess: documentRef.querySelector("#participant-last-access"),
+      participantLinkedCount: documentRef.querySelector("#participant-linked-count"),
+      participantCompletedCount: documentRef.querySelector("#participant-completed-count"),
+      participantLastWorkshop: documentRef.querySelector("#participant-last-workshop"),
+      participantSessionId: documentRef.querySelector("#participant-session-id"),
+      participantSystemVersion: documentRef.querySelector("#participant-system-version"),
       participantRecordsBody: documentRef.querySelector("#participant-records-body"),
       manageLinkedWorkshops: documentRef.querySelector("#manage-linked-workshops"),
       manageDetailPanel: documentRef.querySelector("#manage-detail-panel"),
@@ -500,6 +506,10 @@
           elements.participantIdentifier.textContent = state.currentParticipantCode;
         }
 
+        if (elements.participantCourse) {
+          elements.participantCourse.textContent = state.currentParticipantCourse;
+        }
+
         if (elements.participantStatus) {
           elements.participantStatus.textContent = "Ativo";
         }
@@ -510,6 +520,26 @@
 
         if (elements.participantLastAccess) {
           elements.participantLastAccess.textContent = state.currentLastAccessDateTime;
+        }
+
+        if (elements.participantLinkedCount) {
+          elements.participantLinkedCount.textContent = String(state.linkedWorkshopCount || 0);
+        }
+
+        if (elements.participantCompletedCount) {
+          elements.participantCompletedCount.textContent = String(state.completedWorkshopCount || 0);
+        }
+
+        if (elements.participantLastWorkshop) {
+          elements.participantLastWorkshop.textContent = state.lastManageWorkshopAccessTitle;
+        }
+
+        if (elements.participantSessionId) {
+          elements.participantSessionId.textContent = state.currentSessionId;
+        }
+
+        if (elements.participantSystemVersion) {
+          elements.participantSystemVersion.textContent = state.systemVersion;
         }
 
         if (elements.participantRecordsBody) {

@@ -399,6 +399,11 @@ body[data-ui="v1"] .participant-card {
   padding: 24px;
 }
 
+body[data-ui="v1"] .participant-card-divider {
+  margin: 2px 0 18px;
+  border-top: 1px solid rgba(26, 100, 255, 0.12);
+}
+
 body[data-ui="v1"] .participant-actions {
   display: flex;
   flex-wrap: wrap;
