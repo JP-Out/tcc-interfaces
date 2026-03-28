@@ -814,6 +814,13 @@ body[data-ui="v1"] .search-result-card {
   text-align: left;
 }
 
+body[data-ui="v1"] .search-result-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 body[data-ui="v1"] .search-result-card:hover,
 body[data-ui="v1"] .search-result-card:focus-visible {
   border-color: rgba(26, 100, 255, 0.34);
@@ -822,7 +829,6 @@ body[data-ui="v1"] .search-result-card:focus-visible {
 }
 
 body[data-ui="v1"] .search-result-meta,
-body[data-ui="v1"] .search-result-reason,
 body[data-ui="v1"] .search-result-empty {
   color: var(--muted-text);
   line-height: 1.45;

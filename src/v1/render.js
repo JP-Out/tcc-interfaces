@@ -88,6 +88,22 @@
       .replace(/'/g, "&#39;");
   }
 
+  function buildSearchMetaLine(workshop, index, query) {
+    const variants = [
+      [workshop.cod, workshop.hours, workshop.modality],
+      [workshop.hours, workshop.cod, workshop.modality],
+      [workshop.modality, workshop.hours, workshop.cod],
+      [workshop.cod, workshop.modality, workshop.hours],
+    ];
+    const queryOffset = Array.from(String(query || "")).reduce(
+      (total, char) => total + char.charCodeAt(0),
+      0,
+    );
+    const variant = variants[(queryOffset + index) % variants.length];
+
+    return variant.map((item) => escapeHTML(item)).join(" | ");
+  }
+
   function createSearchSummaryMarkup(state, defaultMarkup) {
     if (!state.hasWorkshopSearch) {
       return defaultMarkup;
@@ -114,7 +130,7 @@
       : '<li class="search-term-chip search-term-chip-muted">Sem termo derivado</li>';
     const searchResultsMarkup = state.workshopSearchResults.length
       ? state.workshopSearchResults
-        .map((result) => {
+        .map((result, index) => {
           const workshop = state.workshops.find((item) => item.cod === result.code);
 
           if (!workshop) {
@@ -123,9 +139,8 @@
 
           return `
             <button class="search-result-card" type="button" data-workshop-code="${escapeHTML(workshop.cod)}">
-              <strong>${escapeHTML(workshop.title)}</strong>
-              <span class="search-result-meta">${escapeHTML(workshop.cod)} | ${escapeHTML(workshop.hours)} | ${escapeHTML(workshop.modality)}</span>
-              <span class="search-result-reason">${escapeHTML(result.reason)}</span>
+              <strong class="search-result-title" title="${escapeHTML(workshop.title)}">${escapeHTML(workshop.title)}</strong>
+              <span class="search-result-meta">${buildSearchMetaLine(workshop, index, state.workshopSearchQuery)}</span>
             </button>
           `;
         })
