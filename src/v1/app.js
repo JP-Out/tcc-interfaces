@@ -204,6 +204,13 @@
         return;
       }
 
+      const manageWorkshopButton = event.target.closest("[data-manage-workshop-code]");
+
+      if (manageWorkshopButton) {
+        controller.openManageWorkshopDetail(manageWorkshopButton.dataset.manageWorkshopCode || "");
+        return;
+      }
+
       const officesPageButton = event.target.closest("[data-offices-page-index]");
 
       if (officesPageButton) {
@@ -288,6 +295,47 @@
 
       if (searchDetailNavigationButton) {
         controller.navigateSearchResultWorkshop(searchDetailNavigationButton.dataset.searchDetailNav || "");
+        return;
+      }
+
+      const manageDetailActionButton = event.target.closest("[data-manage-detail-action]");
+
+      if (manageDetailActionButton) {
+        if (manageDetailActionButton.dataset.manageDetailAction === "pin") {
+          const state = controller.getState();
+
+          if (!state.selectedWorkshop || !state.selectedWorkshopIsLinked) {
+            renderer.showToast({
+              title: "Não foi possível:",
+              message: "Nenhum vínculo encontrado para realizar esta ação.",
+            });
+            return;
+          }
+
+          controller.togglePinnedWorkshop(state.selectedWorkshop.cod);
+          return;
+        }
+
+        if (manageDetailActionButton.dataset.manageDetailAction === "cancel") {
+          const state = controller.getState();
+
+          if (!state.selectedWorkshop || !state.selectedWorkshopIsLinked) {
+            renderer.showToast({
+              title: "Não foi possível:",
+              message: "Nenhum vínculo encontrado para realizar esta ação.",
+            });
+            return;
+          }
+
+          controller.openConfirmModal();
+          return;
+        }
+      }
+
+      const manageDetailNavigationButton = event.target.closest("[data-manage-detail-nav]");
+
+      if (manageDetailNavigationButton) {
+        controller.navigateManageWorkshopDetail(manageDetailNavigationButton.dataset.manageDetailNav || "");
         return;
       }
 

@@ -1000,12 +1000,23 @@ body[data-ui="v1"] .manage-panel-header {
   font-weight: 700;
 }
 
+body[data-ui="v1"] .manage-panel-body {
+  height: clamp(320px, calc(100vh - 320px), 581px);
+  min-height: clamp(320px, calc(100vh - 320px), 581px);
+  max-height: clamp(320px, calc(100vh - 320px), 581px);
+  overflow-y: auto;
+}
+
 body[data-ui="v1"] .manage-panel-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 82px;
   align-items: center;
   border-top: 1px solid var(--line-color);
+}
+
+body[data-ui="v1"] .manage-panel-row:last-child {
+  border-bottom: 1px solid var(--line-color);
 }
 
 body[data-ui="v1"] .manage-panel-link,
@@ -1022,28 +1033,36 @@ body[data-ui="v1"] .manage-panel-empty {
 body[data-ui="v1"] .manage-panel-link {
   display: grid;
   gap: 4px;
+  min-height: 82px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+body[data-ui="v1"] .manage-panel-link:hover,
+body[data-ui="v1"] .manage-panel-link:focus-visible {
+  background: #f7faff;
+  outline: none;
 }
 
 body[data-ui="v1"] .manage-panel-link small {
   color: var(--muted-text);
 }
 
-body[data-ui="v1"] .manage-pin-button {
-  min-width: 92px;
-  margin-right: 20px;
-  padding: 10px 14px;
-  border: 1px solid rgba(26, 100, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(26, 100, 255, 0.08);
-  color: var(--accent-dark);
-  font-size: 0.9rem;
-  font-weight: 700;
+body[data-ui="v1"] .manage-detail-layout {
+  margin-top: 4px;
 }
 
-body[data-ui="v1"] .manage-pin-button.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #ffffff;
+body[data-ui="v1"] .manage-detail-record {
+  min-height: 440px;
+}
+
+body[data-ui="v1"] .manage-detail-link-action,
+body[data-ui="v1"] .manage-detail-cancel-link {
+  cursor: pointer;
+}
+
+body[data-ui="v1"] .manage-detail-link-action.is-linked {
+  color: #534FA3;
 }
 
 body[data-ui="v1"] .offices-table {
@@ -1559,11 +1578,6 @@ body[data-ui="v1"] .history-modal[hidden] {
   body[data-ui="v1"] .quick-menu-header {
     display: grid;
   }
-
-  body[data-ui="v1"] .manage-pin-button {
-    margin: 0 20px 16px;
-  }
-
   body[data-ui="v1"] .login-actions {
     flex-direction: column;
   }

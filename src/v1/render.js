@@ -28,18 +28,9 @@
       .filter(Boolean)
       .map((workshop) => `
         <div class="manage-panel-row">
-          <button class="manage-panel-link" type="button" data-workshop-code="${workshop.cod}">
+          <button class="manage-panel-link" type="button" data-manage-workshop-code="${workshop.cod}">
             <span>${workshop.title}</span>
             <small>${workshop.period}</small>
-          </button>
-          <button
-            class="manage-pin-button${state.pinnedWorkshopCodes.includes(workshop.cod) ? " is-active" : ""}"
-            type="button"
-            data-pin-workshop-action="toggle"
-            data-pin-workshop-code="${workshop.cod}"
-            aria-pressed="${state.pinnedWorkshopCodes.includes(workshop.cod) ? "true" : "false"}"
-          >
-            ${state.pinnedWorkshopCodes.includes(workshop.cod) ? "Desfixar" : "Fixar"}
           </button>
         </div>
       `)
@@ -329,6 +320,91 @@
     `;
   }
 
+  function createManageDetailMarkup(state) {
+    if (!state.selectedWorkshop || !state.selectedWorkshopIsLinked) {
+      return `
+        <div class="search-card search-detail-side-card">
+          <h3>Detalhamento indisponível</h3>
+          <p>Não foi possível reorganizar o vínculo selecionado para exibição individual nesta área.</p>
+        </div>
+      `;
+    }
+
+    const linkedWorkshops = state.linkedWorkshopCodes
+      .map((code) => state.workshops.find((item) => item.cod === code))
+      .filter(Boolean);
+    const detailIndex = linkedWorkshops.findIndex((workshop) => workshop.cod === state.selectedWorkshop.cod);
+    const statusLabel = state.selectedWorkshop.status === "Aberta"
+      ? "Ativa"
+      : state.selectedWorkshop.status;
+    const isPinned = state.pinnedWorkshopCodes.includes(state.selectedWorkshop.cod);
+
+    return `
+      <div class="search-detail-layout manage-detail-layout">
+        <section class="search-card search-detail-main-card" aria-label="Registro vinculado detalhado">
+          <div class="search-card-header search-detail-header">
+            <h3>Registro Vinculado Reorganizado</h3>
+            <p>
+              O vínculo selecionado foi deslocado para leitura acumulada, pouco resumida e distribuída em ordem sequencial.
+            </p>
+          </div>
+
+          <div class="search-detail-record manage-detail-record">
+            <p><span>Código:</span> ${escapeHTML(state.selectedWorkshop.cod)}</p>
+            <p><span>Título:</span> ${escapeHTML(state.selectedWorkshop.title)}</p>
+            <p><span>Período:</span> ${escapeHTML(state.selectedWorkshop.period)}</p>
+            <p><span>Situação:</span> ${escapeHTML(statusLabel)}</p>
+            <p><span>Modalidade:</span> ${escapeHTML(state.selectedWorkshop.modality)}</p>
+            <p><span>Carga Horária:</span> ${escapeHTML(state.selectedWorkshop.hours)}</p>
+            <p class="search-detail-description-line"><span>Descrição:</span> ${escapeHTML(state.selectedWorkshop.description)}</p>
+          </div>
+        </section>
+
+        <aside class="search-card search-detail-side-card" aria-label="Movimentação do vínculo">
+          <h3>Movimentação do Vínculo</h3>
+          <p>
+            Demais registros vinculados permanecem visíveis apenas por deslocamento sequencial ou por retorno indireto à relação principal.
+          </p>
+
+          <div class="search-summary-meta search-detail-summary-meta">
+            <span><strong>Registro:</strong> ${escapeHTML(state.selectedWorkshop.cod)}</span>
+            <span><strong>Atalho:</strong> ${escapeHTML(isPinned ? "Mantido no menu rapido" : "Sem marcação fixa")}</span>
+            <span><strong>Posição:</strong> ${escapeHTML(`${detailIndex + 1} de ${linkedWorkshops.length || 1}`)}</span>
+          </div>
+
+          <div class="search-summary-block search-detail-action-block">
+            <p class="search-summary-label">Ações disponíveis</p>
+            <div class="search-detail-action-buttons manage-detail-action-buttons">
+              <button
+                class="header-link manage-detail-link-action${isPinned ? " is-linked" : ""}"
+                type="button"
+                data-manage-detail-action="pin"
+              >
+                ${isPinned ? "Desfixar" : "Fixar"}
+              </button>
+              <button class="header-link manage-detail-cancel-link" type="button" data-manage-detail-action="cancel">
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <div class="search-summary-block search-detail-navigation-block">
+            <p class="search-summary-label">Deslocamento entre vínculos</p>
+
+            <div class="search-detail-navigation-buttons">
+              <button class="search-detail-nav-button" type="button" data-manage-detail-nav="1">
+                Continuar
+              </button>
+              <button class="search-detail-nav-button" type="button" data-manage-detail-nav="-1">
+                Voltar
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    `;
+  }
+
   function createv1Renderer(documentRef) {
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
@@ -346,6 +422,7 @@
       participantLastAccess: documentRef.querySelector("#participant-last-access"),
       participantRecordsBody: documentRef.querySelector("#participant-records-body"),
       manageLinkedWorkshops: documentRef.querySelector("#manage-linked-workshops"),
+      manageDetailPanel: documentRef.querySelector("#manage-detail-panel"),
       quickMenuList: documentRef.querySelector("#quick-menu-list"),
       officesTableBody: documentRef.querySelector("#offices-table-body"),
       officesPagination: documentRef.querySelector("#offices-pagination"),
@@ -451,6 +528,10 @@
 
         if (elements.manageLinkedWorkshops) {
           elements.manageLinkedWorkshops.innerHTML = createLinkedWorkshopsMarkup(state);
+        }
+
+        if (elements.manageDetailPanel) {
+          elements.manageDetailPanel.innerHTML = createManageDetailMarkup(state);
         }
 
         if (elements.quickMenuList) {

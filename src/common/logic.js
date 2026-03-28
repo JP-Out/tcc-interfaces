@@ -589,6 +589,27 @@
         return true;
       },
 
+      openManageWorkshopDetail(workshopCode) {
+        const workshop = getWorkshopByCode(workshopCode);
+
+        if (!workshop || !state.linkedWorkshopCodes.includes(workshopCode)) {
+          metrics.trackError("invalid_manage_workshop_access");
+          return false;
+        }
+
+        state.selectedWorkshopCode = workshop.cod;
+        state.isOfficeModalOpen = false;
+        state.isConfirmModalOpen = false;
+        setActiveView("gerenciar-detalhes");
+
+        if (state.isLoggedIn) {
+          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
+        }
+
+        notify();
+        return true;
+      },
+
       openSearchResultWorkshop(workshopCode) {
         const navigationCodes = state.workshopSearchResults
           .map((result) => result.code)
@@ -645,6 +666,40 @@
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         setActiveView("pesquisa-detalhes");
+
+        if (state.isLoggedIn) {
+          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
+        }
+
+        notify();
+        return true;
+      },
+
+      navigateManageWorkshopDetail(direction) {
+        const step = Number.parseInt(String(direction || 0), 10);
+        const currentIndex = state.linkedWorkshopCodes.indexOf(state.selectedWorkshopCode);
+        const targetIndex = currentIndex + step;
+
+        if (
+          !Number.isFinite(step)
+          || currentIndex < 0
+          || targetIndex < 0
+          || targetIndex >= state.linkedWorkshopCodes.length
+        ) {
+          return false;
+        }
+
+        const workshop = getWorkshopByCode(state.linkedWorkshopCodes[targetIndex]);
+
+        if (!workshop) {
+          metrics.trackError("invalid_manage_detail_navigation");
+          return false;
+        }
+
+        state.selectedWorkshopCode = workshop.cod;
+        state.isOfficeModalOpen = false;
+        state.isConfirmModalOpen = false;
+        setActiveView("gerenciar-detalhes");
 
         if (state.isLoggedIn) {
           addParticipantRecord(`Acessou oficina “${workshop.title}”`);
@@ -718,6 +773,7 @@
       confirmWorkshopCancellation() {
         const workshop = getWorkshopByCode(state.selectedWorkshopCode);
         const shouldKeepSearchDetailOpen = uiVersion === "v1" && state.activeView === "pesquisa-detalhes";
+        const shouldKeepManageDetailOpen = uiVersion === "v1" && state.activeView === "gerenciar-detalhes";
 
         if (!workshop) {
           state.isConfirmModalOpen = false;
@@ -736,6 +792,23 @@
         state.isConfirmModalOpen = false;
 
         if (shouldKeepSearchDetailOpen) {
+          notify();
+          return true;
+        }
+
+        if (shouldKeepManageDetailOpen) {
+          if (!state.linkedWorkshopCodes.length) {
+            state.selectedWorkshopCode = "";
+            setActiveView("gerenciar");
+            notify();
+            return true;
+          }
+
+          if (!state.linkedWorkshopCodes.includes(state.selectedWorkshopCode)) {
+            const nextIndex = Math.min(linkedIndex, state.linkedWorkshopCodes.length - 1);
+            state.selectedWorkshopCode = state.linkedWorkshopCodes[nextIndex];
+          }
+
           notify();
           return true;
         }
