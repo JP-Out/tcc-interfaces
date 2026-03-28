@@ -71,12 +71,27 @@
 
   function createWorkshopsMarkup(workshops) {
     return workshops.map((workshop) => `
-      <button class="offices-row offices-row-button" type="button" data-workshop-code="${workshop.cod}">
+      <div class="offices-row" role="row">
         <span class="offices-cell">${workshop.cod}</span>
         <span class="offices-cell">${workshop.title}</span>
         <span class="offices-cell">${workshop.period}</span>
-      </button>
+      </div>
     `).join("");
+  }
+
+  function createOfficesPaginationMarkup(state) {
+    return Array.from({ length: state.officesTotalPages }, function buildPageButton(_, index) {
+      return `
+        <button
+          class="offices-page-number${index === state.officesPage ? " is-active" : ""}"
+          type="button"
+          data-offices-page-index="${index}"
+          aria-current="${index === state.officesPage ? "page" : "false"}"
+        >
+          ${index + 1}
+        </button>
+      `;
+    }).join("");
   }
 
   function escapeHTML(value) {
@@ -333,6 +348,7 @@
       manageLinkedWorkshops: documentRef.querySelector("#manage-linked-workshops"),
       quickMenuList: documentRef.querySelector("#quick-menu-list"),
       officesTableBody: documentRef.querySelector("#offices-table-body"),
+      officesPagination: documentRef.querySelector("#offices-pagination"),
       searchSideCard: documentRef.querySelector(".search-side-card"),
       searchDetailPanel: documentRef.querySelector("#search-detail-panel"),
       searchHistoryList: documentRef.querySelector("#search-history-list"),
@@ -442,7 +458,11 @@
         }
 
         if (elements.officesTableBody) {
-          elements.officesTableBody.innerHTML = createWorkshopsMarkup(state.workshops);
+          elements.officesTableBody.innerHTML = createWorkshopsMarkup(state.visibleOffices || state.workshops);
+        }
+
+        if (elements.officesPagination) {
+          elements.officesPagination.innerHTML = createOfficesPaginationMarkup(state);
         }
 
         if (elements.searchSideCard) {

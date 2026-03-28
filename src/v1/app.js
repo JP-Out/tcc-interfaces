@@ -41,9 +41,24 @@
   const searchHistoryList = documentRef.querySelector("#search-history-list");
   const searchSubmitButton = documentRef.querySelector("#search-submit-button");
   const generalSearchInput = documentRef.querySelector("#general-search-input");
+  const OFFICES_PAGE_SIZE = 8;
   let hasQueuedMetricsExport = false;
   let currentViewName = "home";
   let previousViewName = "";
+  let officesPage = 0;
+
+  function buildv1ViewState(state) {
+    const totalPages = Math.max(1, Math.ceil(state.workshops.length / OFFICES_PAGE_SIZE));
+    officesPage = Math.min(officesPage, totalPages - 1);
+    const pageStart = officesPage * OFFICES_PAGE_SIZE;
+
+    return {
+      ...state,
+      officesPage,
+      officesTotalPages: totalPages,
+      visibleOffices: state.workshops.slice(pageStart, pageStart + OFFICES_PAGE_SIZE),
+    };
+  }
 
   function getViewportSnapshot() {
     return {
@@ -186,6 +201,23 @@
 
       if (pinButton) {
         controller.togglePinnedWorkshop(pinButton.dataset.pinWorkshopCode || "");
+        return;
+      }
+
+      const officesPageButton = event.target.closest("[data-offices-page-index]");
+
+      if (officesPageButton) {
+        const latestState = controller.getState();
+        const totalPages = Math.max(1, Math.ceil(latestState.workshops.length / OFFICES_PAGE_SIZE));
+        const selectedPage = Number.parseInt(officesPageButton.dataset.officesPageIndex || "", 10);
+
+        if (!Number.isFinite(selectedPage)) {
+          return;
+        }
+
+        officesPage = Math.min(totalPages - 1, Math.max(0, selectedPage));
+
+        renderer.render(buildv1ViewState(latestState));
         return;
       }
 
@@ -574,7 +606,7 @@
 
     previousViewName = state.activeView;
     currentViewName = state.activeView;
-    renderer.render(state);
+    renderer.render(buildv1ViewState(state));
   });
   controller.init();
 }(window, document));

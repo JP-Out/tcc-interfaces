@@ -1064,13 +1064,64 @@ body[data-ui="v1"] .offices-table-header {
   font-weight: 700;
 }
 
+body[data-ui="v1"] .offices-intro-text {
+  margin: 0;
+  color: var(--muted-text);
+  line-height: 1.55;
+}
+
 body[data-ui="v1"] .offices-row {
   width: 100%;
   border: 0;
   border-top: 1px solid var(--line-color);
   background: transparent;
-  padding: 16px 20px;
+  min-height: 68px;
+  padding: 12px 20px;
   text-align: left;
+}
+
+body[data-ui="v1"] .offices-table-body {
+  min-height: 544px;
+}
+
+body[data-ui="v1"] .offices-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--line-color);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+body[data-ui="v1"] .offices-pagination {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+body[data-ui="v1"] .offices-page-number {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid rgba(26, 100, 255, 0.18);
+  border-radius: 14px;
+  background: #f8fbff;
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+body[data-ui="v1"] .offices-page-number.is-active {
+  background: #e8efff;
+  border-color: rgba(26, 100, 255, 0.3);
+}
+
+body[data-ui="v1"] .offices-page-number:hover,
+body[data-ui="v1"] .offices-page-number:focus-visible {
+  border-color: rgba(26, 100, 255, 0.32);
+  background: #eef4ff;
+  outline: none;
 }
 
 body[data-ui="v1"] .login-screen {
