@@ -417,7 +417,6 @@ body[data-ui="v1"] .participant-card p {
 
 body[data-ui="v1"] .participant-link,
 body[data-ui="v1"] .manage-apply,
-body[data-ui="v1"] .office-modal-participate,
 body[data-ui="v1"] .confirm-modal-button,
 body[data-ui="v1"] .login-button {
   border: 0;
@@ -427,7 +426,6 @@ body[data-ui="v1"] .login-button {
   font-weight: 700;
 }
 
-body[data-ui="v1"] .office-modal-participate,
 body[data-ui="v1"] .confirm-modal-button {
   background: #eef3fd;
   color: #5e6c84;
@@ -1052,6 +1050,18 @@ body[data-ui="v1"] .manage-detail-layout {
   margin-top: 4px;
 }
 
+body[data-ui="v1"] .manage-detail-layout > .search-detail-side-card {
+  gap: 8px;
+}
+
+body[data-ui="v1"] .manage-detail-layout > .search-detail-side-card h3 {
+  margin-bottom: 4px;
+}
+
+body[data-ui="v1"] .manage-detail-intro-text {
+  margin-bottom: 6px;
+}
+
 body[data-ui="v1"] .manage-detail-record {
   min-height: 440px;
 }
@@ -1343,7 +1353,6 @@ body[data-ui="v1"] .research-gate-button {
   box-shadow: 0 20px 36px rgba(26, 100, 255, 0.22);
 }
 
-body[data-ui="v1"] .office-modal,
 body[data-ui="v1"] .confirm-modal,
 body[data-ui="v1"] .history-modal {
   position: fixed;
@@ -1351,7 +1360,6 @@ body[data-ui="v1"] .history-modal {
   z-index: 160;
 }
 
-body[data-ui="v1"] .office-modal-backdrop,
 body[data-ui="v1"] .confirm-modal-backdrop,
 body[data-ui="v1"] .history-modal-backdrop {
   position: absolute;
@@ -1359,7 +1367,6 @@ body[data-ui="v1"] .history-modal-backdrop {
   background: rgba(17, 33, 61, 0.42);
 }
 
-body[data-ui="v1"] .office-modal-dialog,
 body[data-ui="v1"] .confirm-modal-dialog,
 body[data-ui="v1"] .history-modal-dialog {
   position: relative;
@@ -1380,7 +1387,6 @@ body[data-ui="v1"] .history-modal-dialog {
   width: min(560px, calc(100% - 32px));
 }
 
-body[data-ui="v1"] .office-modal-header,
 body[data-ui="v1"] .confirm-modal-header,
 body[data-ui="v1"] .history-modal-header {
   display: flex;
@@ -1391,14 +1397,12 @@ body[data-ui="v1"] .history-modal-header {
   border-bottom: 1px solid var(--line-color);
 }
 
-body[data-ui="v1"] .office-modal-header h2,
 body[data-ui="v1"] .confirm-modal-header h2,
 body[data-ui="v1"] .history-modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
 }
 
-body[data-ui="v1"] .office-modal-close,
 body[data-ui="v1"] .confirm-modal-close,
 body[data-ui="v1"] .history-modal-close {
   width: 38px;
@@ -1408,7 +1412,6 @@ body[data-ui="v1"] .history-modal-close {
   background: transparent;
 }
 
-body[data-ui="v1"] .office-modal-body,
 body[data-ui="v1"] .confirm-modal-message,
 body[data-ui="v1"] .confirm-modal-actions,
 body[data-ui="v1"] .history-modal-body {
@@ -1418,56 +1421,6 @@ body[data-ui="v1"] .history-modal-body {
 body[data-ui="v1"] .history-modal-body {
   max-height: min(480px, calc(100vh - 180px));
   overflow-y: auto;
-}
-
-body[data-ui="v1"] .office-modal-body {
-  position: relative;
-  padding-bottom: 45px;
-}
-
-body[data-ui="v1"] .office-modal-description {
-  margin-bottom: 20px;
-  color: var(--muted-text);
-  line-height: 1.55;
-}
-
-body[data-ui="v1"] .office-modal-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-body[data-ui="v1"] .office-modal-field {
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--surface-soft);
-}
-
-body[data-ui="v1"] .office-modal-field span {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--muted-text);
-  font-size: 0.9rem;
-}
-
-body[data-ui="v1"] .office-modal-participate,
-body[data-ui="v1"] .office-modal-cancel-link {
-  min-height: 54px;
-}
-
-body[data-ui="v1"] .office-modal-cancel-link {
-  position: absolute;
-  bottom: 17px;
-  min-height: auto;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.94rem;
-  font-style: italic;
-  font-weight: 400;
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
 }
 
 body[data-ui="v1"] .confirm-modal-message {
@@ -1484,7 +1437,6 @@ body[data-ui="v1"] .confirm-modal-button {
   min-height: 48px;
 }
 
-body[data-ui="v1"] .office-modal[hidden],
 body[data-ui="v1"] .confirm-modal[hidden],
 body[data-ui="v1"] .history-modal[hidden] {
   display: none;
@@ -1552,10 +1504,6 @@ body[data-ui="v1"] .history-modal[hidden] {
   body[data-ui="v1"] .offices-table-header span:last-child,
   body[data-ui="v1"] .offices-row span:last-child {
     display: none;
-  }
-
-  body[data-ui="v1"] .office-modal-grid {
-    grid-template-columns: 1fr;
   }
 
   body[data-ui="v1"] .login-hero {

@@ -52,7 +52,7 @@
 
     return pinnedWorkshops.map((workshop) => `
       <li class="quick-menu-item">
-        <button class="quick-menu-link" type="button" data-workshop-code="${workshop.cod}">
+        <button class="quick-menu-link" type="button" data-manage-workshop-code="${workshop.cod}">
           <span class="quick-menu-title">${workshop.title}</span>
           <span class="quick-menu-meta">${workshop.cod} - ${workshop.period}</span>
         </button>
@@ -362,7 +362,7 @@
 
         <aside class="search-card search-detail-side-card" aria-label="Movimentação do vínculo">
           <h3>Movimentação do Vínculo</h3>
-          <p>
+          <p class="manage-detail-intro-text">
             Demais registros vinculados permanecem visíveis apenas por deslocamento sequencial ou por retorno indireto à relação principal.
           </p>
 
@@ -383,7 +383,7 @@
                 ${isPinned ? "Desfixar" : "Fixar"}
               </button>
               <button class="header-link manage-detail-cancel-link" type="button" data-manage-detail-action="cancel">
-                Cancelar
+                Desvincular
               </button>
             </div>
           </div>
@@ -431,16 +431,6 @@
       searchHistoryList: documentRef.querySelector("#search-history-list"),
       identificationTrigger: documentRef.querySelector(".header-link[data-view='identificacao']"),
       toastStack: documentRef.querySelector("#toast-stack"),
-      officeModal: documentRef.querySelector("#office-modal"),
-      officeModalTitle: documentRef.querySelector("#office-modal-title"),
-      officeModalDescription: documentRef.querySelector("#office-modal-description"),
-      officeModalCode: documentRef.querySelector("#office-modal-code"),
-      officeModalHours: documentRef.querySelector("#office-modal-hours"),
-      officeModalModality: documentRef.querySelector("#office-modal-modality"),
-      officeModalStatus: documentRef.querySelector("#office-modal-status"),
-      officeModalPeriod: documentRef.querySelector("#office-modal-period"),
-      officeModalParticipate: documentRef.querySelector("#office-modal-participate"),
-      officeModalCancelLink: documentRef.querySelector("#office-modal-cancel-link"),
       confirmModal: documentRef.querySelector("#confirm-modal"),
     };
     const searchSideCardDefaultMarkup = elements.searchSideCard
@@ -556,27 +546,6 @@
 
         if (elements.searchDetailPanel) {
           elements.searchDetailPanel.innerHTML = createSearchDetailMarkup(state);
-        }
-
-        if (elements.officeModal) {
-          elements.officeModal.hidden = !state.isOfficeModalOpen;
-
-          if (state.selectedWorkshop) {
-            elements.officeModalTitle.textContent = state.selectedWorkshop.title;
-            elements.officeModalDescription.textContent = state.selectedWorkshop.description;
-            elements.officeModalCode.textContent = state.selectedWorkshop.cod;
-            elements.officeModalHours.textContent = state.selectedWorkshop.hours;
-            elements.officeModalModality.textContent = state.selectedWorkshop.modality;
-            elements.officeModalStatus.textContent = state.selectedWorkshop.status === "Aberta"
-              ? "Ativa"
-              : state.selectedWorkshop.status;
-            elements.officeModalPeriod.textContent = state.selectedWorkshop.period;
-            elements.officeModalParticipate.disabled = state.selectedWorkshop.status === "Fechada"
-              || state.selectedWorkshopIsLinked;
-            if (elements.officeModalCancelLink) {
-              elements.officeModalCancelLink.hidden = !state.selectedWorkshopIsLinked;
-            }
-          }
         }
 
         if (elements.confirmModal) {

@@ -24,10 +24,6 @@
   const participantModifyButton = documentRef.querySelector(".participant-link");
   const participantExitButton = documentRef.querySelector("#participant-exit-button");
   const thankYouGate = documentRef.querySelector("#thank-you-gate");
-  const officeModalClose = documentRef.querySelector("#office-modal-close");
-  const officeModal = documentRef.querySelector("#office-modal");
-  const officeModalParticipate = documentRef.querySelector("#office-modal-participate");
-  const officeModalCancelLink = documentRef.querySelector("#office-modal-cancel-link");
   const confirmModal = documentRef.querySelector("#confirm-modal");
   const confirmModalSubmit = documentRef.querySelector("#confirm-modal-submit");
   const confirmModalClose = documentRef.querySelector("#confirm-modal-close");
@@ -339,38 +335,7 @@
         return;
       }
 
-      const workshopButton = event.target.closest("[data-workshop-code]");
-
-      if (workshopButton) {
-        controller.openWorkshop(workshopButton.dataset.workshopCode || "");
-      }
     });
-
-    if (officeModalClose) {
-      officeModalClose.addEventListener("click", () => {
-        controller.closeWorkshopModal();
-      });
-    }
-
-    if (officeModal) {
-      officeModal.addEventListener("click", (event) => {
-        if (event.target instanceof HTMLElement && event.target.dataset.modalClose === "true") {
-          controller.closeWorkshopModal();
-        }
-      });
-    }
-
-    if (officeModalParticipate) {
-      officeModalParticipate.addEventListener("click", () => {
-        controller.participateInSelectedWorkshop();
-      });
-    }
-
-    if (officeModalCancelLink) {
-      officeModalCancelLink.addEventListener("click", () => {
-        controller.openConfirmModal();
-      });
-    }
 
     if (confirmModal) {
       confirmModal.addEventListener("click", (event) => {
