@@ -33,6 +33,10 @@
   const searchManageMenu = documentRef.querySelector("#search-manage-menu");
   const searchManageBlock = documentRef.querySelector(".search-menu-block");
   const searchManageCurrent = documentRef.querySelector("#search-manage-current");
+  const searchHistoryButton = documentRef.querySelector("#search-history-button");
+  const searchHistoryModal = documentRef.querySelector("#search-history-modal");
+  const searchHistoryClose = documentRef.querySelector("#search-history-close");
+  const searchHistoryList = documentRef.querySelector("#search-history-list");
   const searchSubmitButton = documentRef.querySelector("#search-submit-button");
   const generalSearchInput = documentRef.querySelector("#general-search-input");
   let hasQueuedMetricsExport = false;
@@ -214,10 +218,79 @@
       return;
     }
 
+    function makeRadioGroupToggleable(groupName) {
+      const radios = Array.from(documentRef.querySelectorAll(`input[name='${groupName}']`));
+
+      radios.forEach((radio) => {
+        if (!(radio instanceof HTMLInputElement)) {
+          return;
+        }
+
+        const syncWasChecked = () => {
+          radio.dataset.wasChecked = radio.checked ? "true" : "false";
+        };
+
+        radio.addEventListener("pointerdown", syncWasChecked);
+        radio.addEventListener("keydown", (event) => {
+          if (event.key === " " || event.key === "Enter") {
+            syncWasChecked();
+          }
+        });
+        radio.addEventListener("click", () => {
+          if (radio.dataset.wasChecked !== "true") {
+            radio.dataset.wasChecked = "false";
+            return;
+          }
+
+          radio.checked = false;
+          radio.dataset.wasChecked = "false";
+          radio.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+      });
+    }
+
     function setSearchMenuOpen(isOpen) {
       searchManageBlock.classList.toggle("is-open", isOpen);
       searchManageButton.setAttribute("aria-expanded", String(isOpen));
       searchManageMenu.hidden = !isOpen;
+    }
+
+    function setSearchHistoryOpen(isOpen) {
+      if (!searchHistoryButton || !searchHistoryModal) {
+        return;
+      }
+
+      searchHistoryButton.setAttribute("aria-expanded", String(isOpen));
+      searchHistoryModal.hidden = !isOpen;
+    }
+
+    function applySearchHistoryEntry(entry) {
+      if (!(generalSearchInput instanceof HTMLInputElement) || !entry) {
+        return;
+      }
+
+      generalSearchInput.value = entry.query || "";
+
+      Array.from(documentRef.querySelectorAll("input[name='search-mode']")).forEach((input) => {
+        if (!(input instanceof HTMLInputElement)) {
+          return;
+        }
+
+        input.checked = input.value === entry.mode;
+      });
+
+      Array.from(documentRef.querySelectorAll("input[name='search-filter']")).forEach((input) => {
+        if (!(input instanceof HTMLInputElement)) {
+          return;
+        }
+
+        input.checked = Array.isArray(entry.filters) && entry.filters.includes(input.value);
+      });
+
+      syncSearchMenuLabel();
+      setSearchHistoryOpen(false);
+      generalSearchInput.focus();
+      generalSearchInput.setSelectionRange(generalSearchInput.value.length, generalSearchInput.value.length);
     }
 
     function syncSearchMenuLabel() {
@@ -230,16 +303,29 @@
       if (selectedOption instanceof HTMLInputElement) {
         searchManageCurrent.textContent = selectedOption.dataset.searchLabel
           || selectedOption.nextElementSibling?.textContent
-          || "Codigo de Indetificação da Ofc.";
+          || "Selecione um escopo";
+        return;
       }
+
+      searchManageCurrent.textContent = "Selecione um escopo";
     }
 
+    makeRadioGroupToggleable("search-mode");
     syncSearchMenuLabel();
 
     searchManageButton.addEventListener("click", () => {
       const isExpanded = searchManageButton.getAttribute("aria-expanded") === "true";
       setSearchMenuOpen(!isExpanded);
+      setSearchHistoryOpen(false);
     });
+
+    if (searchHistoryButton) {
+      searchHistoryButton.addEventListener("click", () => {
+        const isExpanded = searchHistoryButton.getAttribute("aria-expanded") === "true";
+        setSearchHistoryOpen(!isExpanded);
+        setSearchMenuOpen(false);
+      });
+    }
 
     searchManageMenu.addEventListener("change", (event) => {
       if (!(event.target instanceof HTMLInputElement) || event.target.name !== "search-mode") {
@@ -253,16 +339,30 @@
     if (searchSubmitButton) {
       searchSubmitButton.addEventListener("click", () => {
         const selectedMode = searchManageMenu.querySelector("input[name='search-mode']:checked");
-        const selectedFilter = documentRef.querySelector("input[name='search-filter']:checked");
+        const selectedFilters = Array.from(
+          documentRef.querySelectorAll("input[name='search-filter']:checked"),
+        );
         const searchText = generalSearchInput instanceof HTMLInputElement
           ? generalSearchInput.value.trim()
           : "";
-        const modeValue = selectedMode instanceof HTMLInputElement && selectedMode.value
+        const modeValue = selectedMode instanceof HTMLInputElement && selectedMode.checked && selectedMode.value
           ? selectedMode.value
-          : "code";
-        const filterValue = selectedFilter instanceof HTMLInputElement && selectedFilter.value
-          ? selectedFilter.value
-          : "open";
+          : "";
+        const filterValue = selectedFilters
+          .filter((input) => input instanceof HTMLInputElement && input.checked && input.value)
+          .map((input) => input.value);
+
+        if (!modeValue) {
+          renderer.showToast({
+            title: "Pesquisa não executada:",
+            message: "Selecione uma opção em Gerenciar Busca antes de realizar a pesquisa.",
+          });
+          setSearchMenuOpen(false);
+          setSearchHistoryOpen(false);
+          searchManageButton.focus();
+          return;
+        }
+
         const searchResult = controller.performWorkshopSearch({
           query: searchText,
           mode: modeValue,
@@ -277,6 +377,7 @@
         }
 
         setSearchMenuOpen(false);
+        setSearchHistoryOpen(false);
       });
     }
 
@@ -293,16 +394,47 @@
         return;
       }
 
+      if (searchHistoryList) {
+        const historyItem = event.target.closest("[data-search-history-index]");
+
+        if (historyItem instanceof HTMLElement) {
+          const historyIndex = Number.parseInt(historyItem.dataset.searchHistoryIndex || "", 10);
+          const historyEntry = controller.getState().workshopSearchHistory[historyIndex];
+
+          if (historyEntry) {
+            applySearchHistoryEntry(historyEntry);
+          }
+
+          return;
+        }
+      }
+
       if (!event.target.closest(".search-menu-block")) {
         setSearchMenuOpen(false);
       }
+
     });
 
     documentRef.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         setSearchMenuOpen(false);
+        setSearchHistoryOpen(false);
       }
     });
+
+    if (searchHistoryModal) {
+      searchHistoryModal.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLElement && event.target.dataset.historyClose === "true") {
+          setSearchHistoryOpen(false);
+        }
+      });
+    }
+
+    if (searchHistoryClose) {
+      searchHistoryClose.addEventListener("click", () => {
+        setSearchHistoryOpen(false);
+      });
+    }
   }
 
   function bindMetricsExport() {

@@ -10,6 +10,7 @@
     VIEW_LABELS,
   } = global.SGOAData;
   const { createInitialState } = global.SGOAState;
+  const MAX_SEARCH_HISTORY = 8;
 
   function formatDate(date) {
     return date.toLocaleDateString("pt-BR");
@@ -54,6 +55,10 @@
   }
 
   function getSearchModeLabel(mode) {
+    if (!mode) {
+      return "Nenhum escopo selecionado";
+    }
+
     if (mode === "broad") {
       return "Termos de Busca Amplos";
     }
@@ -65,8 +70,35 @@
     return "Codigo de Indetificação da Ofc.";
   }
 
+  function normalizeSearchFilters(filter) {
+    if (Array.isArray(filter)) {
+      return Array.from(new Set(filter.filter(Boolean)))
+        .filter((value) => value === "open" || value === "physical")
+        .sort((left, right) => {
+          const order = { open: 0, physical: 1 };
+          return order[left] - order[right];
+        });
+    }
+
+    if (filter === "open" || filter === "physical") {
+      return [filter];
+    }
+
+    return [];
+  }
+
   function getSearchFilterLabel(filter) {
-    if (filter === "physical") {
+    const filters = normalizeSearchFilters(filter);
+
+    if (!filters.length) {
+      return "Sem filtro";
+    }
+
+    if (filters.length === 2) {
+      return "Situação Ofc. Aberta + Formato OFc. Fisico";
+    }
+
+    if (filters[0] === "physical") {
       return "Formato OFc. Fisico";
     }
 
@@ -74,11 +106,19 @@
   }
 
   function applyWorkshopSearchFilter(workshops, filter) {
-    if (filter === "physical") {
-      return workshops.filter((workshop) => workshop.modality === "Presencial");
-    }
+    const filters = normalizeSearchFilters(filter);
 
-    return workshops.filter((workshop) => workshop.status === "Aberta");
+    return workshops.filter((workshop) => {
+      if (filters.includes("open") && workshop.status !== "Aberta") {
+        return false;
+      }
+
+      if (filters.includes("physical") && workshop.modality !== "Presencial") {
+        return false;
+      }
+
+      return true;
+    });
   }
 
   function getSharedPrefixLength(left, right) {
@@ -94,7 +134,6 @@
 
   function searchWorkshopsByCode(workshops, query) {
     const normalizedQuery = normalizeCode(query);
-    const queryDigits = normalizedQuery.replace(/\D+/g, "");
 
     if (!normalizedQuery) {
       return [];
@@ -103,56 +142,33 @@
     return workshops
       .map((workshop) => {
         const normalizedWorkshopCode = normalizeCode(workshop.cod);
-        const workshopDigits = normalizedWorkshopCode.replace(/\D+/g, "");
-        const sharedPrefixLength = getSharedPrefixLength(normalizedQuery, normalizedWorkshopCode);
-        let score = 0;
-        let reason = "Código apenas parcialmente relacionado.";
+        const containsQuery = normalizedWorkshopCode.includes(normalizedQuery);
 
-        if (normalizedWorkshopCode === normalizedQuery) {
-          score += 320;
-          reason = "Código idêntico ao trecho informado.";
-        }
-
-        if (normalizedWorkshopCode.includes(normalizedQuery)) {
-          score += 180;
-          reason = normalizedWorkshopCode === normalizedQuery
-            ? reason
-            : "Código contém a sequência principal informada.";
-        }
-
-        if (queryDigits && workshopDigits.includes(queryDigits)) {
-          score += 140;
-          reason = score >= 320
-            ? reason
-            : "Numeração compatível com o fragmento digitado.";
-        }
-
-        if (sharedPrefixLength >= 3) {
-          score += sharedPrefixLength * 22;
-        }
-
-        if (!score && normalizedQuery.length >= 2 && normalizedWorkshopCode.startsWith(normalizedQuery.slice(0, 2))) {
-          score += 46;
-        }
-
-        if (!score) {
+        if (!containsQuery) {
           return null;
         }
+
+        const sharedPrefixLength = getSharedPrefixLength(normalizedQuery, normalizedWorkshopCode);
+        const containsIndex = normalizedWorkshopCode.indexOf(normalizedQuery);
+        const score = 260 + (sharedPrefixLength * 18) - (containsIndex * 6);
+        const reason = normalizedWorkshopCode === normalizedQuery
+          ? "Código idêntico ao trecho informado."
+          : "Código contém o trecho digitado.";
 
         return {
           code: workshop.cod,
           reason,
           score,
+          matchedTerms: [normalizedQuery],
         };
       })
       .filter(Boolean)
-      .sort((left, right) => right.score - left.score)
-      .slice(0, 2);
+      .sort((left, right) => left.score - right.score);
   }
 
   function searchWorkshopsByBroadTerms(workshops, query) {
     const normalizedQuery = normalizeText(query).trim();
-    const queryTokens = tokenizeText(query);
+    const queryTokens = tokenizeText(query).filter((token) => token.length >= 2);
 
     if (!normalizedQuery || !queryTokens.length) {
       return [];
@@ -164,36 +180,43 @@
         const normalizedDescription = normalizeText(workshop.description);
         const matchedTokens = [];
         let score = 0;
+        let hasExactPhraseMatch = false;
 
         if (normalizedTitle.includes(normalizedQuery) || normalizedDescription.includes(normalizedQuery)) {
-          score += 120;
+          score += 140;
+          hasExactPhraseMatch = true;
         }
 
         queryTokens.forEach((token) => {
           if (normalizedTitle.includes(token)) {
             matchedTokens.push(token);
-            score += 72;
-          } else if (normalizedDescription.includes(token)) {
+            score += 88;
+            return;
+          }
+
+          if (normalizedDescription.includes(token)) {
             matchedTokens.push(token);
-            score += 38;
+            score += 52;
           }
         });
 
-        if (!score) {
+        const uniqueMatchedTokens = Array.from(new Set(matchedTokens));
+
+        if (!score || (!hasExactPhraseMatch && !uniqueMatchedTokens.length)) {
           return null;
         }
 
         return {
           code: workshop.cod,
-          reason: matchedTokens.length
-            ? `Encontrou incidência em: ${Array.from(new Set(matchedTokens)).slice(0, 3).join(", ")}.`
+          reason: uniqueMatchedTokens.length
+            ? `Encontrou no título ou na descrição: ${uniqueMatchedTokens.slice(0, 4).join(", ")}.`
             : "Encontrou relação textual indireta com a expressão completa.",
           score,
+          matchedTerms: uniqueMatchedTokens,
         };
       })
       .filter(Boolean)
-      .sort((left, right) => right.score - left.score)
-      .slice(0, 3);
+      .sort((left, right) => left.score - right.score);
   }
 
   function searchWorkshopsByHours(workshops, query) {
@@ -208,25 +231,19 @@
     return workshops
       .map((workshop) => {
         const workshopHours = extractHoursValue(workshop.hours);
-        const diff = Math.abs(workshopHours - desiredHours);
-        const score = diff === 0
-          ? 240
-          : Math.max(0, 120 - (diff * 14));
-
-        if (!score) {
+        if (workshopHours !== desiredHours) {
           return null;
         }
 
         return {
           code: workshop.cod,
-          reason: diff === 0
-            ? `Carga horária exata de ${workshopHours} horas.`
-            : `Carga horária próxima ao valor informado (${workshopHours} horas).`,
-          score,
+          reason: `Carga horária exata de ${workshopHours} horas.`,
+          score: 240,
+          matchedTerms: [String(workshopHours)],
         };
       })
       .filter(Boolean)
-      .sort((left, right) => right.score - left.score)
+      .sort((left, right) => left.score - right.score)
       .slice(0, 3);
   }
 
@@ -247,6 +264,14 @@
         return;
       }
 
+      if (Array.isArray(result.matchedTerms) && result.matchedTerms.length) {
+        result.matchedTerms.forEach((term) => {
+          if (String(term).length >= 2) {
+            uniqueTerms.add(String(term));
+          }
+        });
+      }
+
       if (mode === "code") {
         uniqueTerms.add(workshop.cod);
         uniqueTerms.add(workshop.cod.split("-")[0]);
@@ -258,13 +283,6 @@
         uniqueTerms.add(workshop.hours);
         return;
       }
-
-      tokenizeText(`${workshop.title} ${workshop.description}`)
-        .filter((token) => token.length >= 4)
-        .slice(0, 6)
-        .forEach((token) => {
-          uniqueTerms.add(token);
-        });
     });
 
     return Array.from(uniqueTerms).slice(0, 6);
@@ -311,6 +329,11 @@
         participantRecords: state.participantRecords.map((record) => ({ ...record })),
         linkedWorkshopCodes: state.linkedWorkshopCodes.slice(),
         pinnedWorkshopCodes: state.pinnedWorkshopCodes.slice(),
+        workshopSearchFilters: state.workshopSearchFilters.slice(),
+        workshopSearchHistory: state.workshopSearchHistory.map((entry) => ({
+          ...entry,
+          filters: entry.filters.slice(),
+        })),
         workshopSearchMatchedTerms: state.workshopSearchMatchedTerms.slice(),
         workshopSearchResults: state.workshopSearchResults.map((result) => ({ ...result })),
         selectedWorkshop,
@@ -341,6 +364,35 @@
 
       if (state.participantRecords.length > MAX_VISIBLE_RECORDS) {
         state.participantRecords.pop();
+      }
+    }
+
+    function addSearchHistoryEntry({ query, mode, filters }) {
+      const normalizedQuery = String(query || "").trim();
+
+      if (!normalizedQuery || !mode) {
+        return;
+      }
+
+      const normalizedFilters = normalizeSearchFilters(filters);
+      const duplicatedIndex = state.workshopSearchHistory.findIndex((entry) => (
+        entry.query === normalizedQuery
+        && entry.mode === mode
+        && JSON.stringify(entry.filters) === JSON.stringify(normalizedFilters)
+      ));
+
+      if (duplicatedIndex >= 0) {
+        state.workshopSearchHistory.splice(duplicatedIndex, 1);
+      }
+
+      state.workshopSearchHistory.unshift({
+        query: normalizedQuery,
+        mode,
+        filters: normalizedFilters,
+      });
+
+      if (state.workshopSearchHistory.length > MAX_SEARCH_HISTORY) {
+        state.workshopSearchHistory.length = MAX_SEARCH_HISTORY;
       }
     }
 
@@ -458,8 +510,9 @@
         state.pinnedWorkshopCodes = [];
         state.hasWorkshopSearch = false;
         state.workshopSearchQuery = "";
-        state.workshopSearchMode = "code";
-        state.workshopSearchFilter = "open";
+        state.workshopSearchMode = "";
+        state.workshopSearchFilters = [];
+        state.workshopSearchHistory = [];
         state.workshopSearchMatchedTerms = [];
         state.workshopSearchResults = [];
         state.selectedWorkshopCode = "";
@@ -483,8 +536,9 @@
         state.pinnedWorkshopCodes = [];
         state.hasWorkshopSearch = false;
         state.workshopSearchQuery = "";
-        state.workshopSearchMode = "code";
-        state.workshopSearchFilter = "open";
+        state.workshopSearchMode = "";
+        state.workshopSearchFilters = [];
+        state.workshopSearchHistory = [];
         state.workshopSearchMatchedTerms = [];
         state.workshopSearchResults = [];
         state.selectedWorkshopCode = "";
@@ -623,25 +677,36 @@
 
       performWorkshopSearch({ query, mode, filter }) {
         const trimmedQuery = String(query || "").trim();
+        const normalizedFilters = normalizeSearchFilters(filter);
 
         if (!trimmedQuery) {
           state.hasWorkshopSearch = false;
           state.workshopSearchQuery = "";
-          state.workshopSearchMode = mode || "code";
-          state.workshopSearchFilter = filter || "open";
+          state.workshopSearchMode = mode || "";
+          state.workshopSearchFilters = normalizedFilters.slice();
           state.workshopSearchMatchedTerms = [];
           state.workshopSearchResults = [];
           notify();
           return {
             matchedTerms: [],
-            modeLabel: getSearchModeLabel(mode || "code"),
-            filterLabel: getSearchFilterLabel(filter || "open"),
+            modeLabel: getSearchModeLabel(mode || ""),
+            filterLabel: getSearchFilterLabel(normalizedFilters),
             results: [],
           };
         }
 
-        const searchMode = mode || "code";
-        const searchFilter = filter || "open";
+        const searchMode = mode || "";
+        const searchFilter = normalizedFilters;
+
+        if (!searchMode) {
+          return {
+            matchedTerms: [],
+            modeLabel: getSearchModeLabel(""),
+            filterLabel: getSearchFilterLabel(searchFilter),
+            results: [],
+          };
+        }
+
         const searchResult = runWorkshopSearch({
           query: trimmedQuery,
           mode: searchMode,
@@ -651,7 +716,12 @@
         state.hasWorkshopSearch = true;
         state.workshopSearchQuery = trimmedQuery;
         state.workshopSearchMode = searchMode;
-        state.workshopSearchFilter = searchFilter;
+        state.workshopSearchFilters = searchFilter.slice();
+        addSearchHistoryEntry({
+          query: trimmedQuery,
+          mode: searchMode,
+          filters: searchFilter,
+        });
         state.workshopSearchMatchedTerms = searchResult.matchedTerms.slice();
         state.workshopSearchResults = searchResult.results.map((result) => ({ ...result }));
 

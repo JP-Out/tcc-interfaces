@@ -189,66 +189,80 @@
                 </p>
               </div>
 
-              <label class="search-field" for="general-search-input">
-                <span>Busca Textual</span>
-                <input
-                  class="search-text-input"
-                  id="general-search-input"
-                  type="text"
-                  placeholder="Digite expressões, combinações ou partes aproximadas do conteúdo"
-                >
-              </label>
-
-              <div class="search-controls-grid">
-                <div class="search-menu-block">
+              <div class="search-query-row">
+                <div class="search-history-block">
                   <button
-                    class="search-menu-button"
-                    id="search-manage-button"
+                    class="search-history-button"
+                    id="search-history-button"
                     type="button"
                     aria-haspopup="true"
                     aria-expanded="false"
-                    aria-controls="search-manage-menu"
+                    aria-controls="search-history-modal"
                   >
-                    <span class="search-menu-button-text">
-                      <strong>Gerenciar Busca</strong>
-                      <small id="search-manage-current">Codigo de Indetificação da Ofc.</small>
-                    </span>
-                    <span class="manage-caret" aria-hidden="true"></span>
+                    Registros
+                  </button>
+                </div>
+
+                <label class="search-field" for="general-search-input">
+                  <span>Busca Textual</span>
+                  <input
+                    class="search-text-input"
+                    id="general-search-input"
+                    type="text"
+                    placeholder="Digite expressões, combinações ou partes aproximadas do conteúdo"
+                  >
+                </label>
+              </div>
+
+              <div class="search-controls-grid">
+                <div class="search-menu-block">
+                  <div class="search-menu-dropdown">
+                    <button
+                      class="search-menu-button"
+                      id="search-manage-button"
+                      type="button"
+                      aria-haspopup="true"
+                      aria-expanded="false"
+                      aria-controls="search-manage-menu"
+                    >
+                      <span class="search-menu-button-text">
+                        <strong>Gerenciar Busca</strong>
+                        <small id="search-manage-current">Selecione um escopo</small>
+                      </span>
+                      <span class="manage-caret" aria-hidden="true"></span>
                   </button>
 
                   <div class="search-menu-panel" id="search-manage-menu" hidden>
-                    <p class="search-menu-title">Escopo principal</p>
-
                     <label class="search-option">
-                      <input
-                        type="radio"
-                        name="search-mode"
-                        value="code"
-                        data-search-label="Codigo de Indetificação da Ofc."
-                        checked
-                      >
-                      <span>Codigo de Indetificação da Ofc.</span>
-                    </label>
+                        <input
+                          type="radio"
+                          name="search-mode"
+                          value="code"
+                          data-search-label="Codigo de Indetificação da Ofc."
+                        >
+                        <span>Codigo de Indetificação da Ofc.</span>
+                      </label>
 
-                    <label class="search-option">
-                      <input
-                        type="radio"
-                        name="search-mode"
-                        value="broad"
-                        data-search-label="Termos de Busca Amplos"
-                      >
-                      <span>Termos de Busca Amplos</span>
-                    </label>
+                      <label class="search-option">
+                        <input
+                          type="radio"
+                          name="search-mode"
+                          value="broad"
+                          data-search-label="Termos de Busca Amplos"
+                        >
+                        <span>Termos de Busca Amplos</span>
+                      </label>
 
-                    <label class="search-option">
-                      <input
-                        type="radio"
-                        name="search-mode"
-                        value="hours"
-                        data-search-label="Num. da Carga de Horas"
-                      >
-                      <span>Num. da Carga de Horas</span>
-                    </label>
+                      <label class="search-option">
+                        <input
+                          type="radio"
+                          name="search-mode"
+                          value="hours"
+                          data-search-label="Num. da Carga de Horas"
+                        >
+                        <span>Num. da Carga de Horas</span>
+                      </label>
+                    </div>
                   </div>
 
                   <button class="search-submit-button" id="search-submit-button" type="button">
@@ -260,12 +274,12 @@
                   <legend>Filtro</legend>
 
                   <label class="search-option">
-                    <input type="radio" name="search-filter" value="open" checked>
+                    <input type="checkbox" name="search-filter" value="open">
                     <span>Situação Ofc. Aberta</span>
                   </label>
 
                   <label class="search-option">
-                    <input type="radio" name="search-filter" value="physical">
+                    <input type="checkbox" name="search-filter" value="physical">
                     <span>Formato OFc. Fisico</span>
                   </label>
                 </fieldset>
@@ -472,6 +486,22 @@
         <button class="confirm-modal-button" id="confirm-modal-submit" type="button">
           Confirmo
         </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="history-modal" id="search-history-modal" hidden>
+    <div class="history-modal-backdrop" data-history-close="true"></div>
+    <section class="history-modal-dialog" aria-labelledby="search-history-title" aria-modal="true" role="dialog">
+      <div class="history-modal-header">
+        <h2 id="search-history-title">Registros de Busca</h2>
+        <button class="history-modal-close" id="search-history-close" type="button" aria-label="Fechar">
+          x
+        </button>
+      </div>
+
+      <div class="history-modal-body">
+        <div class="search-history-list" id="search-history-list"></div>
       </div>
     </section>
   </div>

@@ -97,10 +97,16 @@
       ? "Termos de Busca Amplos"
       : state.workshopSearchMode === "hours"
         ? "Num. da Carga de Horas"
-        : "Codigo de Indetificação da Ofc.";
-    const filterLabel = state.workshopSearchFilter === "physical"
-      ? "Formato OFc. Fisico"
-      : "Situação Ofc. Aberta";
+        : state.workshopSearchMode === "code"
+          ? "Codigo de Indetificação da Ofc."
+          : "Nenhum escopo selecionado";
+    const filterLabel = state.workshopSearchFilters.length === 2
+      ? "Situação Ofc. Aberta + Formato OFc. Fisico"
+      : state.workshopSearchFilters.includes("physical")
+        ? "Formato OFc. Fisico"
+        : state.workshopSearchFilters.includes("open")
+          ? "Situação Ofc. Aberta"
+          : "Sem filtro";
     const matchedTermsMarkup = state.workshopSearchMatchedTerms.length
       ? state.workshopSearchMatchedTerms.map((term) => `
           <li class="search-term-chip">${escapeHTML(term)}</li>
@@ -108,20 +114,15 @@
       : '<li class="search-term-chip search-term-chip-muted">Sem termo derivado</li>';
     const searchResultsMarkup = state.workshopSearchResults.length
       ? state.workshopSearchResults
-        .map((result, index) => {
+        .map((result) => {
           const workshop = state.workshops.find((item) => item.cod === result.code);
 
           if (!workshop) {
             return "";
           }
 
-          const resultLabel = state.workshopSearchMode === "code"
-            ? (index === 0 ? "Oficina mais relevante" : "Código parecido identificado")
-            : (index === 0 ? "Correspondência principal" : "Correspondência adicional");
-
           return `
             <button class="search-result-card" type="button" data-workshop-code="${escapeHTML(workshop.cod)}">
-              <span class="search-result-label">${resultLabel}</span>
               <strong>${escapeHTML(workshop.title)}</strong>
               <span class="search-result-meta">${escapeHTML(workshop.cod)} | ${escapeHTML(workshop.hours)} | ${escapeHTML(workshop.modality)}</span>
               <span class="search-result-reason">${escapeHTML(result.reason)}</span>
@@ -160,6 +161,43 @@
     `;
   }
 
+  function createSearchHistoryMarkup(state) {
+    if (!state.workshopSearchHistory.length) {
+      return `
+        <div class="search-history-empty">
+          Nenhuma busca registrada ainda.
+        </div>
+      `;
+    }
+
+    return state.workshopSearchHistory.map((entry, index) => {
+      const modeLabel = entry.mode === "broad"
+        ? "Termos de Busca Amplos"
+        : entry.mode === "hours"
+          ? "Num. da Carga de Horas"
+          : "Codigo de Indetificação da Ofc.";
+      const filterLabel = entry.filters.length === 2
+        ? "Aberta + Presencial"
+        : entry.filters.includes("physical")
+          ? "Presencial"
+          : entry.filters.includes("open")
+            ? "Aberta"
+            : "Sem filtro";
+
+      return `
+        <button
+          class="search-history-item"
+          type="button"
+          data-search-history-index="${index}"
+        >
+          <strong>${escapeHTML(entry.query)}</strong>
+          <span>${escapeHTML(modeLabel)}</span>
+          <small>${escapeHTML(filterLabel)}</small>
+        </button>
+      `;
+    }).join("");
+  }
+
   function createv1Renderer(documentRef) {
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
@@ -180,6 +218,7 @@
       quickMenuList: documentRef.querySelector("#quick-menu-list"),
       officesTableBody: documentRef.querySelector("#offices-table-body"),
       searchSideCard: documentRef.querySelector(".search-side-card"),
+      searchHistoryList: documentRef.querySelector("#search-history-list"),
       toastStack: documentRef.querySelector("#toast-stack"),
       officeModal: documentRef.querySelector("#office-modal"),
       officeModalTitle: documentRef.querySelector("#office-modal-title"),
@@ -286,6 +325,10 @@
 
         if (elements.searchSideCard) {
           elements.searchSideCard.innerHTML = createSearchSummaryMarkup(state, searchSideCardDefaultMarkup);
+        }
+
+        if (elements.searchHistoryList) {
+          elements.searchHistoryList.innerHTML = createSearchHistoryMarkup(state);
         }
 
         if (elements.officeModal) {
