@@ -41,6 +41,7 @@
   const generalSearchInput = documentRef.querySelector("#general-search-input");
   let hasQueuedMetricsExport = false;
   let currentViewName = "home";
+  let previousViewName = "";
 
   function getViewportSnapshot() {
     return {
@@ -156,6 +157,76 @@
 
       if (pinButton) {
         controller.togglePinnedWorkshop(pinButton.dataset.pinWorkshopCode || "");
+        return;
+      }
+
+      const searchResultButton = event.target.closest("[data-search-result-code]");
+
+      if (searchResultButton) {
+        controller.openSearchResultWorkshop(searchResultButton.dataset.searchResultCode || "");
+        return;
+      }
+
+      const searchDetailActionButton = event.target.closest("[data-search-detail-action]");
+
+      if (searchDetailActionButton) {
+        if (searchDetailActionButton.dataset.searchDetailAction === "participate") {
+          const state = controller.getState();
+
+          if (
+            state.activeView === "pesquisa-detalhes"
+            && state.selectedWorkshop
+            && state.selectedWorkshopIsLinked
+          ) {
+            renderer.showToast({
+              title: "Operação Redundante:",
+              message: "Registro já vinculado ao perfil.",
+            });
+            return;
+          }
+
+          if (
+            state.activeView === "pesquisa-detalhes"
+            && state.selectedWorkshop
+            && state.selectedWorkshop.status === "Fechada"
+            && !state.selectedWorkshopIsLinked
+          ) {
+            metrics.trackError("closed_workshop_confusing_v1_detail");
+            renderer.showToast({
+              title: "Problema:",
+              message: "Situação atual de oficina incompatível com a ação.",
+            });
+            return;
+          }
+
+          controller.participateInSelectedWorkshop();
+          return;
+        }
+
+        if (searchDetailActionButton.dataset.searchDetailAction === "cancel") {
+          const state = controller.getState();
+
+          if (
+            state.activeView === "pesquisa-detalhes"
+            && state.selectedWorkshop
+            && !state.selectedWorkshopIsLinked
+          ) {
+            renderer.showToast({
+              title: "Não foi possível:",
+              message: "Nenhum vínculo encontrado para realizar esta ação.",
+            });
+            return;
+          }
+
+          controller.openConfirmModal();
+          return;
+        }
+      }
+
+      const searchDetailNavigationButton = event.target.closest("[data-search-detail-nav]");
+
+      if (searchDetailNavigationButton) {
+        controller.navigateSearchResultWorkshop(searchDetailNavigationButton.dataset.searchDetailNav || "");
         return;
       }
 
@@ -464,6 +535,15 @@
   bindSearchControls();
   bindMetricsExport();
   controller.subscribe((state) => {
+    if (
+      previousViewName
+      && previousViewName !== state.activeView
+      && generalSearchInput instanceof HTMLInputElement
+    ) {
+      generalSearchInput.value = "";
+    }
+
+    previousViewName = state.activeView;
     currentViewName = state.activeView;
     renderer.render(state);
   });

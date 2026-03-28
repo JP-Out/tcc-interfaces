@@ -318,8 +318,16 @@
     const state = createInitialState();
     const listeners = new Set();
 
+    function resetWorkshopSearchDetailState() {
+      state.workshopSearchNavigationCodes = [];
+      state.workshopSearchDetailIndex = -1;
+      state.hasConsumedWorkshopSearch = false;
+    }
+
     function getSnapshot() {
       const selectedWorkshop = getWorkshopByCode(state.selectedWorkshopCode);
+      const searchDetailTotal = state.workshopSearchNavigationCodes.length;
+      const searchDetailIndex = state.workshopSearchDetailIndex;
 
       return {
         ...state,
@@ -336,10 +344,15 @@
         })),
         workshopSearchMatchedTerms: state.workshopSearchMatchedTerms.slice(),
         workshopSearchResults: state.workshopSearchResults.map((result) => ({ ...result })),
+        workshopSearchNavigationCodes: state.workshopSearchNavigationCodes.slice(),
         selectedWorkshop,
         selectedWorkshopIsLinked: selectedWorkshop
           ? state.linkedWorkshopCodes.includes(selectedWorkshop.cod)
           : false,
+        searchDetailPosition: searchDetailIndex >= 0 ? searchDetailIndex + 1 : 0,
+        searchDetailTotal,
+        searchDetailHasPrevious: searchDetailIndex > 0,
+        searchDetailHasNext: searchDetailIndex >= 0 && searchDetailIndex < searchDetailTotal - 1,
       };
     }
 
@@ -515,6 +528,7 @@
         state.workshopSearchHistory = [];
         state.workshopSearchMatchedTerms = [];
         state.workshopSearchResults = [];
+        resetWorkshopSearchDetailState();
         state.selectedWorkshopCode = "";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
@@ -541,6 +555,7 @@
         state.workshopSearchHistory = [];
         state.workshopSearchMatchedTerms = [];
         state.workshopSearchResults = [];
+        resetWorkshopSearchDetailState();
         state.selectedWorkshopCode = "";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
@@ -574,6 +589,71 @@
         return true;
       },
 
+      openSearchResultWorkshop(workshopCode) {
+        const navigationCodes = state.workshopSearchResults
+          .map((result) => result.code)
+          .filter(Boolean);
+        const targetIndex = navigationCodes.indexOf(workshopCode);
+        const workshop = getWorkshopByCode(workshopCode);
+
+        if (!workshop || targetIndex < 0 || !navigationCodes.length) {
+          metrics.trackError("invalid_search_result_access");
+          return false;
+        }
+
+        state.selectedWorkshopCode = workshop.cod;
+        state.workshopSearchNavigationCodes = navigationCodes.slice();
+        state.workshopSearchDetailIndex = targetIndex;
+        state.hasConsumedWorkshopSearch = true;
+        state.hasWorkshopSearch = false;
+        state.workshopSearchMatchedTerms = [];
+        state.workshopSearchResults = [];
+        state.isOfficeModalOpen = false;
+        state.isConfirmModalOpen = false;
+        setActiveView("pesquisa-detalhes");
+
+        if (state.isLoggedIn) {
+          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
+        }
+
+        notify();
+        return true;
+      },
+
+      navigateSearchResultWorkshop(direction) {
+        const step = Number.parseInt(String(direction || 0), 10);
+        const targetIndex = state.workshopSearchDetailIndex + step;
+
+        if (
+          !Number.isFinite(step)
+          || !state.workshopSearchNavigationCodes.length
+          || targetIndex < 0
+          || targetIndex >= state.workshopSearchNavigationCodes.length
+        ) {
+          return false;
+        }
+
+        const workshop = getWorkshopByCode(state.workshopSearchNavigationCodes[targetIndex]);
+
+        if (!workshop) {
+          metrics.trackError("invalid_search_detail_navigation");
+          return false;
+        }
+
+        state.selectedWorkshopCode = workshop.cod;
+        state.workshopSearchDetailIndex = targetIndex;
+        state.isOfficeModalOpen = false;
+        state.isConfirmModalOpen = false;
+        setActiveView("pesquisa-detalhes");
+
+        if (state.isLoggedIn) {
+          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
+        }
+
+        notify();
+        return true;
+      },
+
       closeWorkshopModal() {
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
@@ -597,6 +677,7 @@
 
       participateInSelectedWorkshop() {
         const workshop = getWorkshopByCode(state.selectedWorkshopCode);
+        const shouldKeepSearchDetailOpen = uiVersion === "v1" && state.activeView === "pesquisa-detalhes";
 
         if (!workshop) {
           metrics.trackError("participation_without_selection");
@@ -619,6 +700,14 @@
         }
 
         addParticipantRecord(`Realizou inscrição em oficina “${workshop.title}”`);
+
+        if (shouldKeepSearchDetailOpen) {
+          state.isOfficeModalOpen = false;
+          state.isConfirmModalOpen = false;
+          notify();
+          return true;
+        }
+
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         state.selectedWorkshopCode = "";
@@ -628,6 +717,7 @@
 
       confirmWorkshopCancellation() {
         const workshop = getWorkshopByCode(state.selectedWorkshopCode);
+        const shouldKeepSearchDetailOpen = uiVersion === "v1" && state.activeView === "pesquisa-detalhes";
 
         if (!workshop) {
           state.isConfirmModalOpen = false;
@@ -644,6 +734,12 @@
         }
 
         state.isConfirmModalOpen = false;
+
+        if (shouldKeepSearchDetailOpen) {
+          notify();
+          return true;
+        }
+
         state.isOfficeModalOpen = false;
         state.selectedWorkshopCode = "";
         notify();
@@ -678,6 +774,11 @@
       performWorkshopSearch({ query, mode, filter }) {
         const trimmedQuery = String(query || "").trim();
         const normalizedFilters = normalizeSearchFilters(filter);
+
+        resetWorkshopSearchDetailState();
+        state.selectedWorkshopCode = "";
+        state.isOfficeModalOpen = false;
+        state.isConfirmModalOpen = false;
 
         if (!trimmedQuery) {
           state.hasWorkshopSearch = false;
@@ -722,6 +823,7 @@
           mode: searchMode,
           filters: searchFilter,
         });
+        state.hasConsumedWorkshopSearch = false;
         state.workshopSearchMatchedTerms = searchResult.matchedTerms.slice();
         state.workshopSearchResults = searchResult.results.map((result) => ({ ...result }));
 

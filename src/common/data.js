@@ -7,6 +7,7 @@
     VIEW_LABELS: {
       home: "Informações Gerais",
       "pesquisa-geral": "Pesquisa Geral",
+      "pesquisa-detalhes": "Consulta Detalhada",
       participante: "Área do Participante",
       gerenciar: "Gerenciar Oficinas",
       oficinas: "Oficinas Cadastradas",

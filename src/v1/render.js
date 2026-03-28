@@ -104,25 +104,46 @@
     return variant.map((item) => escapeHTML(item)).join(" | ");
   }
 
+  function getSearchModeLabel(mode) {
+    return mode === "broad"
+      ? "Termos de Busca Amplos"
+      : mode === "hours"
+        ? "Num. da Carga de Horas"
+        : mode === "code"
+          ? "Codigo de Indetificação da Ofc."
+          : "Nenhum escopo selecionado";
+  }
+
+  function getSearchFilterLabel(filters) {
+    return filters.length === 2
+      ? "Situação Ofc. Aberta + Formato OFc. Fisico"
+      : filters.includes("physical")
+        ? "Formato OFc. Fisico"
+        : filters.includes("open")
+          ? "Situação Ofc. Aberta"
+          : "Sem filtro";
+  }
+
   function createSearchSummaryMarkup(state, defaultMarkup) {
     if (!state.hasWorkshopSearch) {
+      if (state.hasConsumedWorkshopSearch) {
+        return `
+          <h3 id="search-side-heading">Resumo de Consulta</h3>
+          <p>
+            O retorno anteriormente localizado foi deslocado para a visualização individual e não permanece replicado aqui.
+          </p>
+
+          <div class="search-result-empty search-result-empty-transferred">
+            A listagem consultada não pode ser retomada nesta área. Para restabelecer outra ordem de registros, realize nova pesquisa.
+          </div>
+        `;
+      }
+
       return defaultMarkup;
     }
 
-    const modeLabel = state.workshopSearchMode === "broad"
-      ? "Termos de Busca Amplos"
-      : state.workshopSearchMode === "hours"
-        ? "Num. da Carga de Horas"
-        : state.workshopSearchMode === "code"
-          ? "Codigo de Indetificação da Ofc."
-          : "Nenhum escopo selecionado";
-    const filterLabel = state.workshopSearchFilters.length === 2
-      ? "Situação Ofc. Aberta + Formato OFc. Fisico"
-      : state.workshopSearchFilters.includes("physical")
-        ? "Formato OFc. Fisico"
-        : state.workshopSearchFilters.includes("open")
-          ? "Situação Ofc. Aberta"
-          : "Sem filtro";
+    const modeLabel = getSearchModeLabel(state.workshopSearchMode);
+    const filterLabel = getSearchFilterLabel(state.workshopSearchFilters);
     const matchedTermsMarkup = state.workshopSearchMatchedTerms.length
       ? state.workshopSearchMatchedTerms.map((term) => `
           <li class="search-term-chip">${escapeHTML(term)}</li>
@@ -138,7 +159,7 @@
           }
 
           return `
-            <button class="search-result-card" type="button" data-workshop-code="${escapeHTML(workshop.cod)}">
+            <button class="search-result-card" type="button" data-search-result-code="${escapeHTML(workshop.cod)}">
               <strong class="search-result-title" title="${escapeHTML(workshop.title)}">${escapeHTML(workshop.title)}</strong>
               <span class="search-result-meta">${buildSearchMetaLine(workshop, index, state.workshopSearchQuery)}</span>
             </button>
@@ -213,6 +234,86 @@
     }).join("");
   }
 
+  function createSearchDetailMarkup(state) {
+    if (!state.selectedWorkshop || !state.workshopSearchNavigationCodes.length || state.searchDetailPosition < 1) {
+      return `
+        <div class="search-card search-detail-side-card">
+          <h3>Detalhamento indisponível</h3>
+          <p>Não foi possível reconstruir o registro selecionado para consulta individual.</p>
+        </div>
+      `;
+    }
+
+    const statusLabel = state.selectedWorkshop.status === "Aberta"
+      ? "Ativa"
+      : state.selectedWorkshop.status;
+    return `
+      <div class="search-detail-layout">
+        <section class="search-card search-detail-main-card" aria-label="Registro detalhado">
+          <div class="search-card-header search-detail-header">
+            <h3>Registro Individual Reorganizado</h3>
+            <p>
+              As informações abaixo foram deslocadas para leitura unitária e permanecem em formato acumulado, descritivo e sequencial.
+            </p>
+          </div>
+
+          <div class="search-detail-record">
+            <p><span>Código:</span> ${escapeHTML(state.selectedWorkshop.cod)}</p>
+            <p><span>Título:</span> ${escapeHTML(state.selectedWorkshop.title)}</p>
+            <p><span>Período:</span> ${escapeHTML(state.selectedWorkshop.period)}</p>
+            <p><span>Situação:</span> ${escapeHTML(statusLabel)}</p>
+            <p><span>Modalidade:</span> ${escapeHTML(state.selectedWorkshop.modality)}</p>
+            <p><span>Carga Horária:</span> ${escapeHTML(state.selectedWorkshop.hours)}</p>
+            <p class="search-detail-description-line"><span>Descrição:</span> ${escapeHTML(state.selectedWorkshop.description)}</p>
+          </div>
+        </section>
+
+        <aside class="search-card search-detail-side-card" aria-label="Movimentação da consulta">
+          <h3>Movimentação de Registro</h3>
+          <p>
+            Demais ocorrências compatíveis continuam disponíveis apenas por deslocamento sequencial dos controles abaixo.
+          </p>
+
+          <div class="search-summary-meta search-detail-summary-meta">
+            <span><strong>Entrada:</strong> ${escapeHTML(state.workshopSearchQuery)}</span>
+            <span><strong>Escopo:</strong> ${escapeHTML(getSearchModeLabel(state.workshopSearchMode))}</span>
+            <span><strong>Filtro:</strong> ${escapeHTML(getSearchFilterLabel(state.workshopSearchFilters))}</span>
+            <span><strong>Posição:</strong> ${escapeHTML(`${state.searchDetailPosition} de ${state.searchDetailTotal || 1}`)}</span>
+          </div>
+
+          <div class="search-summary-block search-detail-action-block">
+            <p class="search-summary-label">Ação disponível</p>
+            <div class="search-detail-action-buttons">
+              <button
+                class="header-link search-detail-link-action${state.selectedWorkshopIsLinked ? " is-linked" : ""}"
+                type="button"
+                data-search-detail-action="participate"
+              >
+                Vincular
+              </button>
+              <button class="header-link search-detail-cancel-link" type="button" data-search-detail-action="cancel">
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <div class="search-summary-block search-detail-navigation-block">
+            <p class="search-summary-label">Deslocamento entre oficinas</p>
+
+            <div class="search-detail-navigation-buttons">
+              <button class="search-detail-nav-button" type="button" data-search-detail-nav="1">
+                Continuar
+              </button>
+              <button class="search-detail-nav-button" type="button" data-search-detail-nav="-1">
+                Voltar
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    `;
+  }
+
   function createv1Renderer(documentRef) {
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
@@ -233,7 +334,9 @@
       quickMenuList: documentRef.querySelector("#quick-menu-list"),
       officesTableBody: documentRef.querySelector("#offices-table-body"),
       searchSideCard: documentRef.querySelector(".search-side-card"),
+      searchDetailPanel: documentRef.querySelector("#search-detail-panel"),
       searchHistoryList: documentRef.querySelector("#search-history-list"),
+      identificationTrigger: documentRef.querySelector(".header-link[data-view='identificacao']"),
       toastStack: documentRef.querySelector("#toast-stack"),
       officeModal: documentRef.querySelector("#office-modal"),
       officeModalTitle: documentRef.querySelector("#office-modal-title"),
@@ -268,6 +371,10 @@
 
         if (elements.screenTitle) {
           elements.screenTitle.textContent = getTextContent(state);
+        }
+
+        if (elements.identificationTrigger) {
+          elements.identificationTrigger.classList.toggle("is-logged-in", state.isLoggedIn);
         }
 
         elements.views.forEach((view) => {
@@ -344,6 +451,10 @@
 
         if (elements.searchHistoryList) {
           elements.searchHistoryList.innerHTML = createSearchHistoryMarkup(state);
+        }
+
+        if (elements.searchDetailPanel) {
+          elements.searchDetailPanel.innerHTML = createSearchDetailMarkup(state);
         }
 
         if (elements.officeModal) {
