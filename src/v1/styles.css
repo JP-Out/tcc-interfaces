@@ -986,6 +986,14 @@ body[data-ui="v1"] .search-detail-summary-meta {
   gap: 10px;
 }
 
+body[data-ui="v1"] .search-detail-summary-meta span {
+  color: #1A64FF;
+}
+
+body[data-ui="v1"] .search-detail-summary-meta strong {
+  color: #1238A8;
+}
+
 body[data-ui="v1"] .search-detail-action-block {
   display: grid;
   gap: 0;
