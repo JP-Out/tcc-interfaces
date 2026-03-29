@@ -1,3 +1,0 @@
-# Session exports and generated plots should not pollute the repo status.
-*.json
-output/*.svg
