@@ -143,20 +143,35 @@
           </div>
 
           <div class="participant-layout">
-            <section class="participant-column participant-info-column">
-              <div class="participant-card">
-                <p>Nome: <span id="participant-name">2022667789</span></p>
-                <p>Identificador: <span id="participant-identifier">1145</span></p>
-                <p>Curso: <span id="participant-course">Eletro-mecânica</span></p>
-                <p>Situação: <span id="participant-status">Ativo</span></p>
-                <p>Primeiro Acesso: <span id="participant-first-access">21/03/2026</span></p>
-                <p class="participant-last-access">Último Acesso: <span id="participant-last-access">21/03/2026 - 23:31</span></p>
-                <p>Oficinas participando: <span id="participant-linked-count">0</span></p>
-                <p>Oficinas concluídas: <span id="participant-completed-count">0</span></p>
-                <p>Última oficina acessada: <span id="participant-last-workshop">Nenhuma oficina consultada nesta área.</span></p>
-                <div class="participant-card-divider" aria-hidden="true"></div>
-                <p>ID da sessão atual: <span id="participant-session-id">SGOA-20260328-483921</span></p>
-                <p>Versão do sistema: <span id="participant-system-version">SGOA 1.7.4</span></p>
+            <section class="participant-overview-panel">
+              <div class="participant-summary-grid">
+                <section class="participant-column participant-info-column">
+                  <div class="participant-card">
+                    <p>Nome: <span id="participant-name">2022667789</span></p>
+                    <p>Identificador: <span id="participant-identifier">1145</span></p>
+                    <p>Curso: <span id="participant-course">Eletro-mecânica</span></p>
+                    <p>Situação: <span id="participant-status">Ativo</span></p>
+                    <p>Primeiro Acesso: <span id="participant-first-access">21/03/2026</span></p>
+                    <p class="participant-last-access">Último Acesso: <span id="participant-last-access">21/03/2026 - 23:31</span></p>
+                    <p>Oficinas participando: <span id="participant-linked-count">0</span></p>
+                    <p>Oficinas concluídas: <span id="participant-completed-count">0</span></p>
+                    <p>Última oficina acessada: <span id="participant-last-workshop">Nenhuma oficina consultada nesta área.</span></p>
+                    <div class="participant-card-divider" aria-hidden="true"></div>
+                    <p>ID da sessão atual: <span id="participant-session-id">SGOA-20260328-483921</span></p>
+                    <p>Versão do sistema: <span id="participant-system-version">SGOA 1.7.4</span></p>
+                  </div>
+                </section>
+
+                <section class="participant-column participant-records-column">
+                  <div class="participant-records">
+                    <div class="participant-records-header">
+                      <span>Nº Ordem</span>
+                      <span>Atividade</span>
+                    </div>
+
+                    <div class="participant-records-body" id="participant-records-body"></div>
+                  </div>
+                </section>
               </div>
 
               <div class="participant-actions">
@@ -167,17 +182,6 @@
                 <button class="participant-link" id="participant-exit-button" type="button">
                   Encerrar/Sair
                 </button>
-              </div>
-            </section>
-
-            <section class="participant-column participant-records-column">
-              <div class="participant-records">
-                <div class="participant-records-header">
-                  <span>Nº Ordem</span>
-                  <span>Atividade</span>
-                </div>
-
-                <div class="participant-records-body" id="participant-records-body"></div>
               </div>
             </section>
           </div>
