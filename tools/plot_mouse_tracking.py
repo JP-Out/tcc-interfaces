@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Generate a visual mouse-tracking report from an SGOA metrics JSON file.
+"""Generate visual mouse-tracking reports from an SGOA metrics JSON file.
 
-The script outputs a self-contained SVG file. When a screenshot is provided,
-it is embedded as a base64 data URI so the result can be shared as a single
-file and opened directly in a browser.
+By default, the script generates one SVG per view and tries to locate a
+matching screenshot inside ``tools/mouse-tracking/screenshots`` using the view
+name as the file stem, for example ``participante.png`` or
+``gerenciar-detalhes.png``. Generated SVGs are written to
+``tools/mouse-tracking/output``.
+
+When ``--single-output`` is used, the script falls back to the old behavior
+and produces a single SVG for the whole session. In that mode, an optional
+background can be supplied explicitly.
 """
 
 from __future__ import annotations
@@ -34,16 +40,40 @@ class ViewportChange:
     device_pixel_ratio: float
 
 
+@dataclass(frozen=True)
+class ClickEvent:
+    elapsed_ms: int
+    x: int
+    y: int
+    view_index: int
+
+
 def parse_args() -> argparse.Namespace:
+    repo_root = Path(__file__).resolve().parent.parent
+    default_assets_dir = repo_root / "tools" / "mouse-tracking"
+    default_screenshots_dir = default_assets_dir / "screenshots"
+    default_output_dir = default_assets_dir / "output"
     parser = argparse.ArgumentParser(
-        description="Render a mouse-tracking SVG from an SGOA metrics JSON file.",
+        description="Render mouse-tracking SVG files from an SGOA metrics JSON file.",
     )
     parser.add_argument("metrics_json", type=Path, help="Path to the metrics JSON file.")
     parser.add_argument(
         "-o",
         "--output",
         type=Path,
-        help="Path for the generated SVG. Defaults to the JSON name with -tracking.svg.",
+        help=(
+            "Output path for single-output mode. "
+            "Defaults to tools/mouse-tracking/output/<json>-tracking.svg."
+        ),
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=default_output_dir,
+        help=(
+            "Directory used for generated SVGs in per-view mode. "
+            "Defaults to tools/mouse-tracking/output."
+        ),
     )
     parser.add_argument(
         "-b",
@@ -52,6 +82,21 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Optional screenshot of the interface. "
             "Best results come from a screenshot captured at the same viewport size."
+        ),
+    )
+    parser.add_argument(
+        "--single-output",
+        action="store_true",
+        help="Generate a single SVG for the whole session instead of one SVG per view.",
+    )
+    parser.add_argument(
+        "--screenshots-dir",
+        type=Path,
+        default=default_screenshots_dir,
+        help=(
+            "Directory containing screenshots named after each view "
+            "(for example participante.png). Defaults to "
+            "tools/mouse-tracking/screenshots."
         ),
     )
     parser.add_argument(
@@ -121,6 +166,26 @@ def parse_viewport_changes(raw_changes: Iterable[list]) -> list[ViewportChange]:
         )
 
     return changes
+
+
+def parse_click_events(raw_clicks: Iterable[list]) -> list[ClickEvent]:
+    clicks: list[ClickEvent] = []
+
+    for raw_click in raw_clicks:
+        if not isinstance(raw_click, list) or len(raw_click) < 4:
+            continue
+
+        elapsed_ms, x, y, view_index = raw_click[:4]
+        clicks.append(
+            ClickEvent(
+                elapsed_ms=int(elapsed_ms),
+                x=int(x),
+                y=int(y),
+                view_index=int(view_index),
+            ),
+        )
+
+    return clicks
 
 
 def get_canvas_size(payload: dict) -> tuple[int, int]:
@@ -215,16 +280,12 @@ def build_point_dots(points: list[MousePoint]) -> str:
     return "\n".join(circles)
 
 
-def build_click_markers(raw_clicks: Iterable[list]) -> str:
+def build_click_markers(clicks: Iterable[ClickEvent]) -> str:
     markers: list[str] = []
 
-    for raw_click in raw_clicks:
-        if not isinstance(raw_click, list) or len(raw_click) < 4:
-            continue
-
-        _, x, y, _ = raw_click[:4]
-        x = int(x)
-        y = int(y)
+    for click in clicks:
+        x = click.x
+        y = click.y
         markers.append(
             "\n".join(
                 [
@@ -286,6 +347,17 @@ def build_start_end_markers(points: list[MousePoint]) -> str:
 
 
 def build_info_panel(payload: dict, width: int, height: int) -> str:
+    return build_info_panel_for_view(payload, width, height)
+
+
+def build_info_panel_for_view(
+    payload: dict,
+    width: int,
+    height: int,
+    view_name: str | None = None,
+    points_count: int | None = None,
+    clicks_count: int | None = None,
+) -> str:
     mouse_tracking = payload.get("mouseTracking") or {}
     points = mouse_tracking.get("points") or []
     clicks = mouse_tracking.get("clickEvents") or []
@@ -294,14 +366,26 @@ def build_info_panel(payload: dict, width: int, height: int) -> str:
     panel_width = 330
     panel_x = max(width - panel_width - 24, 24)
     panel_y = max(height - 184, 24)
-    lines = [
-        f"Interface: {payload.get('uiVersion', '-')}",
-        f"Sessão: {payload.get('sessionId', '-')}",
-        f"Duração: {payload.get('durationMs', 0)} ms",
-        f"Pontos do mouse: {len(points)}",
-        f"Cliques com posição: {len(clicks)}",
-        f"Views observadas: {', '.join(views) if views else '-'}",
-    ]
+    lines = [f"Interface: {payload.get('uiVersion', '-')}"]
+
+    if view_name:
+        lines.extend(
+            [
+                f"View: {view_name}",
+                f"Pontos desta view: {points_count or 0}",
+                f"Cliques desta view: {clicks_count or 0}",
+            ],
+        )
+    else:
+        lines.extend(
+            [
+                f"Sessão: {payload.get('sessionId', '-')}",
+                f"Duração: {payload.get('durationMs', 0)} ms",
+                f"Pontos do mouse: {len(points)}",
+                f"Cliques com posição: {len(clicks)}",
+                f"Views observadas: {', '.join(views) if views else '-'}",
+            ],
+        )
 
     text_chunks: list[str] = []
     for index, line in enumerate(lines):
@@ -328,11 +412,15 @@ def generate_svg(
     background_data_uri: str | None,
     stroke_width: float,
     show_points: bool,
+    points: list[MousePoint] | None = None,
+    clicks: list[ClickEvent] | None = None,
+    views: list[str] | None = None,
+    current_view_name: str | None = None,
 ) -> str:
     mouse_tracking = payload.get("mouseTracking") or {}
-    points = parse_mouse_points(mouse_tracking.get("points") or [])
-    clicks = mouse_tracking.get("clickEvents") or []
-    views = [str(view) for view in (mouse_tracking.get("views") or [])]
+    points = points if points is not None else parse_mouse_points(mouse_tracking.get("points") or [])
+    clicks = clicks if clicks is not None else parse_click_events(mouse_tracking.get("clickEvents") or [])
+    views = views if views is not None else [str(view) for view in (mouse_tracking.get("views") or [])]
     width, height = get_canvas_size(payload)
 
     background_layer = (
@@ -346,9 +434,17 @@ def generate_svg(
     )
 
     subtitle = (
-        "Trajeto plotado sobre a screenshot fornecida."
+        (
+            f"Trajeto da view {current_view_name} plotado sobre a screenshot correspondente."
+            if current_view_name
+            else "Trajeto plotado sobre a screenshot fornecida."
+        )
         if background_data_uri
-        else "Trajeto plotado sobre um canvas neutro com a mesma viewport registrada."
+        else (
+            f"Trajeto da view {current_view_name} plotado sobre um canvas neutro."
+            if current_view_name
+            else "Trajeto plotado sobre um canvas neutro com a mesma viewport registrada."
+        )
     )
 
     return "\n".join(
@@ -373,10 +469,106 @@ def generate_svg(
             build_point_dots(points) if show_points else "",
             build_start_end_markers(points),
             build_view_labels(points, views),
-            build_info_panel(payload, width, height),
+            build_info_panel_for_view(
+                payload,
+                width,
+                height,
+                view_name=current_view_name,
+                points_count=len(points),
+                clicks_count=len(clicks),
+            ),
             "</svg>",
         ],
     )
+
+
+def normalize_view_file_name(view_name: str) -> str:
+    allowed = {"-", "_"}
+    normalized = "".join(
+        character.lower()
+        if character.isalnum() or character in allowed
+        else "-"
+        for character in view_name
+    )
+    return "-".join(part for part in normalized.split("-") if part)
+
+
+def find_background_for_view(view_name: str, screenshots_dir: Path) -> Path | None:
+    normalized = normalize_view_file_name(view_name)
+    for extension in (".png", ".jpg", ".jpeg", ".webp"):
+        direct_candidate = screenshots_dir / f"{view_name}{extension}"
+        if direct_candidate.exists():
+            return direct_candidate
+
+        normalized_candidate = screenshots_dir / f"{normalized}{extension}"
+        if normalized_candidate.exists():
+            return normalized_candidate
+
+    return None
+
+
+def remap_points_for_single_view(points: Iterable[MousePoint], view_index: int) -> list[MousePoint]:
+    return [
+        MousePoint(
+            elapsed_ms=point.elapsed_ms,
+            x=point.x,
+            y=point.y,
+            view_index=0,
+        )
+        for point in points
+        if point.view_index == view_index
+    ]
+
+
+def remap_clicks_for_single_view(clicks: Iterable[ClickEvent], view_index: int) -> list[ClickEvent]:
+    return [
+        ClickEvent(
+            elapsed_ms=click.elapsed_ms,
+            x=click.x,
+            y=click.y,
+            view_index=0,
+        )
+        for click in clicks
+        if click.view_index == view_index
+    ]
+
+
+def generate_per_view_svgs(
+    payload: dict,
+    metrics_json_path: Path,
+    screenshots_dir: Path,
+    output_dir: Path,
+    stroke_width: float,
+    show_points: bool,
+) -> list[Path]:
+    mouse_tracking = payload.get("mouseTracking") or {}
+    views = [str(view) for view in (mouse_tracking.get("views") or [])]
+    points = parse_mouse_points(mouse_tracking.get("points") or [])
+    clicks = parse_click_events(mouse_tracking.get("clickEvents") or [])
+    output_paths: list[Path] = []
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    for view_index, view_name in enumerate(views):
+        view_points = remap_points_for_single_view(points, view_index)
+        view_clicks = remap_clicks_for_single_view(clicks, view_index)
+        background_path = find_background_for_view(view_name, screenshots_dir)
+        background_data_uri = load_background_data_uri(background_path)
+        output_path = output_dir / f"{metrics_json_path.stem}-{normalize_view_file_name(view_name)}.svg"
+
+        svg = generate_svg(
+            payload=payload,
+            background_data_uri=background_data_uri,
+            stroke_width=stroke_width,
+            show_points=show_points,
+            points=view_points,
+            clicks=view_clicks,
+            views=[view_name],
+            current_view_name=view_name,
+        )
+        output_path.write_text(svg, encoding="utf-8")
+        output_paths.append(output_path)
+
+    return output_paths
 
 
 def main() -> int:
@@ -390,19 +582,34 @@ def main() -> int:
     if not mouse_tracking.get("points") and not mouse_tracking.get("clickEvents"):
         raise SystemExit("O JSON não possui pontos ou cliques de mouse para renderizar.")
 
-    background_data_uri = load_background_data_uri(args.background)
-    output_path = args.output or args.metrics_json.with_name(
-        f"{args.metrics_json.stem}-tracking.svg",
-    )
+    if args.single_output or args.background is not None:
+        background_data_uri = load_background_data_uri(args.background)
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = args.output or (
+            args.output_dir / f"{args.metrics_json.stem}-tracking.svg"
+        )
 
-    svg = generate_svg(
+        svg = generate_svg(
+            payload=payload,
+            background_data_uri=background_data_uri,
+            stroke_width=args.stroke_width,
+            show_points=args.show_points,
+        )
+        output_path.write_text(svg, encoding="utf-8")
+        print(f"Tracking gerado em: {output_path}")
+        return 0
+
+    output_paths = generate_per_view_svgs(
         payload=payload,
-        background_data_uri=background_data_uri,
+        metrics_json_path=args.metrics_json,
+        screenshots_dir=args.screenshots_dir,
+        output_dir=args.output_dir,
         stroke_width=args.stroke_width,
         show_points=args.show_points,
     )
-    output_path.write_text(svg, encoding="utf-8")
-    print(f"Tracking gerado em: {output_path}")
+
+    for output_path in output_paths:
+        print(f"Tracking por view gerado em: {output_path}")
     return 0
 
 
