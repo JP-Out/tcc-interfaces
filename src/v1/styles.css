@@ -1095,6 +1095,15 @@ body[data-ui="v1"] .manage-panel-link {
   cursor: pointer;
 }
 
+body[data-ui="v1"] .manage-panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
 body[data-ui="v1"] .manage-panel-link:hover,
 body[data-ui="v1"] .manage-panel-link:focus-visible {
   background: #f7faff;
