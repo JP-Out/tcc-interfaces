@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Generate visual mouse-tracking reports from an SGOA metrics JSON file.
 
-By default, the script generates one SVG per view and tries to locate a
-matching screenshot inside ``tools/mouse-tracking/screenshots`` using the view
-name as the file stem, for example ``participante.png`` or
+By default, the script asks the user to choose a metrics JSON file through a
+native file picker, generates one SVG per view and tries to locate a matching
+screenshot inside ``tools/mouse-tracking/screenshots`` using the view name as
+the file stem, for example ``participante.png`` or
 ``gerenciar-detalhes.png``. Generated SVGs are written to
 ``tools/mouse-tracking/output``.
 
@@ -48,15 +49,36 @@ class ClickEvent:
     view_index: int
 
 
-def parse_args() -> argparse.Namespace:
+@dataclass(frozen=True)
+class ViewMetrics:
+    index: int
+    name: str
+    points: list[MousePoint]
+    clicks: list[ClickEvent]
+
+
+LOG_WIDTH = 72
+
+
+def get_default_paths() -> tuple[Path, Path, Path, Path]:
     repo_root = Path(__file__).resolve().parent.parent
-    default_assets_dir = repo_root / "tools" / "mouse-tracking"
-    default_screenshots_dir = default_assets_dir / "screenshots"
-    default_output_dir = default_assets_dir / "output"
+    assets_dir = repo_root / "tools" / "mouse-tracking"
+    screenshots_dir = assets_dir / "screenshots"
+    output_dir = assets_dir / "output"
+    return repo_root, assets_dir, screenshots_dir, output_dir
+
+
+def parse_args() -> argparse.Namespace:
+    _, _, default_screenshots_dir, default_output_dir = get_default_paths()
     parser = argparse.ArgumentParser(
         description="Render mouse-tracking SVG files from an SGOA metrics JSON file.",
     )
-    parser.add_argument("metrics_json", type=Path, help="Path to the metrics JSON file.")
+    parser.add_argument(
+        "metrics_json",
+        nargs="?",
+        type=Path,
+        help="Path to the metrics JSON file. If omitted, a file picker is opened.",
+    )
     parser.add_argument(
         "-o",
         "--output",
@@ -113,8 +135,134 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def print_log_header(title: str) -> None:
+    print("=" * LOG_WIDTH)
+    print(title)
+    print("=" * LOG_WIDTH)
+
+
+def print_log_line(label: str, value: object) -> None:
+    print(f"{label:<16}: {value}")
+
+
+def print_log_divider() -> None:
+    print("-" * LOG_WIDTH)
+
+
+def print_run_context(
+    metrics_json_path: Path,
+    output_dir: Path,
+    mode_label: str,
+    views_count: int | None = None,
+) -> None:
+    print_log_header("Mouse Tracking Generator")
+    print_log_line("Mode", mode_label)
+    print_log_line("Metrics JSON", metrics_json_path.resolve())
+    print_log_line("Output dir", output_dir.resolve())
+    if views_count is not None:
+        print_log_line("Views found", views_count)
+    print_log_divider()
+
+
+def print_view_progress(
+    position: int,
+    total: int,
+    view_metric: ViewMetrics,
+    background_path: Path | None,
+    output_path: Path,
+) -> None:
+    background_label = background_path.name if background_path else "canvas neutro"
+    print(f"[{position}/{total}] View: {view_metric.name}")
+    print_log_line("Points", len(view_metric.points))
+    print_log_line("Clicks", len(view_metric.clicks))
+    print_log_line("Background", background_label)
+    print_log_line("Output file", output_path.resolve())
+
+
+def print_completion_summary(output_paths: list[Path]) -> None:
+    print_log_header("Generation Complete")
+    print_log_line("SVG files", len(output_paths))
+    if output_paths:
+        print_log_line("First file", output_paths[0].resolve())
+    print_log_divider()
+
+
+def get_metrics_picker_start_dir(repo_root: Path, assets_dir: Path) -> Path:
+    downloads_dir = Path.home() / "Downloads"
+
+    for candidate in (downloads_dir, assets_dir, repo_root):
+        if candidate.exists():
+            return candidate
+
+    return Path.cwd()
+
+
+def open_metrics_file_dialog(initial_dir: Path) -> Path | None:
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+    except ImportError:
+        return None
+
+    root = None
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            root.attributes("-topmost", True)
+        except Exception:
+            pass
+        root.update_idletasks()
+        selected_path = filedialog.askopenfilename(
+            title="Selecione o arquivo JSON de metricas",
+            initialdir=str(initial_dir),
+            filetypes=[
+                ("Arquivos JSON", "*.json"),
+                ("Todos os arquivos", "*.*"),
+            ],
+        )
+        return Path(selected_path).expanduser() if selected_path else None
+    except Exception:
+        return None
+    finally:
+        if root is not None:
+            root.destroy()
+
+
+def prompt_metrics_json_path(initial_dir: Path) -> Path:
+    print("[fallback] Nao foi possivel abrir o seletor grafico de arquivos nesta sessao.")
+    print_log_line("Suggested dir", initial_dir)
+    print_log_divider()
+
+    try:
+        typed_path = input("Caminho do arquivo JSON: ").strip()
+    except EOFError as error:
+        raise SystemExit("Nenhum arquivo de metricas foi informado.") from error
+
+    if not typed_path:
+        raise SystemExit("Nenhum arquivo de metricas foi selecionado.")
+
+    return Path(typed_path).expanduser()
+
+
+def resolve_metrics_json_path(cli_path: Path | None, repo_root: Path, assets_dir: Path) -> Path:
+    if cli_path is not None:
+        return cli_path.expanduser()
+
+    initial_dir = get_metrics_picker_start_dir(repo_root, assets_dir)
+    print_log_header("Metrics File Selection")
+    print(f"[select] Abrindo seletor de arquivo em: {initial_dir}")
+    print_log_divider()
+    selected_path = open_metrics_file_dialog(initial_dir)
+
+    if selected_path is not None:
+        return selected_path
+
+    return prompt_metrics_json_path(initial_dir)
+
+
 def load_json(path: Path) -> dict:
-    with path.open("r", encoding="utf-8") as handle:
+    with path.open("r", encoding="utf-8-sig") as handle:
         return json.load(handle)
 
 
@@ -507,6 +655,45 @@ def find_background_for_view(view_name: str, screenshots_dir: Path) -> Path | No
     return None
 
 
+def collect_view_metrics(payload: dict) -> list[ViewMetrics]:
+    mouse_tracking = payload.get("mouseTracking") or {}
+    views = [str(view) for view in (mouse_tracking.get("views") or [])]
+    grouped_points: dict[int, list[MousePoint]] = {}
+    grouped_clicks: dict[int, list[ClickEvent]] = {}
+
+    for point in parse_mouse_points(mouse_tracking.get("points") or []):
+        grouped_points.setdefault(point.view_index, []).append(point)
+
+    for click in parse_click_events(mouse_tracking.get("clickEvents") or []):
+        grouped_clicks.setdefault(click.view_index, []).append(click)
+
+    view_indexes = sorted(set(grouped_points) | set(grouped_clicks))
+    collected: list[ViewMetrics] = []
+
+    for view_index in view_indexes:
+        view_points = grouped_points.get(view_index, [])
+        view_clicks = grouped_clicks.get(view_index, [])
+
+        if not view_points and not view_clicks:
+            continue
+
+        if 0 <= view_index < len(views) and views[view_index]:
+            view_name = views[view_index]
+        else:
+            view_name = f"view-{view_index}"
+
+        collected.append(
+            ViewMetrics(
+                index=view_index,
+                name=view_name,
+                points=view_points,
+                clicks=view_clicks,
+            ),
+        )
+
+    return collected
+
+
 def remap_points_for_single_view(points: Iterable[MousePoint], view_index: int) -> list[MousePoint]:
     return [
         MousePoint(
@@ -541,39 +728,55 @@ def generate_per_view_svgs(
     stroke_width: float,
     show_points: bool,
 ) -> list[Path]:
-    mouse_tracking = payload.get("mouseTracking") or {}
-    views = [str(view) for view in (mouse_tracking.get("views") or [])]
-    points = parse_mouse_points(mouse_tracking.get("points") or [])
-    clicks = parse_click_events(mouse_tracking.get("clickEvents") or [])
+    view_metrics = collect_view_metrics(payload)
     output_paths: list[Path] = []
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    for view_index, view_name in enumerate(views):
-        view_points = remap_points_for_single_view(points, view_index)
-        view_clicks = remap_clicks_for_single_view(clicks, view_index)
-        background_path = find_background_for_view(view_name, screenshots_dir)
+    if not view_metrics:
+        raise SystemExit("Nenhuma tela com metricas validas foi encontrada no JSON informado.")
+
+    print_run_context(
+        metrics_json_path=metrics_json_path,
+        output_dir=output_dir,
+        mode_label="per-view",
+        views_count=len(view_metrics),
+    )
+
+    for position, view_metric in enumerate(view_metrics, start=1):
+        background_path = find_background_for_view(view_metric.name, screenshots_dir)
         background_data_uri = load_background_data_uri(background_path)
-        output_path = output_dir / f"{metrics_json_path.stem}-{normalize_view_file_name(view_name)}.svg"
+        output_path = output_dir / f"{metrics_json_path.stem}-{normalize_view_file_name(view_metric.name)}.svg"
+        print_view_progress(
+            position=position,
+            total=len(view_metrics),
+            view_metric=view_metric,
+            background_path=background_path,
+            output_path=output_path,
+        )
 
         svg = generate_svg(
             payload=payload,
             background_data_uri=background_data_uri,
             stroke_width=stroke_width,
             show_points=show_points,
-            points=view_points,
-            clicks=view_clicks,
-            views=[view_name],
-            current_view_name=view_name,
+            points=remap_points_for_single_view(view_metric.points, view_metric.index),
+            clicks=remap_clicks_for_single_view(view_metric.clicks, view_metric.index),
+            views=[view_metric.name],
+            current_view_name=view_metric.name,
         )
         output_path.write_text(svg, encoding="utf-8")
         output_paths.append(output_path)
+        print_log_line("Status", "written")
+        print_log_divider()
 
     return output_paths
 
 
 def main() -> int:
     args = parse_args()
-    payload = load_json(args.metrics_json)
+    repo_root, assets_dir, _, default_output_dir = get_default_paths()
+    metrics_json_path = resolve_metrics_json_path(args.metrics_json, repo_root, assets_dir)
+    payload = load_json(metrics_json_path)
     mouse_tracking = payload.get("mouseTracking") or {}
 
     if not mouse_tracking.get("enabled"):
@@ -586,8 +789,16 @@ def main() -> int:
         background_data_uri = load_background_data_uri(args.background)
         args.output_dir.mkdir(parents=True, exist_ok=True)
         output_path = args.output or (
-            args.output_dir / f"{args.metrics_json.stem}-tracking.svg"
+            args.output_dir / f"{metrics_json_path.stem}-tracking.svg"
         )
+
+        print_run_context(
+            metrics_json_path=metrics_json_path,
+            output_dir=args.output_dir,
+            mode_label="single-output",
+        )
+        print_log_line("Output file", output_path.resolve())
+        print_log_divider()
 
         svg = generate_svg(
             payload=payload,
@@ -596,20 +807,19 @@ def main() -> int:
             show_points=args.show_points,
         )
         output_path.write_text(svg, encoding="utf-8")
-        print(f"Tracking gerado em: {output_path}")
+        print_completion_summary([output_path])
         return 0
 
     output_paths = generate_per_view_svgs(
         payload=payload,
-        metrics_json_path=args.metrics_json,
+        metrics_json_path=metrics_json_path,
         screenshots_dir=args.screenshots_dir,
-        output_dir=args.output_dir,
+        output_dir=args.output_dir or default_output_dir,
         stroke_width=args.stroke_width,
         show_points=args.show_points,
     )
 
-    for output_path in output_paths:
-        print(f"Tracking por view gerado em: {output_path}")
+    print_completion_summary(output_paths)
     return 0
 
 
