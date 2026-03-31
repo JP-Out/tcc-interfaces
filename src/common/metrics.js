@@ -29,6 +29,10 @@
       sessionId: `${uiVersion}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       uiVersion,
       taskId,
+      objectiveProfileId: null,
+      objectiveSets: [],
+      currentObjectiveId: null,
+      allObjectivesTerminal: false,
       startedAt: null,
       finishedAt: null,
       clickCount: 0,
@@ -96,6 +100,29 @@
 
       start() {
         ensureStart();
+        return this;
+      },
+
+      setResearchObjectives(details = null) {
+        if (!details) {
+          metrics.objectiveProfileId = null;
+          metrics.objectiveSets = [];
+          metrics.currentObjectiveId = null;
+          metrics.allObjectivesTerminal = false;
+          return this;
+        }
+
+        metrics.objectiveProfileId = details.objectiveProfileId || null;
+        metrics.objectiveSets = Array.isArray(details.objectiveSets)
+          ? details.objectiveSets.map((set) => ({
+            ...set,
+            objectives: Array.isArray(set.objectives)
+              ? set.objectives.map((objective) => ({ ...objective }))
+              : [],
+          }))
+          : [];
+        metrics.currentObjectiveId = details.currentObjectiveId || null;
+        metrics.allObjectivesTerminal = Boolean(details.allObjectivesTerminal);
         return this;
       },
 
@@ -268,6 +295,13 @@
           sessionId: metrics.sessionId,
           uiVersion: metrics.uiVersion,
           taskId: metrics.taskId,
+          objectiveProfileId: metrics.objectiveProfileId,
+          objectiveSets: metrics.objectiveSets.map((set) => ({
+            ...set,
+            objectives: set.objectives.map((objective) => ({ ...objective })),
+          })),
+          currentObjectiveId: metrics.currentObjectiveId,
+          allObjectivesTerminal: metrics.allObjectivesTerminal,
           startedAt: metrics.startedAt,
           finishedAt: metrics.finishedAt,
           durationMs: startedAt ? Math.max(0, finishedAt.getTime() - startedAt.getTime()) : 0,

@@ -5,6 +5,8 @@
     DEFAULT_PARTICIPANT,
     MAX_VISIBLE_RECORDS,
     MOCK_WORKSHOPS,
+    RESEARCH_OBJECTIVE_PROFILES,
+    RESEARCH_TASK_ID,
     SIDEBAR_FIRST_OPEN_PREFIX,
     SYSTEM_VERSION,
     TOAST_MESSAGES,
@@ -12,6 +14,51 @@
   } = global.SGOAData;
   const { createInitialState } = global.SGOAState;
   const MAX_SEARCH_HISTORY = 8;
+
+  function cloneResearchObjectiveProfile(profile) {
+    if (!profile) {
+      return null;
+    }
+
+    return {
+      id: profile.id,
+      periodTarget: profile.periodTarget,
+      exitViewName: profile.exitViewName,
+      exitViewLabel: profile.exitViewLabel,
+      sets: profile.sets.map((set) => ({
+        id: set.id,
+        title: set.title,
+        objectives: set.objectives.map((objective) => ({
+          id: objective.id,
+          title: objective.title,
+          dependsOn: Array.isArray(objective.dependsOn) ? objective.dependsOn.slice() : [],
+          target: objective.target ? { ...objective.target } : {},
+          status: "pendente",
+          startedAt: null,
+          completedAt: null,
+          failedAt: null,
+          resolutionType: null,
+          resolutionReason: null,
+        })),
+      })),
+    };
+  }
+
+  function deriveObjectiveSetStatus(objectives) {
+    if (!objectives.length) {
+      return "pendente";
+    }
+
+    const hasPending = objectives.some((objective) => objective.status === "pendente");
+
+    if (hasPending) {
+      return "pendente";
+    }
+
+    return objectives.some((objective) => objective.status === "falhou")
+      ? "falhou"
+      : "concluido";
+  }
 
   function formatDate(date) {
     return date.toLocaleDateString("pt-BR");
@@ -326,15 +373,324 @@
     metrics,
     storage = typeof window !== "undefined" ? window.localStorage : null,
     taskId = "main-flow",
+    researchObjectiveProfileKey = null,
     onToast = () => {},
   }) {
     const state = createInitialState();
     const listeners = new Set();
+    const researchProfileConfig = researchObjectiveProfileKey
+      ? RESEARCH_OBJECTIVE_PROFILES[researchObjectiveProfileKey] || null
+      : null;
 
     function resetWorkshopSearchDetailState() {
       state.workshopSearchNavigationCodes = [];
       state.workshopSearchDetailIndex = -1;
       state.hasConsumedWorkshopSearch = false;
+    }
+
+    function isResearchTrackingEnabled() {
+      return Boolean(researchProfileConfig);
+    }
+
+    function getResearchTimestamp() {
+      return new Date().toISOString();
+    }
+
+    function resetResearchObjectives() {
+      state.researchTaskId = isResearchTrackingEnabled() ? RESEARCH_TASK_ID : taskId;
+      state.objectiveProfileId = "";
+      state.objectiveSets = [];
+      state.currentObjectiveId = "";
+      state.allObjectivesTerminal = false;
+      state.objectiveFeedback = null;
+      state.isObjectiveFailureModalOpen = false;
+      state.objectiveFailureTargetId = "";
+      state.objectiveFailureDependentIds = [];
+      state.objectiveTrackedPinnedWorkshopCode = "";
+      state.objectiveTrackedQuickAccessWorkshopCode = "";
+      state.objectiveRemovedQuickAccessWorkshopCode = "";
+
+      if (!isResearchTrackingEnabled()) {
+        if (typeof metrics.setResearchObjectives === "function") {
+          metrics.setResearchObjectives(null);
+        }
+        return;
+      }
+
+      const profile = cloneResearchObjectiveProfile(researchProfileConfig);
+      state.objectiveProfileId = profile.id;
+      state.objectiveSets = profile.sets;
+      refreshResearchProgress();
+      syncResearchMetrics();
+    }
+
+    function getObjectiveSets() {
+      return Array.isArray(state.objectiveSets) ? state.objectiveSets : [];
+    }
+
+    function getAllObjectives() {
+      return getObjectiveSets().flatMap((set) => set.objectives || []);
+    }
+
+    function findObjectiveById(objectiveId) {
+      return getAllObjectives().find((objective) => objective.id === objectiveId) || null;
+    }
+
+    function collectDependentObjectiveIds(objectiveId, visited = new Set()) {
+      const dependentIds = [];
+
+      getAllObjectives().forEach((objective) => {
+        if (!objective.dependsOn.includes(objectiveId) || visited.has(objective.id)) {
+          return;
+        }
+
+        visited.add(objective.id);
+        dependentIds.push(objective.id);
+        dependentIds.push(...collectDependentObjectiveIds(objective.id, visited));
+      });
+
+      return dependentIds;
+    }
+
+    function refreshResearchProgress() {
+      const allObjectives = getAllObjectives();
+
+      getObjectiveSets().forEach((set) => {
+        set.status = deriveObjectiveSetStatus(set.objectives || []);
+      });
+
+      state.allObjectivesTerminal = allObjectives.length > 0
+        && allObjectives.every((objective) => objective.status !== "pendente");
+
+      const nextPendingObjective = allObjectives.find((objective) => objective.status === "pendente") || null;
+      state.currentObjectiveId = nextPendingObjective ? nextPendingObjective.id : "";
+
+      if (state.isResearchStarted && nextPendingObjective && !nextPendingObjective.startedAt) {
+        nextPendingObjective.startedAt = getResearchTimestamp();
+      }
+    }
+
+    function createResearchMetricsSnapshot() {
+      if (!isResearchTrackingEnabled()) {
+        return null;
+      }
+
+      return {
+        objectiveProfileId: state.objectiveProfileId,
+        objectiveSets: getObjectiveSets().map((set) => ({
+          id: set.id,
+          title: set.title,
+          status: set.status,
+          objectives: (set.objectives || []).map((objective) => ({
+            id: objective.id,
+            title: objective.title,
+            dependsOn: objective.dependsOn.slice(),
+            target: objective.target ? { ...objective.target } : {},
+            status: objective.status,
+            startedAt: objective.startedAt,
+            completedAt: objective.completedAt,
+            failedAt: objective.failedAt,
+            resolutionType: objective.resolutionType,
+            resolutionReason: objective.resolutionReason,
+          })),
+        })),
+        currentObjectiveId: state.currentObjectiveId || null,
+        allObjectivesTerminal: state.allObjectivesTerminal,
+      };
+    }
+
+    function syncResearchMetrics() {
+      if (typeof metrics.setResearchObjectives === "function") {
+        metrics.setResearchObjectives(createResearchMetricsSnapshot());
+      }
+    }
+
+    function setObjectiveFeedback(objective, status) {
+      if (!objective) {
+        return;
+      }
+
+      state.objectiveFeedback = {
+        objectiveId: objective.id,
+        status,
+        title: objective.title,
+        message: status === "concluido"
+          ? `Objetivo ${objective.id} concluido automaticamente.`
+          : `Objetivo ${objective.id} marcado como falhou.`,
+      };
+    }
+
+    function completeObjective(objectiveId, resolutionReason) {
+      const objective = findObjectiveById(objectiveId);
+
+      if (!objective || objective.status !== "pendente") {
+        return false;
+      }
+
+      if (!objective.startedAt && state.isResearchStarted) {
+        objective.startedAt = getResearchTimestamp();
+      }
+
+      objective.status = "concluido";
+      objective.completedAt = getResearchTimestamp();
+      objective.failedAt = null;
+      objective.resolutionType = "automatico";
+      objective.resolutionReason = resolutionReason;
+      setObjectiveFeedback(objective, "concluido");
+      refreshResearchProgress();
+      syncResearchMetrics();
+      return true;
+    }
+
+    function failObjective(objectiveId, resolutionReason, resolutionType = "manual", shouldSetFeedback = false) {
+      const objective = findObjectiveById(objectiveId);
+
+      if (!objective || objective.status !== "pendente") {
+        return false;
+      }
+
+      if (!objective.startedAt && state.isResearchStarted) {
+        objective.startedAt = getResearchTimestamp();
+      }
+
+      objective.status = "falhou";
+      objective.failedAt = getResearchTimestamp();
+      objective.completedAt = null;
+      objective.resolutionType = resolutionType;
+      objective.resolutionReason = resolutionReason;
+
+      if (shouldSetFeedback) {
+        setObjectiveFeedback(objective, "falhou");
+      }
+
+      refreshResearchProgress();
+      syncResearchMetrics();
+      return true;
+    }
+
+    function applyObjectiveFailure() {
+      if (!state.objectiveFailureTargetId) {
+        return false;
+      }
+
+      const targetObjectiveId = state.objectiveFailureTargetId;
+      const dependentIds = collectDependentObjectiveIds(targetObjectiveId);
+
+      failObjective(targetObjectiveId, "desistencia_manual", "manual", true);
+      dependentIds.forEach((dependentId) => {
+        failObjective(dependentId, "dependencia_bloqueada", "automatico", false);
+      });
+
+      state.isObjectiveFailureModalOpen = false;
+      state.objectiveFailureTargetId = "";
+      state.objectiveFailureDependentIds = [];
+      return true;
+    }
+
+    function getTrackedPeriodTarget() {
+      return researchProfileConfig ? researchProfileConfig.periodTarget : "";
+    }
+
+    function handleWorkshopLinked(workshop) {
+      if (!isResearchTrackingEnabled() || !workshop) {
+        return;
+      }
+
+      if (workshop.cod === "ELM-1806") {
+        completeObjective("1.1", "inscricao_realizada");
+      }
+
+      if (workshop.title === "Montagem de Painéis de Controle") {
+        completeObjective("1.2", "inscricao_realizada");
+      }
+
+      if (workshop.period === getTrackedPeriodTarget()) {
+        completeObjective("1.3", "inscricao_realizada");
+      }
+    }
+
+    function handleWorkshopOpened(workshop, source) {
+      if (!isResearchTrackingEnabled() || !workshop) {
+        return;
+      }
+
+      if (source === "manage" && workshop.cod === "ELM-1806" && state.linkedWorkshopCodes.includes(workshop.cod)) {
+        completeObjective("2.1", "oficina_aberta_em_gerenciamento");
+      }
+
+      if (
+        source === "quick_access"
+        && state.objectiveTrackedPinnedWorkshopCode
+        && workshop.cod === state.objectiveTrackedPinnedWorkshopCode
+      ) {
+        if (completeObjective("3.1", "oficina_aberta_no_acesso_rapido")) {
+          state.objectiveTrackedQuickAccessWorkshopCode = workshop.cod;
+        }
+      }
+    }
+
+    function handlePinnedWorkshopChange(workshop, isPinned) {
+      if (!isResearchTrackingEnabled() || !workshop) {
+        return;
+      }
+
+      if (
+        isPinned
+        && state.selectedWorkshopSource === "manage"
+        && state.linkedWorkshopCodes.includes(workshop.cod)
+        && workshop.period === getTrackedPeriodTarget()
+      ) {
+        state.objectiveTrackedPinnedWorkshopCode = workshop.cod;
+        completeObjective("2.3", "atalho_adicionado");
+      }
+
+      if (
+        !isPinned
+        && state.objectiveTrackedQuickAccessWorkshopCode
+        && workshop.cod === state.objectiveTrackedQuickAccessWorkshopCode
+      ) {
+        state.objectiveRemovedQuickAccessWorkshopCode = workshop.cod;
+      }
+    }
+
+    function handleWorkshopCancellation(workshop) {
+      if (!isResearchTrackingEnabled() || !workshop) {
+        return;
+      }
+
+      if (workshop.title === "Montagem de Painéis de Controle") {
+        completeObjective("2.2", "inscricao_cancelada");
+      }
+
+      if (
+        state.objectiveRemovedQuickAccessWorkshopCode
+        && workshop.cod === state.objectiveRemovedQuickAccessWorkshopCode
+      ) {
+        completeObjective("3.2", "atalho_removido_e_inscricao_cancelada");
+      }
+    }
+
+    function handleResearchExitRequest() {
+      if (!isResearchTrackingEnabled()) {
+        return true;
+      }
+
+      const exitObjective = findObjectiveById("3.3");
+
+      if (!exitObjective) {
+        return false;
+      }
+
+      if (exitObjective.status === "falhou") {
+        return true;
+      }
+
+      if (state.currentObjectiveId !== "3.3") {
+        return false;
+      }
+
+      completeObjective("3.3", "atividade_encerrada");
+      return true;
     }
 
     function getSnapshot() {
@@ -349,9 +705,24 @@
       return {
         ...state,
         uiVersion,
-        taskId,
+        taskId: state.researchTaskId || taskId,
         systemVersion: SYSTEM_VERSION,
         workshops: MOCK_WORKSHOPS.map((workshop) => ({ ...workshop })),
+        objectiveSets: getObjectiveSets().map((set) => ({
+          ...set,
+          objectives: (set.objectives || []).map((objective) => ({
+            ...objective,
+            dependsOn: objective.dependsOn.slice(),
+            target: objective.target ? { ...objective.target } : {},
+          })),
+        })),
+        currentObjective: state.currentObjectiveId ? findObjectiveById(state.currentObjectiveId) : null,
+        objectiveFailureTarget: state.objectiveFailureTargetId
+          ? findObjectiveById(state.objectiveFailureTargetId)
+          : null,
+        objectiveFailureDependents: state.objectiveFailureDependentIds
+          .map((objectiveId) => findObjectiveById(objectiveId))
+          .filter(Boolean),
         participantRecords: state.participantRecords.map((record) => ({ ...record })),
         linkedWorkshopCodes: state.linkedWorkshopCodes.slice(),
         completedWorkshopCodes: state.completedWorkshopCodes.slice(),
@@ -370,6 +741,9 @@
         selectedWorkshopIsLinked: selectedWorkshop
           ? state.linkedWorkshopCodes.includes(selectedWorkshop.cod)
           : false,
+        canFinishResearch: !isResearchTrackingEnabled() || state.currentObjectiveId === "3.3" || (
+          findObjectiveById("3.3") && findObjectiveById("3.3").status === "falhou"
+        ),
         lastManageWorkshopAccessTitle: state.lastManageWorkshopAccessTitle
           || "Nenhuma oficina consultada nesta área.",
         searchDetailPosition: searchDetailIndex >= 0 ? searchDetailIndex + 1 : 0,
@@ -380,6 +754,8 @@
     }
 
     function notify() {
+      refreshResearchProgress();
+      syncResearchMetrics();
       const snapshot = getSnapshot();
       listeners.forEach((listener) => {
         listener(snapshot);
@@ -479,6 +855,7 @@
       init() {
         state.currentSessionId = generateSessionReference();
         state.isSidebarCollapsed = !shouldStartWithSidebarOpen();
+        resetResearchObjectives();
         notify();
       },
 
@@ -494,6 +871,8 @@
         state.isResearchStarted = true;
         metrics.start();
         metrics.trackView(state.activeView);
+        refreshResearchProgress();
+        syncResearchMetrics();
         notify();
         return true;
       },
@@ -558,6 +937,7 @@
         state.workshopSearchResults = [];
         resetWorkshopSearchDetailState();
         state.selectedWorkshopCode = "";
+        state.selectedWorkshopSource = "";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         addParticipantRecord("Realizou identificação");
@@ -589,9 +969,11 @@
         state.workshopSearchResults = [];
         resetWorkshopSearchDetailState();
         state.selectedWorkshopCode = "";
+        state.selectedWorkshopSource = "";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         state.activeView = "home";
+        resetResearchObjectives();
         metrics.trackView("home");
         notify();
       },
@@ -600,7 +982,7 @@
         onToast(TOAST_MESSAGES.participantOperation);
       },
 
-      openWorkshop(workshopCode) {
+      openWorkshop(workshopCode, source = "catalog") {
         const workshop = getWorkshopByCode(workshopCode);
 
         if (!workshop) {
@@ -608,6 +990,7 @@
         }
 
         state.selectedWorkshopCode = workshop.cod;
+        state.selectedWorkshopSource = source;
         state.isOfficeModalOpen = true;
         state.isConfirmModalOpen = false;
 
@@ -615,11 +998,12 @@
           addParticipantRecord(`Acessou oficina “${workshop.title}”`);
         }
 
+        handleWorkshopOpened(workshop, source);
         notify();
         return true;
       },
 
-      openManageWorkshopDetail(workshopCode) {
+      openManageWorkshopDetail(workshopCode, source = "manage") {
         const workshop = getWorkshopByCode(workshopCode);
 
         if (!workshop || !state.linkedWorkshopCodes.includes(workshopCode)) {
@@ -627,6 +1011,7 @@
         }
 
         state.selectedWorkshopCode = workshop.cod;
+        state.selectedWorkshopSource = source;
         state.lastManageWorkshopAccessTitle = workshop.title;
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
@@ -636,6 +1021,7 @@
           addParticipantRecord(`Acessou oficina “${workshop.title}”`);
         }
 
+        handleWorkshopOpened(workshop, source);
         notify();
         return true;
       },
@@ -658,6 +1044,7 @@
         state.hasWorkshopSearch = false;
         state.workshopSearchMatchedTerms = [];
         state.workshopSearchResults = [];
+        state.selectedWorkshopSource = "search_results";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         setActiveView("pesquisa-detalhes");
@@ -691,6 +1078,7 @@
 
         state.selectedWorkshopCode = workshop.cod;
         state.workshopSearchDetailIndex = targetIndex;
+        state.selectedWorkshopSource = "search_results";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         setActiveView("pesquisa-detalhes");
@@ -724,6 +1112,7 @@
         }
 
         state.selectedWorkshopCode = workshop.cod;
+        state.selectedWorkshopSource = "manage";
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         setActiveView("gerenciar-detalhes");
@@ -740,6 +1129,7 @@
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         state.selectedWorkshopCode = "";
+        state.selectedWorkshopSource = "";
         notify();
       },
 
@@ -781,6 +1171,7 @@
         }
 
         addParticipantRecord(`Realizou inscrição em oficina “${workshop.title}”`);
+        handleWorkshopLinked(workshop);
 
         if (shouldKeepSearchDetailOpen) {
           state.isOfficeModalOpen = false;
@@ -816,6 +1207,7 @@
           }
           state.pinnedWorkshopCodes = state.pinnedWorkshopCodes.filter((code) => code !== workshop.cod);
           addParticipantRecord(`Cancelou inscrição em oficina “${workshop.title}”`);
+          handleWorkshopCancellation(workshop);
         }
 
         state.isConfirmModalOpen = false;
@@ -864,9 +1256,11 @@
         if (pinnedIndex >= 0) {
           state.pinnedWorkshopCodes.splice(pinnedIndex, 1);
           addParticipantRecord(`Desfixou oficina "${workshop.title}" do Menu Rapido`);
+          handlePinnedWorkshopChange(workshop, false);
         } else {
           state.pinnedWorkshopCodes.unshift(workshopCode);
           addParticipantRecord(`Fixou oficina "${workshop.title}" no Menu Rapido`);
+          handlePinnedWorkshopChange(workshop, true);
         }
 
         notify();
@@ -937,7 +1331,48 @@
         return searchResult;
       },
 
+      openObjectiveFailureModal() {
+        if (!isResearchTrackingEnabled() || !state.currentObjectiveId) {
+          return false;
+        }
+
+        state.isObjectiveFailureModalOpen = true;
+        state.objectiveFailureTargetId = state.currentObjectiveId;
+        state.objectiveFailureDependentIds = collectDependentObjectiveIds(state.currentObjectiveId);
+        notify();
+        return true;
+      },
+
+      closeObjectiveFailureModal() {
+        state.isObjectiveFailureModalOpen = false;
+        state.objectiveFailureTargetId = "";
+        state.objectiveFailureDependentIds = [];
+        notify();
+      },
+
+      confirmObjectiveFailure() {
+        const confirmed = applyObjectiveFailure();
+
+        if (confirmed) {
+          notify();
+        }
+
+        return confirmed;
+      },
+
+      canFinishResearch() {
+        const exitObjective = findObjectiveById("3.3");
+        return !isResearchTrackingEnabled() || state.currentObjectiveId === "3.3" || (
+          exitObjective && exitObjective.status === "falhou"
+        );
+      },
+
+      requestResearchExit() {
+        return handleResearchExitRequest();
+      },
+
       finishMetrics() {
+        syncResearchMetrics();
         return metrics.finish();
       },
 

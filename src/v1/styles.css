@@ -1612,3 +1612,149 @@ body[data-ui="v1"] .history-modal[hidden] {
     width: 100%;
   }
 }
+
+body[data-ui="v1"] .objective-guide-panel {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border: 1px solid rgba(112, 95, 73, 0.28);
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(248, 240, 225, 0.92));
+  box-shadow: 0 14px 34px rgba(88, 68, 40, 0.12);
+}
+
+body[data-ui="v1"] .objective-guide-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+body[data-ui="v1"] .objective-guide-kicker {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+body[data-ui="v1"] .objective-guide-title {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.35;
+  color: var(--headline);
+}
+
+body[data-ui="v1"] .objective-guide-copy {
+  margin: 0;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+body[data-ui="v1"] .objective-guide-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 0.88rem;
+  color: var(--muted-text);
+}
+
+body[data-ui="v1"] .objective-guide-list,
+body[data-ui="v1"] .objective-failure-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+body[data-ui="v1"] .objective-guide-list {
+  display: grid;
+  gap: 8px;
+}
+
+body[data-ui="v1"] .objective-guide-item {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--text-color);
+}
+
+body[data-ui="v1"] .objective-guide-item-id {
+  font-weight: 700;
+  color: var(--headline);
+}
+
+body[data-ui="v1"] .objective-guide-item-concluido .objective-guide-item-title {
+  color: #2f6a38;
+}
+
+body[data-ui="v1"] .objective-guide-item-falhou .objective-guide-item-title {
+  color: #8b4b3d;
+}
+
+body[data-ui="v1"] .objective-guide-item-pendente .objective-guide-item-title {
+  color: var(--text-color);
+}
+
+body[data-ui="v1"] .objective-guide-feedback {
+  padding: 10px 12px;
+  border-left: 4px solid rgba(112, 95, 73, 0.48);
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--text-color);
+}
+
+body[data-ui="v1"] .objective-guide-feedback-concluido {
+  border-left-color: #4d8b57;
+}
+
+body[data-ui="v1"] .objective-guide-feedback-falhou {
+  border-left-color: #a15b4e;
+}
+
+body[data-ui="v1"] .objective-guide-abandon-button {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid rgba(122, 84, 60, 0.35);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--headline);
+  font: inherit;
+  cursor: pointer;
+}
+
+body[data-ui="v1"] .objective-guide-abandon-button:hover,
+body[data-ui="v1"] .objective-guide-abandon-button:focus-visible {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+body[data-ui="v1"] .objective-failure-message {
+  display: grid;
+  gap: 12px;
+}
+
+body[data-ui="v1"] .objective-failure-copy,
+body[data-ui="v1"] .objective-failure-list-block p {
+  margin: 0;
+}
+
+body[data-ui="v1"] .objective-failure-list-block {
+  display: grid;
+  gap: 10px;
+}
+
+body[data-ui="v1"] .objective-failure-modal[hidden] {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  body[data-ui="v1"] .objective-guide-head {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  body[data-ui="v1"] .objective-guide-abandon-button {
+    width: 100%;
+  }
+
+  body[data-ui="v1"] .objective-guide-item {
+    grid-template-columns: 1fr;
+  }
+}

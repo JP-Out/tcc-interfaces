@@ -1,8 +1,96 @@
 (function attachCommonData(global) {
+  function createResearchObjectiveProfile(profileId, periodTarget, exitViewLabel) {
+    return {
+      id: profileId,
+      periodTarget,
+      exitViewName: "participante",
+      exitViewLabel,
+      sets: [
+        {
+          id: "conjunto-1",
+          title: "Busca e Inscricao",
+          objectives: [
+            {
+              id: "1.1",
+              title: "Inscreva-se na oficina com o codigo ELM-1806.",
+              dependsOn: [],
+              target: { workshopCode: "ELM-1806" },
+            },
+            {
+              id: "1.2",
+              title: "Encontre e inscreva-se na oficina Montagem de Paineis de Controle.",
+              dependsOn: [],
+              target: { workshopTitle: "Montagem de Painéis de Controle" },
+            },
+            {
+              id: "1.3",
+              title: `Localize oficinas no periodo ${periodTarget} e inscreva-se em pelo menos uma.`,
+              dependsOn: [],
+              target: { period: periodTarget },
+            },
+          ],
+        },
+        {
+          id: "conjunto-2",
+          title: "Acesso e Gerenciamento",
+          objectives: [
+            {
+              id: "2.1",
+              title: "Encontre suas inscricoes e acesse a oficina ELM-1806.",
+              dependsOn: ["1.1"],
+              target: { workshopCode: "ELM-1806", source: "manage" },
+            },
+            {
+              id: "2.2",
+              title: "Acesse Montagem de Paineis de Controle e cancele sua inscricao nela.",
+              dependsOn: ["1.2"],
+              target: { workshopTitle: "Montagem de Painéis de Controle", source: "manage" },
+            },
+            {
+              id: "2.3",
+              title: `Abra a oficina inscrita do periodo ${periodTarget} e adicione ao acesso rapido.`,
+              dependsOn: ["1.3"],
+              target: { period: periodTarget, source: "manage" },
+            },
+          ],
+        },
+        {
+          id: "conjunto-3",
+          title: "Acesso Rapido e Encerramento",
+          objectives: [
+            {
+              id: "3.1",
+              title: "Acesse a oficina salva no acesso rapido pela tela inicial.",
+              dependsOn: ["2.3"],
+              target: { source: "quick_access" },
+            },
+            {
+              id: "3.2",
+              title: "Remova a oficina do acesso rapido e cancele sua inscricao nela.",
+              dependsOn: ["3.1"],
+              target: { sourceObjectiveId: "3.1" },
+            },
+            {
+              id: "3.3",
+              title: `Acesse ${exitViewLabel} e encontre a opcao para sair e encerrar a atividade.`,
+              dependsOn: ["1.1", "1.2", "1.3", "2.1", "2.2", "2.3", "3.1", "3.2"],
+              target: { viewName: "participante", viewLabel: exitViewLabel },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
   const data = {
     MAX_VISIBLE_RECORDS: 20,
     DEFAULT_LOGIN_IDENTIFIER: "2022667789",
     SIDEBAR_FIRST_OPEN_PREFIX: "sgoa-sidebar-first-open",
+    RESEARCH_TASK_ID: "research-objectives",
+    RESEARCH_OBJECTIVE_PROFILES: {
+      v1: createResearchObjectiveProfile("v1-default", "11/05 a 31/05", "Área do Participante"),
+      v2: createResearchObjectiveProfile("v2-default", "05/04 a 25/04", "Área do Participante"),
+    },
     BLOCKED_VIEWS: new Set(["participante", "gerenciar", "gerenciar-detalhes"]),
     VIEW_LABELS: {
       home: "Informações Gerais",

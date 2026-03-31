@@ -1,4 +1,5 @@
 (function bootstrapv1App(global, documentRef) {
+  const { RESEARCH_TASK_ID } = global.SGOAData;
   const { createAppController } = global.SGOALogic;
   const { createMetricsSession } = global.SGOAMetrics;
   const { downloadMetricsPayload, flushQueuedMetricExports, queueMetricsExport } = global.SGOAExporter;
@@ -7,12 +8,14 @@
   const renderer = createv1Renderer(documentRef);
   const metrics = createMetricsSession({
     uiVersion: "v1",
-    taskId: "main-flow",
+    taskId: RESEARCH_TASK_ID,
   });
 
   const controller = createAppController({
     uiVersion: "v1",
     metrics,
+    taskId: RESEARCH_TASK_ID,
+    researchObjectiveProfileKey: "v1",
     onToast: (toast) => renderer.showToast(toast),
   });
 
@@ -27,6 +30,9 @@
   const confirmModal = documentRef.querySelector("#confirm-modal");
   const confirmModalSubmit = documentRef.querySelector("#confirm-modal-submit");
   const confirmModalClose = documentRef.querySelector("#confirm-modal-close");
+  const objectiveFailureModal = documentRef.querySelector("#objective-failure-modal");
+  const objectiveFailureClose = documentRef.querySelector("#objective-failure-close");
+  const objectiveFailureSubmit = documentRef.querySelector("#objective-failure-submit");
   const searchManageButton = documentRef.querySelector("#search-manage-button");
   const searchManageMenu = documentRef.querySelector("#search-manage-menu");
   const searchManageBlock = documentRef.querySelector(".search-menu-block");
@@ -179,6 +185,14 @@
 
     if (participantExitButton) {
       participantExitButton.addEventListener("click", () => {
+        if (!controller.requestResearchExit()) {
+          renderer.showToast({
+            title: "Objetivos pendentes:",
+            message: "Finalize ou desista do objetivo atual antes de encerrar a atividade.",
+          });
+          return;
+        }
+
         hasQueuedMetricsExport = true;
         downloadMetricsPayload(controller.finishMetrics());
 
@@ -203,7 +217,17 @@
       const manageWorkshopButton = event.target.closest("[data-manage-workshop-code]");
 
       if (manageWorkshopButton) {
-        controller.openManageWorkshopDetail(manageWorkshopButton.dataset.manageWorkshopCode || "");
+        controller.openManageWorkshopDetail(
+          manageWorkshopButton.dataset.manageWorkshopCode || "",
+          manageWorkshopButton.dataset.manageWorkshopSource || "manage",
+        );
+        return;
+      }
+
+      const objectiveAbandonButton = event.target.closest("#objective-abandon-button");
+
+      if (objectiveAbandonButton) {
+        controller.openObjectiveFailureModal();
         return;
       }
 
@@ -331,6 +355,14 @@
       });
     }
 
+    if (objectiveFailureModal) {
+      objectiveFailureModal.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLElement && event.target.dataset.objectiveFailureClose === "true") {
+          controller.closeObjectiveFailureModal();
+        }
+      });
+    }
+
     if (confirmModalClose) {
       confirmModalClose.addEventListener("click", () => {
         controller.closeConfirmModal();
@@ -340,6 +372,18 @@
     if (confirmModalSubmit) {
       confirmModalSubmit.addEventListener("click", () => {
         controller.confirmWorkshopCancellation();
+      });
+    }
+
+    if (objectiveFailureClose) {
+      objectiveFailureClose.addEventListener("click", () => {
+        controller.closeObjectiveFailureModal();
+      });
+    }
+
+    if (objectiveFailureSubmit) {
+      objectiveFailureSubmit.addEventListener("click", () => {
+        controller.confirmObjectiveFailure();
       });
     }
   }

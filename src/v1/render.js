@@ -28,7 +28,12 @@
       .filter(Boolean)
       .map((workshop) => `
         <div class="manage-panel-row">
-          <button class="manage-panel-link" type="button" data-manage-workshop-code="${workshop.cod}">
+          <button
+            class="manage-panel-link"
+            type="button"
+            data-manage-workshop-code="${workshop.cod}"
+            data-manage-workshop-source="manage"
+          >
             <span>${workshop.title}</span>
             <small>${workshop.period}</small>
           </button>
@@ -52,7 +57,12 @@
 
     return pinnedWorkshops.map((workshop) => `
       <li class="quick-menu-item">
-        <button class="quick-menu-link" type="button" data-manage-workshop-code="${workshop.cod}">
+        <button
+          class="quick-menu-link"
+          type="button"
+          data-manage-workshop-code="${workshop.cod}"
+          data-manage-workshop-source="quick_access"
+        >
           <span class="quick-menu-title">${workshop.title}</span>
           <span class="quick-menu-meta">${workshop.cod} - ${workshop.period}</span>
         </button>
@@ -405,10 +415,111 @@
     `;
   }
 
+  function createObjectiveGuideMarkup(state) {
+    if (!state.objectiveSets.length) {
+      return "";
+    }
+
+    const allObjectives = state.objectiveSets.flatMap((set) => set.objectives || []);
+    const currentObjective = state.currentObjective;
+    const currentSet = state.objectiveSets.find((set) => (
+      currentObjective && (set.objectives || []).some((objective) => objective.id === currentObjective.id)
+    )) || null;
+    const resolvedCount = allObjectives.filter((objective) => objective.status !== "pendente").length;
+    const totalCount = allObjectives.length;
+    const feedbackMarkup = state.objectiveFeedback
+      ? `
+          <div class="objective-guide-feedback objective-guide-feedback-${escapeHTML(state.objectiveFeedback.status)}">
+            ${escapeHTML(state.objectiveFeedback.message)}
+          </div>
+        `
+      : "";
+
+    if (!currentObjective || !currentSet) {
+      return `
+        <div class="objective-guide-head">
+          <div>
+            <p class="objective-guide-kicker">Desafios da pesquisa</p>
+            <h2 class="objective-guide-title">Sessão finalizada</h2>
+          </div>
+        </div>
+        <p class="objective-guide-copy">Todos os objetivos desta sessão já foram resolvidos.</p>
+        ${feedbackMarkup}
+      `;
+    }
+
+    const setProgressMarkup = currentSet.objectives.map((objective) => `
+      <li class="objective-guide-item objective-guide-item-${escapeHTML(objective.status)}">
+        <span class="objective-guide-item-id">${escapeHTML(objective.id)}</span>
+        <span class="objective-guide-item-title">${escapeHTML(objective.title)}</span>
+      </li>
+    `).join("");
+
+    return `
+      <div class="objective-guide-head">
+        <div>
+          <p class="objective-guide-kicker">Desafio atual</p>
+          <h2 class="objective-guide-title">${escapeHTML(currentObjective.id)} - ${escapeHTML(currentSet.title)}</h2>
+        </div>
+        <button class="objective-guide-abandon-button" id="objective-abandon-button" type="button">
+          Desistir
+        </button>
+      </div>
+
+      <p class="objective-guide-copy">${escapeHTML(currentObjective.title)}</p>
+
+      <div class="objective-guide-meta">
+        <span><strong>Progresso:</strong> ${escapeHTML(`${resolvedCount}/${totalCount}`)}</span>
+        <span><strong>Conjunto:</strong> ${escapeHTML(currentSet.title)}</span>
+      </div>
+
+      <ul class="objective-guide-list">
+        ${setProgressMarkup}
+      </ul>
+
+      ${feedbackMarkup}
+    `;
+  }
+
+  function createObjectiveFailureModalMarkup(state) {
+    if (!state.objectiveFailureTarget) {
+      return "";
+    }
+
+    const dependentMarkup = state.objectiveFailureDependents.length
+      ? `
+          <div class="objective-failure-list-block">
+            <p>As tarefas abaixo nao poderao mais ser concluídas nesta sessao:</p>
+            <ul class="objective-failure-list">
+              ${state.objectiveFailureDependents.map((objective) => `
+                <li>${escapeHTML(objective.id)} - ${escapeHTML(objective.title)}</li>
+              `).join("")}
+            </ul>
+          </div>
+        `
+      : `
+          <p class="objective-failure-copy">
+            Nenhuma outra tarefa depende diretamente deste objetivo.
+          </p>
+        `;
+
+    return `
+      <div class="objective-failure-message">
+        <p>Tem certeza que deseja desistir do objetivo atual?</p>
+        <strong>${escapeHTML(state.objectiveFailureTarget.id)} - ${escapeHTML(state.objectiveFailureTarget.title)}</strong>
+      </div>
+      ${dependentMarkup}
+    `;
+  }
+
   function createv1Renderer(documentRef) {
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
       screenTitle: documentRef.querySelector("#screen-title"),
+      objectiveGuide: documentRef.querySelector("#objective-guide"),
+      objectiveFailureModal: documentRef.querySelector("#objective-failure-modal"),
+      objectiveFailureContent: documentRef.querySelector("#objective-failure-content"),
+      participantExitButton: documentRef.querySelector("#participant-exit-button"),
       triggers: Array.from(documentRef.querySelectorAll(".nav-trigger")),
       views: Array.from(documentRef.querySelectorAll(".content-view")),
       sidebar: documentRef.querySelector(".sidebar"),
@@ -460,6 +571,11 @@
 
         if (elements.screenTitle) {
           elements.screenTitle.textContent = getTextContent(state);
+        }
+
+        if (elements.objectiveGuide) {
+          elements.objectiveGuide.innerHTML = createObjectiveGuideMarkup(state);
+          elements.objectiveGuide.hidden = !state.objectiveSets.length;
         }
 
         if (elements.identificationTrigger) {
@@ -542,6 +658,11 @@
           elements.participantSystemVersion.textContent = state.systemVersion;
         }
 
+        if (elements.participantExitButton) {
+          elements.participantExitButton.hidden = !state.canFinishResearch;
+          elements.participantExitButton.disabled = !state.canFinishResearch;
+        }
+
         if (elements.participantRecordsBody) {
           elements.participantRecordsBody.innerHTML = createParticipantRecordsMarkup(state.participantRecords);
         }
@@ -580,6 +701,11 @@
 
         if (elements.confirmModal) {
           elements.confirmModal.hidden = !state.isConfirmModalOpen;
+        }
+
+        if (elements.objectiveFailureModal && elements.objectiveFailureContent) {
+          elements.objectiveFailureModal.hidden = !state.isObjectiveFailureModalOpen;
+          elements.objectiveFailureContent.innerHTML = createObjectiveFailureModalMarkup(state);
         }
 
       },

@@ -63,6 +63,8 @@
       </aside>
 
       <main class="content-area">
+        <section class="objective-guide-panel" id="objective-guide" aria-live="polite" hidden></section>
+
         <section class="content-view is-active" id="view-home" aria-labelledby="home-heading">
           <div class="good-home-grid">
             <section class="good-hero-panel">
@@ -472,6 +474,26 @@
       <div class="confirm-modal-actions">
         <button class="confirm-modal-button" id="confirm-modal-submit" type="button">
           Confirmo
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="confirm-modal objective-failure-modal" id="objective-failure-modal" hidden>
+    <div class="confirm-modal-backdrop" data-objective-failure-close="true"></div>
+    <section class="confirm-modal-dialog" aria-labelledby="objective-failure-title" aria-modal="true" role="dialog">
+      <div class="confirm-modal-header">
+        <h2 id="objective-failure-title">Desistir do objetivo</h2>
+        <button class="confirm-modal-close" id="objective-failure-close" type="button" aria-label="Fechar">
+          x
+        </button>
+      </div>
+
+      <div class="confirm-modal-message" id="objective-failure-content"></div>
+
+      <div class="confirm-modal-actions">
+        <button class="confirm-modal-button" id="objective-failure-submit" type="button">
+          Confirmar desistência
         </button>
       </div>
     </section>
