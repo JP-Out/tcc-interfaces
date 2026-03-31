@@ -512,7 +512,7 @@
         let hasNewRecord = false;
 
         if (BLOCKED_VIEWS.has(viewName) && !state.isLoggedIn) {
-          metrics.trackError("blocked_view");
+          metrics.trackError("acesso_bloqueado_sem_identificacao");
           onToast(TOAST_MESSAGES.blockedAccess);
           return false;
         }
@@ -597,7 +597,6 @@
       },
 
       showParticipantOperationFailure() {
-        metrics.trackError("participant_operation_failed");
         onToast(TOAST_MESSAGES.participantOperation);
       },
 
@@ -605,7 +604,6 @@
         const workshop = getWorkshopByCode(workshopCode);
 
         if (!workshop) {
-          metrics.trackError("invalid_workshop_access");
           return false;
         }
 
@@ -625,7 +623,6 @@
         const workshop = getWorkshopByCode(workshopCode);
 
         if (!workshop || !state.linkedWorkshopCodes.includes(workshopCode)) {
-          metrics.trackError("invalid_manage_workshop_access");
           return false;
         }
 
@@ -651,7 +648,6 @@
         const workshop = getWorkshopByCode(workshopCode);
 
         if (!workshop || targetIndex < 0 || !navigationCodes.length) {
-          metrics.trackError("invalid_search_result_access");
           return false;
         }
 
@@ -690,7 +686,6 @@
         const workshop = getWorkshopByCode(state.workshopSearchNavigationCodes[targetIndex]);
 
         if (!workshop) {
-          metrics.trackError("invalid_search_detail_navigation");
           return false;
         }
 
@@ -725,7 +720,6 @@
         const workshop = getWorkshopByCode(state.linkedWorkshopCodes[targetIndex]);
 
         if (!workshop) {
-          metrics.trackError("invalid_manage_detail_navigation");
           return false;
         }
 
@@ -768,18 +762,17 @@
         const shouldKeepSearchDetailOpen = uiVersion === "v1" && state.activeView === "pesquisa-detalhes";
 
         if (!workshop) {
-          metrics.trackError("participation_without_selection");
           return false;
         }
 
         if (!state.isLoggedIn) {
-          metrics.trackError("participation_requires_login");
+          metrics.trackError("inscricao_sem_identificacao");
           onToast(TOAST_MESSAGES.blockedAccess);
           return false;
         }
 
         if (workshop.status === "Fechada") {
-          metrics.trackError("workshop_closed");
+          metrics.trackError("inscricao_em_oficina_fechada");
           return false;
         }
 

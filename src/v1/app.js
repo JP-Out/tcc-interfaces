@@ -255,7 +255,7 @@
             && state.selectedWorkshop.status === "Fechada"
             && !state.selectedWorkshopIsLinked
           ) {
-            metrics.trackError("closed_workshop_confusing_v1_detail");
+            metrics.trackError("v1_inscricao_em_oficina_fechada_no_detalhe");
             renderer.showToast({
               title: "Problema:",
               message: "Situação atual de oficina incompatível com a ação.",
