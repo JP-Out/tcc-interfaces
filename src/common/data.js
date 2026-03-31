@@ -37,7 +37,7 @@
       {
         cod: "ELM-1801",
         title: "Leitura de Diagramas Elétricos Industriais",
-        period: "01/02 a 10/02",
+        period: "01/02 a 15/02",
         status: "Fechada",
         modality: "Presencial",
         hours: "12 Hrs",
@@ -46,7 +46,7 @@
       {
         cod: "ELM-1802",
         title: "Leitura de Diagramas Elétricos Industriais",
-        period: "02/04 a 12/04",
+        period: "05/04 a 25/04",
         status: "Aberta",
         modality: "Presencial",
         hours: "12 Hrs",
@@ -56,7 +56,7 @@
       {
         cod: "ELM-1803",
         title: "Montagem de Painéis de Controle",
-        period: "10/02 a 28/02",
+        period: "16/02 a 28/02",
         status: "Fechada",
         modality: "Presencial",
         hours: "24 Hrs",
@@ -75,7 +75,7 @@
       {
         cod: "ELM-1805",
         title: "Sensores e Atuadores Industriais",
-        period: "15/02 a 25/02",
+        period: "01/03 a 15/03",
         status: "Fechada",
         modality: "EaD",
         hours: "10 Hrs",
@@ -84,7 +84,7 @@
       {
         cod: "ELM-1806",
         title: "Sensores e Atuadores Industriais",
-        period: "08/04 a 18/04",
+        period: "05/04 a 25/04",
         status: "Aberta",
         modality: "EaD",
         hours: "10 Hrs",
@@ -94,7 +94,7 @@
       {
         cod: "ELM-1807",
         title: "Manutenção de Motores Elétricos",
-        period: "20/02 a 10/03",
+        period: "16/03 a 31/03",
         status: "Fechada",
         modality: "Presencial",
         hours: "20 Hrs",
@@ -103,7 +103,7 @@
       {
         cod: "ELM-1808",
         title: "Manutenção de Motores Elétricos",
-        period: "10/04 a 28/04",
+        period: "05/04 a 25/04",
         status: "Aberta",
         modality: "Presencial",
         hours: "20 Hrs",
@@ -113,7 +113,7 @@
       {
         cod: "ELM-1809",
         title: "Inversores de Frequência na Prática",
-        period: "05/03 a 20/03",
+        period: "01/04 a 20/04",
         status: "Fechada",
         modality: "EaD",
         hours: "18 Hrs",
@@ -122,7 +122,7 @@
       {
         cod: "ELM-1810",
         title: "Inversores de Frequência na Prática",
-        period: "18/04 a 08/05",
+        period: "26/04 a 10/05",
         status: "Aberta",
         modality: "EaD",
         hours: "18 Hrs",
@@ -132,7 +132,7 @@
       {
         cod: "ELM-1811",
         title: "Transmissões Mecânicas Industriais",
-        period: "10/03 a 25/03",
+        period: "01/03 a 20/03",
         status: "Fechada",
         modality: "Presencial",
         hours: "20 Hrs",
@@ -141,7 +141,7 @@
       {
         cod: "ELM-1812",
         title: "Transmissões Mecânicas Industriais",
-        period: "20/04 a 10/05",
+        period: "26/04 a 10/05",
         status: "Aberta",
         modality: "Presencial",
         hours: "20 Hrs",
@@ -151,7 +151,7 @@
       {
         cod: "ELM-1813",
         title: "Lubrificação Industrial",
-        period: "12/03 a 18/03",
+        period: "21/03 a 31/03",
         status: "Fechada",
         modality: "EaD",
         hours: "8 Hrs",
@@ -160,7 +160,7 @@
       {
         cod: "ELM-1814",
         title: "Lubrificação Industrial",
-        period: "22/04 a 30/04",
+        period: "26/04 a 10/05",
         status: "Aberta",
         modality: "EaD",
         hours: "8 Hrs",
@@ -179,7 +179,7 @@
       {
         cod: "ELM-1816",
         title: "Hidráulica Industrial",
-        period: "03/05 a 23/05",
+        period: "11/05 a 31/05",
         status: "Aberta",
         modality: "EaD",
         hours: "32 Hrs",
@@ -191,7 +191,7 @@
       {
         cod: "ELM-1817",
         title: "CLP com Diagnóstico de Falhas",
-        period: "05/05 a 02/06",
+        period: "11/05 a 31/05",
         status: "Fechada",
         modality: "EaD",
         hours: "36 Hrs",
@@ -200,7 +200,7 @@
       {
         cod: "ELM-1818",
         title: "Chaves Fim de Curso e Sensoriamento",
-        period: "08/05 a 18/05",
+        period: "05/04 a 25/04",
         status: "Aberta",
         modality: "Presencial",
         hours: "10 Hrs",
@@ -209,7 +209,7 @@
       {
         cod: "ELM-1819",
         title: "Diagnóstico de Sistemas Eletromecânicos",
-        period: "18/05 a 08/06",
+        period: "11/05 a 31/05",
         status: "Fechada",
         modality: "EaD",
         hours: "28 Hrs",
@@ -218,7 +218,7 @@
       {
         cod: "ELM-1820",
         title: "Manutenção Preditiva Industrial",
-        period: "20/05 a 10/06",
+        period: "26/04 a 10/05",
         status: "Aberta",
         modality: "EaD",
         hours: "16 Hrs",
