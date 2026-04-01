@@ -427,58 +427,172 @@
     )) || null;
     const resolvedCount = allObjectives.filter((objective) => objective.status !== "pendente").length;
     const totalCount = allObjectives.length;
-    const feedbackMarkup = state.objectiveFeedback
+    const latestFailedObjective = [...allObjectives].reverse().find((objective) => objective.status === "falhou") || null;
+    const transitionState = getObjectiveTransitionState(state);
+    const shouldSuppressFailedFeedback = transitionState && transitionState.variant === "failure";
+    const feedbackMarkup = state.objectiveFeedback && state.objectiveFeedback.status === "falhou" && !shouldSuppressFailedFeedback
       ? `
           <div class="objective-guide-feedback objective-guide-feedback-${escapeHTML(state.objectiveFeedback.status)}">
-            ${escapeHTML(state.objectiveFeedback.message)}
+            <span class="objective-guide-feedback-icon" aria-hidden="true">${
+              state.objectiveFeedback.status === "falhou" ? "X" : "✓"
+            }</span>
+            <span>${escapeHTML(state.objectiveFeedback.message)}</span>
+          </div>
+        `
+      : latestFailedObjective
+        && !(shouldSuppressFailedFeedback && latestFailedObjective.id === transitionState.objectiveId)
+        ? `
+          <div class="objective-guide-feedback objective-guide-feedback-falhou">
+            <span class="objective-guide-feedback-icon" aria-hidden="true">X</span>
+            <span>${escapeHTML(`Desistência registrada em ${latestFailedObjective.id}.`)}</span>
           </div>
         `
       : "";
 
     if (!currentObjective || !currentSet) {
       return `
-        <div class="objective-guide-head">
-          <div>
-            <p class="objective-guide-kicker">Desafios da pesquisa</p>
-            <h2 class="objective-guide-title">Sessão finalizada</h2>
+        <div class="objective-guide-shell">
+          <div class="objective-guide-copy-block">
+            <p class="objective-guide-kicker">Objetivo Atual</p>
+            <div class="objective-guide-headline-row">
+              <span class="objective-guide-status-bullet objective-guide-status-bullet-complete" aria-hidden="true">✓</span>
+              <h2 class="objective-guide-title">Sessão finalizada</h2>
+            </div>
+            <p class="objective-guide-copy">Todos os objetivos desta sessão já receberam um desfecho.</p>
+          </div>
+
+          <div class="objective-guide-side">
+            <span class="objective-guide-progress-pill">9/9</span>
           </div>
         </div>
-        <p class="objective-guide-copy">Todos os objetivos desta sessão já foram resolvidos.</p>
+
         ${feedbackMarkup}
       `;
     }
 
-    const setProgressMarkup = currentSet.objectives.map((objective) => `
-      <li class="objective-guide-item objective-guide-item-${escapeHTML(objective.status)}">
-        <span class="objective-guide-item-id">${escapeHTML(objective.id)}</span>
-        <span class="objective-guide-item-title">${escapeHTML(objective.title)}</span>
-      </li>
-    `).join("");
+    const currentStatusSymbol = currentObjective.status === "falhou" ? "X" : "";
+    const currentStatusClass = currentObjective.status === "falhou"
+      ? "objective-guide-status-bullet-failed"
+      : "objective-guide-status-bullet-pending";
 
     return `
-      <div class="objective-guide-head">
-        <div>
-          <p class="objective-guide-kicker">Desafio atual</p>
-          <h2 class="objective-guide-title">${escapeHTML(currentObjective.id)} - ${escapeHTML(currentSet.title)}</h2>
+      <div class="objective-guide-shell">
+        <div class="objective-guide-copy-block">
+          <p class="objective-guide-kicker">Objetivo Atual</p>
+          <div class="objective-guide-headline-row">
+            <span class="objective-guide-status-bullet ${escapeHTML(currentStatusClass)}" aria-hidden="true">
+              ${escapeHTML(currentStatusSymbol)}
+            </span>
+            <h2 class="objective-guide-title">${escapeHTML(`${currentObjective.id} - ${currentSet.title}`)}</h2>
+          </div>
+          <p class="objective-guide-copy">${escapeHTML(currentObjective.title)}</p>
         </div>
-        <button class="objective-guide-abandon-button" id="objective-abandon-button" type="button">
-          Desistir
-        </button>
+
+        <div class="objective-guide-side">
+          <span class="objective-guide-progress-pill">${escapeHTML(`${resolvedCount}/${totalCount}`)}</span>
+          <button class="objective-guide-abandon-button" id="objective-abandon-button" type="button">
+            Desistir
+          </button>
+        </div>
       </div>
-
-      <p class="objective-guide-copy">${escapeHTML(currentObjective.title)}</p>
-
-      <div class="objective-guide-meta">
-        <span><strong>Progresso:</strong> ${escapeHTML(`${resolvedCount}/${totalCount}`)}</span>
-        <span><strong>Conjunto:</strong> ${escapeHTML(currentSet.title)}</span>
-      </div>
-
-      <ul class="objective-guide-list">
-        ${setProgressMarkup}
-      </ul>
 
       ${feedbackMarkup}
     `;
+  }
+
+  function createObjectiveTransitionGuideMarkup(transitionState) {
+    if (!transitionState) {
+      return "";
+    }
+
+    const shellVariantClass = transitionState.variant === "failure"
+      ? "objective-guide-shell-failure"
+      : "objective-guide-shell-completion";
+
+    return `
+      <div class="objective-guide-shell ${shellVariantClass}" aria-live="off">
+        <div class="objective-guide-copy-block">
+          <p class="objective-guide-kicker objective-guide-kicker-transition">${escapeHTML(transitionState.kicker)}</p>
+          <div class="objective-guide-headline-row">
+            <span class="objective-guide-status-bullet objective-guide-status-bullet-animated" aria-hidden="true">
+              <span class="objective-guide-status-symbol objective-guide-status-symbol-transition">
+                ${escapeHTML(transitionState.symbol)}
+              </span>
+            </span>
+            <h2 class="objective-guide-title objective-guide-title-transition">
+              <span class="objective-guide-strike-text objective-guide-strike-text-transition">${escapeHTML(transitionState.title)}</span>
+            </h2>
+          </div>
+          <p class="objective-guide-copy objective-guide-copy-transition">
+            <span class="objective-guide-strike-text objective-guide-strike-text-transition">${escapeHTML(transitionState.copy)}</span>
+          </p>
+        </div>
+
+        <div class="objective-guide-side">
+          <span class="objective-guide-progress-pill">${escapeHTML(transitionState.progressLabel)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function findObjectiveSetByObjectiveId(state, objectiveId) {
+    return state.objectiveSets.find((set) => (
+      (set.objectives || []).some((objective) => objective.id === objectiveId)
+    )) || null;
+  }
+
+  function findObjectiveByIdInSets(state, objectiveId) {
+    return state.objectiveSets
+      .flatMap((set) => set.objectives || [])
+      .find((objective) => objective.id === objectiveId) || null;
+  }
+
+  function getObjectiveTransitionState(state) {
+    if (!state.objectiveFeedback) {
+      return null;
+    }
+
+    const allObjectives = state.objectiveSets.flatMap((set) => set.objectives || []);
+    const resolvedCount = allObjectives.filter((objective) => objective.status !== "pendente").length;
+    const totalCount = allObjectives.length;
+    const transitionObjective = findObjectiveByIdInSets(state, state.objectiveFeedback.objectiveId);
+    const transitionSet = findObjectiveSetByObjectiveId(state, state.objectiveFeedback.objectiveId);
+
+    if (!transitionObjective) {
+      return null;
+    }
+
+    if (state.objectiveFeedback.status === "concluido") {
+      return {
+        key: `concluido:${state.objectiveFeedback.objectiveId}:${resolvedCount}/${totalCount}`,
+        variant: "success",
+        objectiveId: state.objectiveFeedback.objectiveId,
+        kicker: "Objetivo Concluido",
+        symbol: "✓",
+        title: transitionSet
+          ? `${state.objectiveFeedback.objectiveId} - ${transitionSet.title}`
+          : state.objectiveFeedback.objectiveId,
+        copy: state.objectiveFeedback.title || transitionObjective.title || "",
+        progressLabel: `${resolvedCount}/${totalCount}`,
+      };
+    }
+
+    if (state.objectiveFeedback.status === "falhou" && transitionObjective.resolutionType === "manual") {
+      return {
+        key: `falhou:${state.objectiveFeedback.objectiveId}:${resolvedCount}/${totalCount}`,
+        variant: "failure",
+        objectiveId: state.objectiveFeedback.objectiveId,
+        kicker: "Objetivo Abandonado",
+        symbol: "X",
+        title: transitionSet
+          ? `${state.objectiveFeedback.objectiveId} - ${transitionSet.title}`
+          : state.objectiveFeedback.objectiveId,
+        copy: state.objectiveFeedback.title || transitionObjective.title || "",
+        progressLabel: `${resolvedCount}/${totalCount}`,
+      };
+    }
+
+    return null;
   }
 
   function createObjectiveFailureModalMarkup(state) {
@@ -513,6 +627,7 @@
   }
 
   function createv1Renderer(documentRef) {
+    const OBJECTIVE_TRANSITION_VISUAL_MS = 3600;
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
       screenTitle: documentRef.querySelector("#screen-title"),
@@ -553,11 +668,71 @@
     const searchSideCardDefaultMarkup = elements.searchSideCard
       ? elements.searchSideCard.innerHTML
       : "";
+    let latestState = null;
+    let activeObjectiveTransitionState = null;
+    let activeObjectiveTransitionTimeout = 0;
+    let lastObjectiveTransitionKey = "";
+
+    function clearObjectiveTransitionTimeout() {
+      if (!activeObjectiveTransitionTimeout) {
+        return;
+      }
+
+      global.clearTimeout(activeObjectiveTransitionTimeout);
+      activeObjectiveTransitionTimeout = 0;
+    }
+
+    function resetObjectiveTransitionState() {
+      clearObjectiveTransitionTimeout();
+      activeObjectiveTransitionState = null;
+      lastObjectiveTransitionKey = "";
+    }
+
+    function renderObjectiveGuide(state) {
+      if (!elements.objectiveGuide) {
+        return;
+      }
+
+      elements.objectiveGuide.innerHTML = activeObjectiveTransitionState
+        ? createObjectiveTransitionGuideMarkup(activeObjectiveTransitionState)
+        : createObjectiveGuideMarkup(state);
+      elements.objectiveGuide.hidden = !state.objectiveSets.length;
+      elements.objectiveGuide.classList.toggle(
+        "is-objective-transitioning",
+        Boolean(activeObjectiveTransitionState),
+      );
+    }
+
+    function syncObjectiveTransitionState(state) {
+      if (!state.objectiveSets.length) {
+        resetObjectiveTransitionState();
+        return;
+      }
+
+      const nextTransitionState = getObjectiveTransitionState(state);
+
+      if (!nextTransitionState || nextTransitionState.key === lastObjectiveTransitionKey) {
+        return;
+      }
+
+      activeObjectiveTransitionState = nextTransitionState;
+      lastObjectiveTransitionKey = nextTransitionState.key;
+      clearObjectiveTransitionTimeout();
+      activeObjectiveTransitionTimeout = global.setTimeout(() => {
+        activeObjectiveTransitionState = null;
+        activeObjectiveTransitionTimeout = 0;
+
+        if (latestState) {
+          renderObjectiveGuide(latestState);
+        }
+      }, OBJECTIVE_TRANSITION_VISUAL_MS);
+    }
 
     return {
       elements,
 
       render(state) {
+        latestState = state;
         documentRef.body.classList.toggle("is-session-locked", !state.isResearchStarted);
 
         if (elements.appShell) {
@@ -573,10 +748,8 @@
           elements.screenTitle.textContent = getTextContent(state);
         }
 
-        if (elements.objectiveGuide) {
-          elements.objectiveGuide.innerHTML = createObjectiveGuideMarkup(state);
-          elements.objectiveGuide.hidden = !state.objectiveSets.length;
-        }
+        syncObjectiveTransitionState(state);
+        renderObjectiveGuide(state);
 
         if (elements.identificationTrigger) {
           elements.identificationTrigger.classList.toggle("is-logged-in", state.isLoggedIn);
