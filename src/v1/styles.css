@@ -1776,21 +1776,14 @@ body[data-ui="v1"] .objective-guide-copy {
 }
 
 body[data-ui="v1"] .objective-guide-strike-text {
-  position: relative;
-  display: inline-block;
+  text-decoration-line: line-through;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-decoration-skip-ink: none;
 }
 
-body[data-ui="v1"] .objective-guide-strike-text-transition::after {
-  content: "";
-  position: absolute;
-  top: 54%;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--objective-transition-color);
-  transform: translateY(-50%);
-  transform-origin: left center;
-  animation: objective-guide-strike-draw 3600ms ease forwards;
+body[data-ui="v1"] .objective-guide-strike-text-transition {
+  animation: objective-guide-strike-reveal 3600ms ease forwards;
 }
 
 body[data-ui="v1"] .objective-failure-list {
@@ -1901,15 +1894,15 @@ body[data-ui="v1"] .objective-failure-modal[hidden] {
   }
 }
 
-@keyframes objective-guide-strike-draw {
+@keyframes objective-guide-strike-reveal {
   0%,
   28% {
-    width: 0;
+    text-decoration-color: transparent;
   }
 
   56%,
   100% {
-    width: 100%;
+    text-decoration-color: var(--objective-transition-color);
   }
 }
 

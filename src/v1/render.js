@@ -427,24 +427,22 @@
     )) || null;
     const resolvedCount = allObjectives.filter((objective) => objective.status !== "pendente").length;
     const totalCount = allObjectives.length;
-    const latestFailedObjective = [...allObjectives].reverse().find((objective) => objective.status === "falhou") || null;
     const transitionState = getObjectiveTransitionState(state);
-    const shouldSuppressFailedFeedback = transitionState && transitionState.variant === "failure";
-    const feedbackMarkup = state.objectiveFeedback && state.objectiveFeedback.status === "falhou" && !shouldSuppressFailedFeedback
+    const feedbackObjective = state.objectiveFeedback
+      ? findObjectiveByIdInSets(state, state.objectiveFeedback.objectiveId)
+      : null;
+    const shouldRenderFailureFeedback = state.objectiveFeedback
+      && state.objectiveFeedback.status === "falhou"
+      && (!transitionState || transitionState.variant !== "failure")
+      && feedbackObjective
+      && feedbackObjective.resolutionType !== "manual";
+    const feedbackMarkup = shouldRenderFailureFeedback
       ? `
           <div class="objective-guide-feedback objective-guide-feedback-${escapeHTML(state.objectiveFeedback.status)}">
             <span class="objective-guide-feedback-icon" aria-hidden="true">${
               state.objectiveFeedback.status === "falhou" ? "X" : "✓"
             }</span>
             <span>${escapeHTML(state.objectiveFeedback.message)}</span>
-          </div>
-        `
-      : latestFailedObjective
-        && !(shouldSuppressFailedFeedback && latestFailedObjective.id === transitionState.objectiveId)
-        ? `
-          <div class="objective-guide-feedback objective-guide-feedback-falhou">
-            <span class="objective-guide-feedback-icon" aria-hidden="true">X</span>
-            <span>${escapeHTML(`Desistência registrada em ${latestFailedObjective.id}.`)}</span>
           </div>
         `
       : "";
