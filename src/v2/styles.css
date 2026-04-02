@@ -1,3 +1,19 @@
+@font-face {
+  font-family: "Glegoo";
+  src: url("../../assets/fonts/glegoo/Glegoo-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Glegoo";
+  src: url("../../assets/fonts/glegoo/Glegoo-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --page-background: #ffffff;
   --header-background: #dce4f3;
@@ -95,6 +111,406 @@ button {
 .header-action-area {
   align-self: center;
   justify-self: end;
+}
+
+body[data-ui="v2"] .objective-guide-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 70;
+  width: min(660px, calc(100vw - 440px));
+  max-width: calc(100vw - 440px);
+  margin-inline: auto;
+  display: grid;
+  gap: 8px;
+  padding: 9px 15px 11px;
+  border: 1px solid rgba(112, 95, 73, 0.42);
+  border-radius: 0 0 24px 24px;
+  background: linear-gradient(180deg, rgba(253, 248, 236, 0.98), rgba(248, 241, 227, 0.97));
+  box-shadow: 0 8px 18px rgba(88, 68, 40, 0.09);
+  backdrop-filter: blur(8px);
+  font-family: "Glegoo", Georgia, serif;
+}
+
+body[data-ui="v2"] .objective-guide-panel.is-objective-transitioning {
+  overflow: hidden;
+}
+
+body[data-ui="v2"] .objective-guide-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: stretch;
+  gap: 12px;
+}
+
+body[data-ui="v2"] .objective-guide-shell-completion,
+body[data-ui="v2"] .objective-guide-shell-failure {
+  animation: objective-guide-shell-resolve 3600ms ease forwards;
+}
+
+body[data-ui="v2"] .objective-guide-shell-completion {
+  --objective-transition-color: #2f6a38;
+  --objective-transition-text: rgba(43, 63, 36, 0.9);
+  --objective-transition-fill: rgba(77, 139, 87, 0.14);
+  --objective-transition-ring: rgba(77, 139, 87, 0.08);
+  --objective-transition-fill-strong: rgba(77, 139, 87, 0.18);
+}
+
+body[data-ui="v2"] .objective-guide-shell-failure {
+  --objective-transition-color: #8b4b3d;
+  --objective-transition-text: rgba(91, 44, 39, 0.92);
+  --objective-transition-fill: rgba(161, 91, 78, 0.14);
+  --objective-transition-ring: rgba(161, 91, 78, 0.08);
+  --objective-transition-fill-strong: rgba(161, 91, 78, 0.18);
+}
+
+body[data-ui="v2"] .objective-guide-copy-block {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-self: stretch;
+  min-width: 0;
+}
+
+body[data-ui="v2"] .objective-guide-kicker {
+  margin: 0 0 2px;
+  font-size: 1rem;
+  line-height: 1;
+  color: #5f7399;
+  transform: translateY(-2px);
+}
+
+body[data-ui="v2"] .objective-guide-kicker-transition {
+  color: var(--objective-transition-color);
+}
+
+body[data-ui="v2"] .objective-guide-main-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  align-self: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+body[data-ui="v2"] .objective-guide-text-block {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+body[data-ui="v2"] .objective-guide-title {
+  margin: 0;
+  max-width: 100%;
+  font-size: clamp(0.95rem, 0.76rem + 0.72vw, 1.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #111111;
+  overflow-wrap: anywhere;
+}
+
+body[data-ui="v2"] .objective-guide-title-transition,
+body[data-ui="v2"] .objective-guide-copy-transition {
+  color: var(--objective-transition-text);
+}
+
+body[data-ui="v2"] .objective-guide-status-bullet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1.5px solid rgba(31, 31, 31, 0.78);
+  color: #111111;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+body[data-ui="v2"] .objective-guide-status-bullet-icon {
+  border: 0;
+}
+
+body[data-ui="v2"] .objective-guide-status-bullet-animated {
+  transform-origin: center;
+  opacity: 0;
+  animation: objective-guide-bullet-resolve 3600ms cubic-bezier(0.2, 0.9, 0.22, 1) forwards;
+}
+
+body[data-ui="v2"] .objective-guide-status-bullet-pending {
+  border-color: rgba(17, 17, 17, 0.78);
+}
+
+body[data-ui="v2"] .objective-guide-status-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+body[data-ui="v2"] .objective-guide-status-icon-transition {
+  opacity: 0;
+  transform: translateX(-8px) scale(0.6) rotate(-10deg);
+  animation: objective-guide-check-reveal 3600ms cubic-bezier(0.2, 0.9, 0.22, 1) forwards;
+}
+
+body[data-ui="v2"] .objective-guide-side {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  align-self: center;
+  gap: 9px;
+}
+
+body[data-ui="v2"] .objective-guide-progress-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  min-height: 42px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(209, 196, 175, 0.84);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1d2230;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+body[data-ui="v2"] .objective-guide-copy {
+  margin: 0;
+  color: var(--text-color);
+  max-width: min(100%, 420px);
+  line-height: 1.28;
+  font-size: clamp(0.8rem, 0.72rem + 0.34vw, 0.94rem);
+  overflow-wrap: anywhere;
+}
+
+body[data-ui="v2"] .objective-guide-strike-text,
+body[data-ui="v2"] .objective-guide-strike-line {
+  text-decoration: none;
+  background-image: linear-gradient(var(--objective-transition-color), var(--objective-transition-color));
+  background-repeat: no-repeat;
+  background-position: 0 58%;
+  background-size: 0% 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+body[data-ui="v2"] .objective-guide-strike-text-transition {
+  animation: objective-guide-strike-reveal 3600ms ease forwards;
+}
+
+body[data-ui="v2"] .objective-guide-strike-text-transition.objective-guide-strike-text-sequenced {
+  animation: none;
+  background-image: none;
+}
+
+body[data-ui="v2"] .objective-guide-strike-line {
+  display: inline;
+  animation-name: objective-guide-strike-line-reveal;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+body[data-ui="v2"] .objective-guide-strike-word {
+  display: inline;
+}
+
+body[data-ui="v2"] .objective-failure-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+body[data-ui="v2"] .objective-guide-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-left: 4px solid rgba(112, 95, 73, 0.48);
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--text-color);
+  font-size: 0.84rem;
+}
+
+body[data-ui="v2"] .objective-guide-feedback-concluido {
+  border-left-color: #4d8b57;
+}
+
+body[data-ui="v2"] .objective-guide-feedback-falhou {
+  border-left-color: #a15b4e;
+}
+
+body[data-ui="v2"] .objective-guide-feedback-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+body[data-ui="v2"] .objective-guide-abandon-button {
+  width: min(128px, 100%);
+  min-height: 44px;
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #c8c8ca;
+  color: #1a1a1a;
+  font-family: "Glegoo", Georgia, serif;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+body[data-ui="v2"] .objective-guide-abandon-button:hover,
+body[data-ui="v2"] .objective-guide-abandon-button:focus-visible {
+  background: #bbbbbf;
+}
+
+body[data-ui="v2"] .objective-guide-abandon-button:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+
+body[data-ui="v2"] .objective-failure-message {
+  display: grid;
+  gap: 12px;
+}
+
+body[data-ui="v2"] .objective-failure-copy,
+body[data-ui="v2"] .objective-failure-list-block p {
+  margin: 0;
+}
+
+body[data-ui="v2"] .objective-failure-list-block {
+  display: grid;
+  gap: 10px;
+}
+
+body[data-ui="v2"] .objective-failure-modal[hidden] {
+  display: none;
+}
+
+@keyframes objective-guide-bullet-resolve {
+  0%,
+  6% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.72);
+    filter: blur(1px);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1.08);
+    filter: blur(0);
+  }
+
+  30%,
+  84% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes objective-guide-check-reveal {
+  0%,
+  10% {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.6) rotate(-10deg);
+  }
+
+  22% {
+    opacity: 1;
+    transform: translateX(1px) scale(1.08) rotate(2deg);
+  }
+
+  34%,
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes objective-guide-strike-reveal {
+  0%,
+  22% {
+    background-size: 0% 2px;
+  }
+
+  64%,
+  100% {
+    background-size: 100% 2px;
+  }
+}
+
+@keyframes objective-guide-strike-line-reveal {
+  0% {
+    background-size: 0% 2px;
+  }
+
+  100% {
+    background-size: 100% 2px;
+  }
+}
+
+@keyframes objective-guide-shell-resolve {
+  0%,
+  12% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    filter: blur(0);
+  }
+
+  14% {
+    opacity: 1;
+    transform: translate3d(-4px, 0, 0) rotate(-0.35deg);
+    filter: blur(0);
+  }
+
+  16% {
+    opacity: 1;
+    transform: translate3d(5px, 0, 0) rotate(0.35deg);
+    filter: blur(0);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translate3d(-3px, 0, 0) rotate(-0.22deg);
+    filter: blur(0);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate3d(2px, 0, 0) rotate(0.14deg);
+    filter: blur(0);
+  }
+
+  22%,
+  82% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -16px, 0) rotate(0deg);
+    filter: blur(4px);
+  }
 }
 
 .header-link {
@@ -1318,6 +1734,63 @@ button {
 
   .brand-area {
     justify-content: flex-start;
+  }
+
+  body[data-ui="v2"] .objective-guide-panel {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    grid-column: auto;
+    width: 100%;
+    max-width: none;
+    border-radius: 18px;
+    justify-self: stretch;
+    backdrop-filter: none;
+  }
+
+  body[data-ui="v2"] .objective-guide-shell {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  body[data-ui="v2"] .objective-guide-side {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  body[data-ui="v2"] .objective-guide-abandon-button {
+    width: auto;
+    min-width: 122px;
+    min-height: 42px;
+    padding-inline: 16px;
+  }
+
+  body[data-ui="v2"] .objective-guide-progress-pill {
+    min-width: 58px;
+    min-height: 42px;
+  }
+
+  body[data-ui="v2"] .objective-guide-title {
+    font-size: clamp(0.98rem, 3.6vw, 1.12rem);
+  }
+
+  body[data-ui="v2"] .objective-guide-copy {
+    max-width: none;
+    font-size: clamp(0.82rem, 3vw, 0.9rem);
+  }
+
+  body[data-ui="v2"] .objective-guide-kicker {
+    font-size: 1rem;
+  }
+
+  body[data-ui="v2"] .objective-guide-status-bullet,
+  body[data-ui="v2"] .objective-guide-status-icon {
+    width: 24px;
+    height: 24px;
   }
 
   .header-title-area {

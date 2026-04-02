@@ -29,6 +29,9 @@
   const confirmModal = documentRef.querySelector("#confirm-modal");
   const confirmModalSubmit = documentRef.querySelector("#confirm-modal-submit");
   const confirmModalClose = documentRef.querySelector("#confirm-modal-close");
+  const objectiveFailureModal = documentRef.querySelector("#objective-failure-modal");
+  const objectiveFailureClose = documentRef.querySelector("#objective-failure-close");
+  const objectiveFailureSubmit = documentRef.querySelector("#objective-failure-submit");
   const carouselActions = Array.from(documentRef.querySelectorAll("[data-carousel-action]"));
   const carouselDots = Array.from(documentRef.querySelectorAll(".carousel-dot"));
 
@@ -160,6 +163,13 @@
 
       if (workshopButton) {
         controller.openWorkshop(workshopButton.dataset.workshopCode || "");
+        return;
+      }
+
+      const objectiveAbandonButton = event.target.closest("#objective-abandon-button");
+
+      if (objectiveAbandonButton) {
+        controller.openObjectiveFailureModal();
       }
     });
 
@@ -206,6 +216,26 @@
     if (confirmModalSubmit) {
       confirmModalSubmit.addEventListener("click", () => {
         controller.confirmWorkshopCancellation();
+      });
+    }
+
+    if (objectiveFailureModal) {
+      objectiveFailureModal.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLElement && event.target.dataset.objectiveFailureClose === "true") {
+          controller.closeObjectiveFailureModal();
+        }
+      });
+    }
+
+    if (objectiveFailureClose) {
+      objectiveFailureClose.addEventListener("click", () => {
+        controller.closeObjectiveFailureModal();
+      });
+    }
+
+    if (objectiveFailureSubmit) {
+      objectiveFailureSubmit.addEventListener("click", () => {
+        controller.confirmObjectiveFailure();
       });
     }
   }

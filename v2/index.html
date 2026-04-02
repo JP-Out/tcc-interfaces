@@ -6,7 +6,7 @@
   <title>SGOA - Tela Inicial</title>
   <link rel="stylesheet" href="../src/v2/styles.css">
 </head>
-<body>
+<body data-ui="v2">
   <div class="app-shell">
     <header class="app-header">
       <div class="brand-area">
@@ -26,6 +26,8 @@
           Identificação
         </button>
       </div>
+
+      <section class="objective-guide-panel" id="objective-guide" aria-live="polite" hidden></section>
     </header>
 
     <div class="app-body">
@@ -398,6 +400,26 @@
       <div class="confirm-modal-actions">
         <button class="confirm-modal-button" id="confirm-modal-submit" type="button">
           Confirmo
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="confirm-modal objective-failure-modal" id="objective-failure-modal" hidden>
+    <div class="confirm-modal-backdrop" data-objective-failure-close="true"></div>
+    <section class="confirm-modal-dialog" aria-labelledby="objective-failure-title" aria-modal="true" role="dialog">
+      <div class="confirm-modal-header">
+        <h2 id="objective-failure-title">Desistir do objetivo</h2>
+        <button class="confirm-modal-close" id="objective-failure-close" type="button" aria-label="Fechar">
+          x
+        </button>
+      </div>
+
+      <div class="confirm-modal-message" id="objective-failure-content"></div>
+
+      <div class="confirm-modal-actions">
+        <button class="confirm-modal-button" id="objective-failure-submit" type="button">
+          Confirmar desistência
         </button>
       </div>
     </section>
