@@ -73,7 +73,7 @@
             {
               id: "3.3",
               title: `Acesse ${exitViewLabel} e encontre a opcao para sair e encerrar a atividade.`,
-              dependsOn: ["1.1", "1.2", "1.3", "2.1", "2.2", "2.3", "3.1", "3.2"],
+              dependsOn: [],
               target: { viewName: "participante", viewLabel: exitViewLabel },
             },
           ],

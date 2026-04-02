@@ -653,10 +653,14 @@
       }
     }
 
-    function handleWorkshopCancellation(workshop) {
+    function handleWorkshopCancellation(workshop, options = {}) {
       if (!isResearchTrackingEnabled() || !workshop) {
         return;
       }
+
+      const {
+        removedPinnedShortcutImplicitly = false,
+      } = options;
 
       if (workshop.title === "Montagem de Painéis de Controle") {
         completeObjective("2.2", "inscricao_cancelada");
@@ -667,6 +671,15 @@
         && workshop.cod === state.objectiveRemovedQuickAccessWorkshopCode
       ) {
         completeObjective("3.2", "atalho_removido_e_inscricao_cancelada");
+        return;
+      }
+
+      if (
+        removedPinnedShortcutImplicitly
+        && state.objectiveTrackedQuickAccessWorkshopCode
+        && workshop.cod === state.objectiveTrackedQuickAccessWorkshopCode
+      ) {
+        completeObjective("3.2", "inscricao_cancelada_com_atalho_removido");
       }
     }
 
@@ -1201,13 +1214,16 @@
         const linkedIndex = state.linkedWorkshopCodes.indexOf(workshop.cod);
 
         if (linkedIndex >= 0) {
+          const removedPinnedShortcutImplicitly = state.pinnedWorkshopCodes.includes(workshop.cod);
           state.linkedWorkshopCodes.splice(linkedIndex, 1);
           if (!state.completedWorkshopCodes.includes(workshop.cod)) {
             state.completedWorkshopCodes.unshift(workshop.cod);
           }
           state.pinnedWorkshopCodes = state.pinnedWorkshopCodes.filter((code) => code !== workshop.cod);
           addParticipantRecord(`Cancelou inscrição em oficina “${workshop.title}”`);
-          handleWorkshopCancellation(workshop);
+          handleWorkshopCancellation(workshop, {
+            removedPinnedShortcutImplicitly,
+          });
         }
 
         state.isConfirmModalOpen = false;
