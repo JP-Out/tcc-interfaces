@@ -452,49 +452,100 @@
         <div class="objective-guide-shell">
           <div class="objective-guide-copy-block">
             <p class="objective-guide-kicker">Objetivo Atual</p>
-            <div class="objective-guide-headline-row">
-              <span class="objective-guide-status-bullet objective-guide-status-bullet-complete" aria-hidden="true">✓</span>
-              <h2 class="objective-guide-title">Sessão finalizada</h2>
+            <div class="objective-guide-main-row">
+              ${createObjectiveStatusMarkup("success")}
+              <div class="objective-guide-text-block">
+                <h2 class="objective-guide-title">Sessão finalizada</h2>
+                <p class="objective-guide-copy">Todos os objetivos desta sessão já receberam um desfecho.</p>
+              </div>
             </div>
-            <p class="objective-guide-copy">Todos os objetivos desta sessão já receberam um desfecho.</p>
           </div>
 
-          <div class="objective-guide-side">
-            <span class="objective-guide-progress-pill">9/9</span>
-          </div>
+          ${createObjectiveGuideSideMarkup("9/9", { showAbandonButton: false })}
         </div>
 
         ${feedbackMarkup}
       `;
     }
 
-    const currentStatusSymbol = currentObjective.status === "falhou" ? "X" : "";
-    const currentStatusClass = currentObjective.status === "falhou"
-      ? "objective-guide-status-bullet-failed"
-      : "objective-guide-status-bullet-pending";
+    const currentStatusVariant = currentObjective.status === "falhou"
+      ? "failure"
+      : "pending";
+    const shouldShowAbandonButton = currentObjective.id !== "3.3";
 
     return `
       <div class="objective-guide-shell">
         <div class="objective-guide-copy-block">
           <p class="objective-guide-kicker">Objetivo Atual</p>
-          <div class="objective-guide-headline-row">
-            <span class="objective-guide-status-bullet ${escapeHTML(currentStatusClass)}" aria-hidden="true">
-              ${escapeHTML(currentStatusSymbol)}
-            </span>
-            <h2 class="objective-guide-title">${escapeHTML(`${currentObjective.id} - ${currentSet.title}`)}</h2>
+          <div class="objective-guide-main-row">
+            ${createObjectiveStatusMarkup(currentStatusVariant)}
+            <div class="objective-guide-text-block">
+              <h2 class="objective-guide-title">${escapeHTML(`${currentObjective.id} - ${currentSet.title}`)}</h2>
+              <p class="objective-guide-copy">${escapeHTML(currentObjective.title)}</p>
+            </div>
           </div>
-          <p class="objective-guide-copy">${escapeHTML(currentObjective.title)}</p>
         </div>
 
-        <div class="objective-guide-side">
-          <span class="objective-guide-progress-pill">${escapeHTML(`${resolvedCount}/${totalCount}`)}</span>
-          <button class="objective-guide-abandon-button" id="objective-abandon-button" type="button">
-            Desistir
-          </button>
-        </div>
+        ${createObjectiveGuideSideMarkup(`${resolvedCount}/${totalCount}`, {
+          showAbandonButton: shouldShowAbandonButton,
+        })}
       </div>
 
       ${feedbackMarkup}
+    `;
+  }
+
+  function getObjectiveStatusIconPath(variant) {
+    const iconPaths = {
+      failure: "../assets/icons/objective-card/objective-abandoned.svg",
+      success: "../assets/icons/objective-card/objective-completed.svg",
+      pending: "../assets/icons/objective-card/objective-pending.svg",
+    };
+
+    return iconPaths[variant] || iconPaths.pending;
+  }
+
+  function createObjectiveStatusMarkup(variant, options = {}) {
+    const { animated = false } = options;
+    const pendingClass = variant === "pending"
+      ? " objective-guide-status-bullet-pending"
+      : "";
+
+    return `
+      <span class="objective-guide-status-bullet objective-guide-status-bullet-icon${pendingClass}${animated ? " objective-guide-status-bullet-animated" : ""}" aria-hidden="true">
+        <img
+          class="objective-guide-status-icon${animated ? " objective-guide-status-icon-transition" : ""}"
+          src="${getObjectiveStatusIconPath(variant)}"
+          alt=""
+        >
+      </span>
+    `;
+  }
+
+  function createObjectiveGuideSideMarkup(progressLabel, options = {}) {
+    const {
+      showAbandonButton = true,
+      disableAbandonButton = false,
+    } = options;
+
+    const buttonMarkup = showAbandonButton
+      ? `
+          <button
+            class="objective-guide-abandon-button"
+            id="objective-abandon-button"
+            type="button"
+            ${disableAbandonButton ? "disabled tabindex='-1'" : ""}
+          >
+            Desistir
+          </button>
+        `
+      : "";
+
+    return `
+      <div class="objective-guide-side">
+        ${buttonMarkup}
+        <span class="objective-guide-progress-pill">${escapeHTML(progressLabel)}</span>
+      </div>
     `;
   }
 
@@ -511,24 +562,23 @@
       <div class="objective-guide-shell ${shellVariantClass}" aria-live="off">
         <div class="objective-guide-copy-block">
           <p class="objective-guide-kicker objective-guide-kicker-transition">${escapeHTML(transitionState.kicker)}</p>
-          <div class="objective-guide-headline-row">
-            <span class="objective-guide-status-bullet objective-guide-status-bullet-animated" aria-hidden="true">
-              <span class="objective-guide-status-symbol objective-guide-status-symbol-transition">
-                ${escapeHTML(transitionState.symbol)}
-              </span>
-            </span>
-            <h2 class="objective-guide-title objective-guide-title-transition">
-              <span class="objective-guide-strike-text objective-guide-strike-text-transition">${escapeHTML(transitionState.title)}</span>
-            </h2>
+          <div class="objective-guide-main-row">
+            ${createObjectiveStatusMarkup(transitionState.variant, { animated: true })}
+            <div class="objective-guide-text-block">
+              <h2 class="objective-guide-title objective-guide-title-transition">
+                <span class="objective-guide-strike-text objective-guide-strike-text-transition">${escapeHTML(transitionState.title)}</span>
+              </h2>
+              <p class="objective-guide-copy objective-guide-copy-transition">
+                <span class="objective-guide-strike-text objective-guide-strike-text-transition">${escapeHTML(transitionState.copy)}</span>
+              </p>
+            </div>
           </div>
-          <p class="objective-guide-copy objective-guide-copy-transition">
-            <span class="objective-guide-strike-text objective-guide-strike-text-transition">${escapeHTML(transitionState.copy)}</span>
-          </p>
         </div>
 
-        <div class="objective-guide-side">
-          <span class="objective-guide-progress-pill">${escapeHTML(transitionState.progressLabel)}</span>
-        </div>
+        ${createObjectiveGuideSideMarkup(transitionState.progressLabel, {
+          showAbandonButton: transitionState.objectiveId !== "3.3",
+          disableAbandonButton: true,
+        })}
       </div>
     `;
   }
@@ -566,7 +616,6 @@
         variant: "success",
         objectiveId: state.objectiveFeedback.objectiveId,
         kicker: "Objetivo Concluido",
-        symbol: "✓",
         title: transitionSet
           ? `${state.objectiveFeedback.objectiveId} - ${transitionSet.title}`
           : state.objectiveFeedback.objectiveId,
@@ -581,7 +630,6 @@
         variant: "failure",
         objectiveId: state.objectiveFeedback.objectiveId,
         kicker: "Objetivo Abandonado",
-        symbol: "X",
         title: transitionSet
           ? `${state.objectiveFeedback.objectiveId} - ${transitionSet.title}`
           : state.objectiveFeedback.objectiveId,
@@ -626,6 +674,8 @@
 
   function createv1Renderer(documentRef) {
     const OBJECTIVE_TRANSITION_VISUAL_MS = 3600;
+    const OBJECTIVE_STRIKE_REVEAL_START_MS = Math.round(OBJECTIVE_TRANSITION_VISUAL_MS * 0.22);
+    const OBJECTIVE_STRIKE_REVEAL_END_MS = Math.round(OBJECTIVE_TRANSITION_VISUAL_MS * 0.64);
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
       screenTitle: documentRef.querySelector("#screen-title"),
@@ -670,6 +720,9 @@
     let activeObjectiveTransitionState = null;
     let activeObjectiveTransitionTimeout = 0;
     let lastObjectiveTransitionKey = "";
+    let lastObjectiveGuideMarkup = "";
+    let lastObjectiveGuideHidden = true;
+    let lastObjectiveGuideIsTransitioning = false;
 
     function clearObjectiveTransitionTimeout() {
       if (!activeObjectiveTransitionTimeout) {
@@ -686,19 +739,136 @@
       lastObjectiveTransitionKey = "";
     }
 
+    function prepareSequentialStrikeText() {
+      if (!elements.objectiveGuide) {
+        return;
+      }
+
+      const strikeElements = Array.from(
+        elements.objectiveGuide.querySelectorAll(".objective-guide-strike-text-transition"),
+      );
+
+      if (!strikeElements.length) {
+        return;
+      }
+
+      global.requestAnimationFrame(() => {
+        strikeElements.forEach((element) => {
+          if (!(element instanceof HTMLElement) || !element.isConnected) {
+            return;
+          }
+
+          if (element.dataset.sequentialStrikeReady === "true") {
+            return;
+          }
+
+          const fullText = String(element.textContent || "").trim();
+
+          if (!fullText) {
+            element.dataset.sequentialStrikeReady = "true";
+            return;
+          }
+
+          const words = fullText.split(/\s+/).filter(Boolean);
+
+          if (!words.length) {
+            element.dataset.sequentialStrikeReady = "true";
+            return;
+          }
+
+          element.textContent = "";
+
+          const wordElements = words.map((word, index) => {
+            const wordElement = documentRef.createElement("span");
+            wordElement.className = "objective-guide-strike-word";
+            wordElement.textContent = word;
+            element.appendChild(wordElement);
+
+            if (index < words.length - 1) {
+              element.appendChild(documentRef.createTextNode(" "));
+            }
+
+            return wordElement;
+          });
+
+          const lineTexts = [];
+          let currentLineWords = [];
+          let currentLineTop = null;
+
+          wordElements.forEach((wordElement) => {
+            const wordTop = Math.round(wordElement.getBoundingClientRect().top);
+
+            if (currentLineTop !== null && Math.abs(wordTop - currentLineTop) > 1) {
+              lineTexts.push(currentLineWords.join(" "));
+              currentLineWords = [wordElement.textContent || ""];
+              currentLineTop = wordTop;
+              return;
+            }
+
+            currentLineTop = currentLineTop === null ? wordTop : currentLineTop;
+            currentLineWords.push(wordElement.textContent || "");
+          });
+
+          if (currentLineWords.length) {
+            lineTexts.push(currentLineWords.join(" "));
+          }
+
+          const revealWindowMs = Math.max(
+            OBJECTIVE_STRIKE_REVEAL_END_MS - OBJECTIVE_STRIKE_REVEAL_START_MS,
+            1,
+          );
+          const lineRevealDurationMs = Math.max(revealWindowMs / Math.max(lineTexts.length, 1), 1);
+
+          element.textContent = "";
+          element.classList.add("objective-guide-strike-text-sequenced");
+
+          lineTexts.forEach((lineText, index) => {
+            const lineElement = documentRef.createElement("span");
+            lineElement.className = "objective-guide-strike-line";
+            lineElement.textContent = lineText;
+            lineElement.style.animationDelay = `${OBJECTIVE_STRIKE_REVEAL_START_MS + (lineRevealDurationMs * index)}ms`;
+            lineElement.style.animationDuration = `${lineRevealDurationMs}ms`;
+            element.appendChild(lineElement);
+
+            if (index < lineTexts.length - 1) {
+              element.appendChild(documentRef.createElement("br"));
+            }
+          });
+
+          element.dataset.sequentialStrikeReady = "true";
+        });
+      });
+    }
+
     function renderObjectiveGuide(state) {
       if (!elements.objectiveGuide) {
         return;
       }
 
-      elements.objectiveGuide.innerHTML = activeObjectiveTransitionState
+      const nextMarkup = activeObjectiveTransitionState
         ? createObjectiveTransitionGuideMarkup(activeObjectiveTransitionState)
         : createObjectiveGuideMarkup(state);
-      elements.objectiveGuide.hidden = !state.objectiveSets.length;
-      elements.objectiveGuide.classList.toggle(
-        "is-objective-transitioning",
-        Boolean(activeObjectiveTransitionState),
-      );
+      const nextHidden = !state.objectiveSets.length;
+      const nextIsTransitioning = Boolean(activeObjectiveTransitionState);
+
+      if (nextMarkup !== lastObjectiveGuideMarkup) {
+        elements.objectiveGuide.innerHTML = nextMarkup;
+        lastObjectiveGuideMarkup = nextMarkup;
+        prepareSequentialStrikeText();
+      }
+
+      if (nextHidden !== lastObjectiveGuideHidden) {
+        elements.objectiveGuide.hidden = nextHidden;
+        lastObjectiveGuideHidden = nextHidden;
+      }
+
+      if (nextIsTransitioning !== lastObjectiveGuideIsTransitioning) {
+        elements.objectiveGuide.classList.toggle(
+          "is-objective-transitioning",
+          nextIsTransitioning,
+        );
+        lastObjectiveGuideIsTransitioning = nextIsTransitioning;
+      }
     }
 
     function syncObjectiveTransitionState(state) {
