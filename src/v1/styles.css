@@ -52,7 +52,17 @@ body[data-ui="v1"] .app-shell {
   min-height: 100vh;
 }
 
-body[data-ui="v1"] .app-shell.login-mode .app-header,
+body[data-ui="v1"] .app-shell.login-mode .app-header {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  gap: 0;
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+body[data-ui="v1"] .app-shell.login-mode .app-header > :not(.objective-guide-panel),
 body[data-ui="v1"] .app-shell.login-mode .sidebar {
   display: none;
 }
@@ -63,7 +73,7 @@ body[data-ui="v1"] .app-shell.login-mode .content-area {
   justify-content: center;
   max-width: none;
   min-height: 100vh;
-  padding: 24px;
+  padding: 116px 24px 24px;
 }
 
 body[data-ui="v1"] .app-header {
@@ -2037,6 +2047,15 @@ body[data-ui="v1"] .objective-failure-modal[hidden] {
   body[data-ui="v1"] .app-header {
     grid-template-columns: 1fr;
     justify-items: start;
+  }
+
+  body[data-ui="v1"] .app-shell.login-mode .app-header {
+    padding: 16px 12px 0;
+  }
+
+  body[data-ui="v1"] .app-shell.login-mode .content-area {
+    min-height: 0;
+    padding: 24px 0 28px;
   }
 
   body[data-ui="v1"] .objective-guide-panel {

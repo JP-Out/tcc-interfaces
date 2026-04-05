@@ -62,14 +62,23 @@ button {
   overflow: hidden;
 }
 
-.app-shell.login-mode .app-header,
+.app-shell.login-mode .app-header {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  gap: 0;
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
+.app-shell.login-mode .app-header > :not(.objective-guide-panel),
 .app-shell.login-mode .sidebar {
   display: none;
 }
 
 .app-shell.login-mode .content-area {
   height: 100%;
-  padding: 0;
+  padding: 108px 0 0;
 }
 
 .app-shell.login-mode .app-body {
@@ -1734,6 +1743,14 @@ body[data-ui="v2"] .objective-failure-modal[hidden] {
 
   .brand-area {
     justify-content: flex-start;
+  }
+
+  .app-shell.login-mode .app-header {
+    padding: 16px;
+  }
+
+  .app-shell.login-mode .content-area {
+    padding: 0;
   }
 
   body[data-ui="v2"] .objective-guide-panel {
