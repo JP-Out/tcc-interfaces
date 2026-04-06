@@ -1,4 +1,5 @@
 tools/__pycache__/
 .codex
-tools/mouse-tracking/*.json
-tools/mouse-tracking/output/*.svg
+tools/**/__pycache__/
+tools/output/*
+!tools/output/.gitkeep
