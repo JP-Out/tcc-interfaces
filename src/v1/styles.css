@@ -150,6 +150,11 @@ body[data-ui="v1"] .header-link.is-logged-in {
   color: #534FA3;
 }
 
+body[data-ui="v1"] .header-link.is-nudging {
+  animation: identification-nudge 420ms ease-in-out 1;
+  transform-origin: center;
+}
+
 body[data-ui="v1"] .header-link:focus-visible {
   outline: 1px dashed rgba(26, 100, 255, 0.45);
   outline-offset: 4px;
@@ -1549,6 +1554,29 @@ body[data-ui="v1"] .history-modal[hidden] {
   to {
     opacity: 1;
     transform: translate(0, 0);
+  }
+}
+
+@keyframes identification-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-2px) rotate(-1deg);
+  }
+
+  40% {
+    transform: translateX(2px) rotate(1deg);
+  }
+
+  60% {
+    transform: translateX(-2px) rotate(-0.8deg);
+  }
+
+  80% {
+    transform: translateX(1px) rotate(0.5deg);
   }
 }
 

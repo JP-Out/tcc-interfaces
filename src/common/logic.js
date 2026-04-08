@@ -737,6 +737,8 @@
           .map((objectiveId) => findObjectiveById(objectiveId))
           .filter(Boolean),
         participantRecords: state.participantRecords.map((record) => ({ ...record })),
+        unauthenticatedErrorToastCount: state.unauthenticatedErrorToastCount,
+        identificationNudgeTick: state.identificationNudgeTick,
         linkedWorkshopCodes: state.linkedWorkshopCodes.slice(),
         completedWorkshopCodes: state.completedWorkshopCodes.slice(),
         pinnedWorkshopCodes: state.pinnedWorkshopCodes.slice(),
@@ -818,6 +820,14 @@
 
       if (state.workshopSearchHistory.length > MAX_SEARCH_HISTORY) {
         state.workshopSearchHistory.length = MAX_SEARCH_HISTORY;
+      }
+    }
+
+    function registerUnauthenticatedErrorToast() {
+      state.unauthenticatedErrorToastCount += 1;
+
+      if (state.unauthenticatedErrorToastCount >= 5) {
+        state.identificationNudgeTick += 1;
       }
     }
 
@@ -905,7 +915,9 @@
 
         if (BLOCKED_VIEWS.has(viewName) && !state.isLoggedIn) {
           metrics.trackError("acesso_bloqueado_sem_identificacao");
+          registerUnauthenticatedErrorToast();
           onToast(TOAST_MESSAGES.blockedAccess);
+          notify();
           return false;
         }
 
@@ -930,6 +942,8 @@
         state.currentUserIdentifier = identifier && identifier.trim()
           ? identifier.trim()
           : DEFAULT_LOGIN_IDENTIFIER;
+        state.unauthenticatedErrorToastCount = 0;
+        state.identificationNudgeTick = 0;
         state.currentParticipantCode = generateParticipantCode();
         state.currentParticipantCourse = DEFAULT_PARTICIPANT.course;
         state.currentFirstAccessDate = formatDate(new Date());
@@ -962,6 +976,8 @@
       resetApp() {
         state.isLoggedIn = false;
         state.currentUserIdentifier = "";
+        state.unauthenticatedErrorToastCount = 0;
+        state.identificationNudgeTick = 0;
         state.currentParticipantCode = DEFAULT_PARTICIPANT.identifier;
         state.currentParticipantCourse = DEFAULT_PARTICIPANT.course;
         state.currentFirstAccessDate = DEFAULT_PARTICIPANT.firstAccessDate;
@@ -1170,7 +1186,9 @@
 
         if (!state.isLoggedIn) {
           metrics.trackError("inscricao_sem_identificacao");
+          registerUnauthenticatedErrorToast();
           onToast(TOAST_MESSAGES.blockedAccess);
+          notify();
           return false;
         }
 

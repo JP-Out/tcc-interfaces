@@ -21,6 +21,8 @@
       objectiveRemovedQuickAccessWorkshopCode: "",
       selectedWorkshopSource: "",
       currentUserIdentifier: "",
+      unauthenticatedErrorToastCount: 0,
+      identificationNudgeTick: 0,
       currentParticipantCode: DEFAULT_PARTICIPANT.identifier,
       currentParticipantCourse: DEFAULT_PARTICIPANT.course,
       currentFirstAccessDate: DEFAULT_PARTICIPANT.firstAccessDate,
