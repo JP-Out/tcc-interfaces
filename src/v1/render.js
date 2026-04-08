@@ -318,10 +318,10 @@
 
             <div class="search-detail-navigation-buttons">
               <button class="search-detail-nav-button" type="button" data-search-detail-nav="1">
-                Continuar
+                Proximo Item (Ofc.)
               </button>
               <button class="search-detail-nav-button" type="button" data-search-detail-nav="-1">
-                Voltar
+                Item Anterior (Ofc.)
               </button>
             </div>
           </div>
