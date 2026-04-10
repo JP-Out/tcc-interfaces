@@ -94,7 +94,7 @@
     BLOCKED_VIEWS: new Set(["participante", "gerenciar", "gerenciar-detalhes"]),
     VIEW_LABELS: {
       home: "Informações Gerais",
-      "pesquisa-geral": "Pesquisa Geral",
+      "pesquisa-geral": "Busca e Inscricao",
       "pesquisa-detalhes": "Consulta Detalhada",
       participante: "Área do Participante",
       gerenciar: "Gerenciar Oficinas",
