@@ -52,30 +52,6 @@ body[data-ui="v1"] .app-shell {
   min-height: 100vh;
 }
 
-body[data-ui="v1"] .app-shell.login-mode .app-header {
-  grid-template-columns: minmax(0, 1fr);
-  min-height: 0;
-  gap: 0;
-  padding: 0;
-  border-bottom: 0;
-  background: transparent;
-  backdrop-filter: none;
-}
-
-body[data-ui="v1"] .app-shell.login-mode .app-header > :not(.objective-guide-panel),
-body[data-ui="v1"] .app-shell.login-mode .sidebar {
-  display: none;
-}
-
-body[data-ui="v1"] .app-shell.login-mode .content-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: none;
-  min-height: 100vh;
-  padding: 116px 24px 24px;
-}
-
 body[data-ui="v1"] .app-header {
   display: grid;
   grid-template-columns: minmax(240px, auto) minmax(320px, 660px) auto;
@@ -85,12 +61,6 @@ body[data-ui="v1"] .app-header {
   border-bottom: 1px solid var(--line-color);
   background: rgba(255, 255, 255, 0.84);
   backdrop-filter: blur(12px);
-}
-
-body[data-ui="v1"] .header-action-area {
-  grid-column: 3;
-  justify-self: end;
-  margin-top: 12px;
 }
 
 body[data-ui="v1"] .good-brand-block {
@@ -144,15 +114,6 @@ body[data-ui="v1"] .header-link {
 body[data-ui="v1"] .header-link:hover {
   text-decoration: underline;
   text-underline-offset: 0.12em;
-}
-
-body[data-ui="v1"] .header-link.is-logged-in {
-  color: #534FA3;
-}
-
-body[data-ui="v1"] .header-link.is-nudging {
-  animation: identification-nudge 420ms ease-in-out 1;
-  transform-origin: center;
 }
 
 body[data-ui="v1"] .header-link:focus-visible {
@@ -485,8 +446,7 @@ body[data-ui="v1"] .participant-card p {
 
 body[data-ui="v1"] .participant-link,
 body[data-ui="v1"] .manage-apply,
-body[data-ui="v1"] .confirm-modal-button,
-body[data-ui="v1"] .login-button {
+body[data-ui="v1"] .confirm-modal-button {
   border: 0;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--accent) 0%, #4c88ff 100%);
@@ -1256,93 +1216,6 @@ body[data-ui="v1"] .offices-page-number:focus-visible {
   outline: none;
 }
 
-body[data-ui="v1"] .login-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: min(920px, 100%);
-  max-width: 920px;
-  margin: 0 auto;
-}
-
-body[data-ui="v1"] .content-view.login-screen.is-active {
-  display: flex;
-}
-
-body[data-ui="v1"] .login-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  width: 100%;
-  padding: 28px;
-  border: 1px solid var(--line-color);
-  border-radius: 24px;
-  background: var(--surface);
-  box-shadow: 0 16px 36px rgba(17, 33, 61, 0.08);
-  text-align: center;
-}
-
-body[data-ui="v1"] .login-title-block {
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-}
-
-body[data-ui="v1"] .login-title {
-  margin: 0;
-  font-size: clamp(2rem, 3vw, 3rem);
-}
-
-body[data-ui="v1"] .login-subtitle {
-  margin: 0;
-  color: var(--muted-text);
-  text-align: center;
-}
-
-body[data-ui="v1"] .login-logo {
-  width: 160px;
-}
-
-body[data-ui="v1"] .login-body {
-  display: grid;
-  gap: 18px;
-  width: 50%;
-  padding: 24px 0 0;
-}
-
-body[data-ui="v1"] .login-input {
-  width: 100%;
-  min-height: 64px;
-  padding: 0 18px;
-  border: 1px solid var(--line-color);
-  border-radius: 16px;
-  background: var(--surface);
-  font-size: 1rem;
-}
-
-body[data-ui="v1"] .login-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  width: 100%;
-}
-
-body[data-ui="v1"] .login-button {
-  min-width: 180px;
-  min-height: 52px;
-  background: #e8efff;
-  color: var(--accent-dark);
-}
-
-body[data-ui="v1"] .login-button-secondary {
-  background: #e8efff;
-  color: var(--accent-dark);
-}
-
 body[data-ui="v1"] .prototype-note {
   position: fixed;
   left: 24px;
@@ -1557,29 +1430,6 @@ body[data-ui="v1"] .history-modal[hidden] {
   }
 }
 
-@keyframes identification-nudge {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  20% {
-    transform: translateX(-2px) rotate(-1deg);
-  }
-
-  40% {
-    transform: translateX(2px) rotate(1deg);
-  }
-
-  60% {
-    transform: translateX(-2px) rotate(-0.8deg);
-  }
-
-  80% {
-    transform: translateX(1px) rotate(0.5deg);
-  }
-}
-
 @media (max-width: 1080px) {
   body[data-ui="v1"] .content-area {
     width: calc(100% - 32px);
@@ -1642,10 +1492,6 @@ body[data-ui="v1"] .history-modal[hidden] {
     display: none;
   }
 
-  body[data-ui="v1"] .login-hero {
-    align-items: center;
-  }
-
   body[data-ui="v1"] .quick-menu-header,
   body[data-ui="v1"] .manage-panel-row {
     grid-template-columns: 1fr;
@@ -1661,13 +1507,6 @@ body[data-ui="v1"] .history-modal[hidden] {
 
   body[data-ui="v1"] .quick-menu-header {
     display: grid;
-  }
-  body[data-ui="v1"] .login-actions {
-    flex-direction: column;
-  }
-
-  body[data-ui="v1"] .login-button {
-    width: 100%;
   }
 }
 
@@ -2075,15 +1914,6 @@ body[data-ui="v1"] .objective-failure-modal[hidden] {
   body[data-ui="v1"] .app-header {
     grid-template-columns: 1fr;
     justify-items: start;
-  }
-
-  body[data-ui="v1"] .app-shell.login-mode .app-header {
-    padding: 16px 12px 0;
-  }
-
-  body[data-ui="v1"] .app-shell.login-mode .content-area {
-    min-height: 0;
-    padding: 24px 0 28px;
   }
 
   body[data-ui="v1"] .objective-guide-panel {

@@ -62,30 +62,6 @@ button {
   overflow: hidden;
 }
 
-.app-shell.login-mode .app-header {
-  grid-template-columns: minmax(0, 1fr);
-  min-height: 0;
-  gap: 0;
-  padding: 0;
-  border-bottom: 0;
-  background: transparent;
-}
-
-.app-shell.login-mode .app-header > :not(.objective-guide-panel),
-.app-shell.login-mode .sidebar {
-  display: none;
-}
-
-.app-shell.login-mode .content-area {
-  height: 100%;
-  padding: 108px 0 0;
-}
-
-.app-shell.login-mode .app-body {
-  display: block;
-  height: 100%;
-}
-
 .app-header {
   display: grid;
   grid-template-columns: 190px minmax(0, 1fr) auto;
@@ -115,11 +91,6 @@ button {
   font-size: clamp(2.25rem, 3vw, 3.5rem);
   font-weight: 400;
   line-height: 1.05;
-}
-
-.header-action-area {
-  align-self: center;
-  justify-self: end;
 }
 
 body[data-ui="v2"] .objective-guide-panel {
@@ -1506,100 +1477,6 @@ body[data-ui="v2"] .objective-failure-modal[hidden] {
   font-weight: 500;
 }
 
-.login-screen {
-  background: #ffffff;
-}
-
-.login-screen.is-active {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.login-hero {
-  display: flex;
-  flex: 0 0 417px;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 96px 150px 60px;
-  background: #e7eef9;
-  border-bottom: 4px solid var(--line-color);
-}
-
-.login-title-block {
-  padding-top: 10px;
-}
-
-.login-title {
-  margin: 0 0 10px;
-  font-size: 110px;
-  font-weight: 400;
-  line-height: 0.92;
-}
-
-.login-subtitle {
-  margin: 0;
-  font-size: 102px;
-  font-weight: 400;
-  line-height: 0.94;
-}
-
-.login-logo {
-  width: 230px;
-  height: auto;
-  margin-top: 8px;
-}
-
-.login-body {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  padding: 0 116px 100px;
-}
-
-.login-input {
-  position: absolute;
-  top: 41%;
-  left: 50%;
-  width: 582px;
-  height: 78px;
-  transform: translate(-50%, -50%);
-  padding: 0 32px;
-  border: 2px solid #1e2939;
-  border-radius: 0;
-  background: #ffffff;
-  color: #1e2939;
-  font-size: 22px;
-}
-
-.login-input::placeholder {
-  color: #8b8b8b;
-}
-
-.login-actions {
-  position: absolute;
-  right: 116px;
-  bottom: 40px;
-  left: 116px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.login-button {
-  min-width: 260px;
-  height: 68px;
-  border: 2px solid #1e2939;
-  background: #ffffff;
-  color: #000000;
-  font-size: 24px;
-}
-
-.login-button:hover,
-.login-button:focus-visible {
-  background: #f2f2f2;
-}
-
 .placeholder-panel {
   margin: 18px 0 32px;
   padding: 18px 20px;
@@ -1666,17 +1543,14 @@ body[data-ui="v2"] .objective-failure-modal[hidden] {
 
 .sidebar-link:focus-visible,
 .header-link:focus-visible,
-.square-button:focus-visible,
-.login-button:focus-visible,
-.login-input:focus-visible {
+.square-button:focus-visible {
   outline: none;
 }
 
 .sidebar-link:focus-visible,
 .sidebar-toggle:focus-visible,
 .header-link:focus-visible,
-.square-button:focus-visible,
-.login-button:focus-visible {
+.square-button:focus-visible {
   outline: 3px solid #ff8a1f;
   outline-offset: 2px;
 }
@@ -1743,14 +1617,6 @@ body[data-ui="v2"] .objective-failure-modal[hidden] {
 
   .brand-area {
     justify-content: flex-start;
-  }
-
-  .app-shell.login-mode .app-header {
-    padding: 16px;
-  }
-
-  .app-shell.login-mode .content-area {
-    padding: 0;
   }
 
   body[data-ui="v2"] .objective-guide-panel {
@@ -1873,48 +1739,6 @@ body[data-ui="v2"] .objective-failure-modal[hidden] {
   .carousel-controls {
     flex-wrap: wrap;
     justify-content: center;
-  }
-
-  .login-hero {
-    flex-basis: 250px;
-    padding: 24px 24px 28px;
-  }
-
-  .login-title {
-    font-size: 54px;
-  }
-
-  .login-subtitle {
-    font-size: 46px;
-  }
-
-  .login-logo {
-    width: 120px;
-  }
-
-  .login-body {
-    padding: 24px 16px 24px;
-  }
-
-  .login-input {
-    position: static;
-    width: 100%;
-    max-width: 582px;
-    height: 68px;
-    margin: 80px auto 0;
-    transform: none;
-  }
-
-  .login-actions {
-    position: static;
-    display: grid;
-    gap: 16px;
-    margin-top: 60px;
-  }
-
-  .login-button {
-    width: 100%;
-    min-width: 0;
   }
 
   .home-copy p,

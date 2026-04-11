@@ -1,7 +1,5 @@
 (function attachCommonLogic(global) {
   const {
-    BLOCKED_VIEWS,
-    DEFAULT_LOGIN_IDENTIFIER,
     DEFAULT_PARTICIPANT,
     MAX_VISIBLE_RECORDS,
     MOCK_WORKSHOPS,
@@ -737,8 +735,6 @@
           .map((objectiveId) => findObjectiveById(objectiveId))
           .filter(Boolean),
         participantRecords: state.participantRecords.map((record) => ({ ...record })),
-        unauthenticatedErrorToastCount: state.unauthenticatedErrorToastCount,
-        identificationNudgeTick: state.identificationNudgeTick,
         linkedWorkshopCodes: state.linkedWorkshopCodes.slice(),
         completedWorkshopCodes: state.completedWorkshopCodes.slice(),
         pinnedWorkshopCodes: state.pinnedWorkshopCodes.slice(),
@@ -820,14 +816,6 @@
 
       if (state.workshopSearchHistory.length > MAX_SEARCH_HISTORY) {
         state.workshopSearchHistory.length = MAX_SEARCH_HISTORY;
-      }
-    }
-
-    function registerUnauthenticatedErrorToast() {
-      state.unauthenticatedErrorToastCount += 1;
-
-      if (state.unauthenticatedErrorToastCount >= 5) {
-        state.identificationNudgeTick += 1;
       }
     }
 
@@ -913,17 +901,9 @@
       openView(viewName) {
         let hasNewRecord = false;
 
-        if (BLOCKED_VIEWS.has(viewName) && !state.isLoggedIn) {
-          metrics.trackError("acesso_bloqueado_sem_identificacao");
-          registerUnauthenticatedErrorToast();
-          onToast(TOAST_MESSAGES.blockedAccess);
-          notify();
-          return false;
-        }
-
         const label = VIEW_LABELS[viewName];
 
-        if (state.isLoggedIn && label && viewName !== "home" && viewName !== "identificacao") {
+        if (label && viewName !== "home") {
           addParticipantRecord(`Acessou submenu “${label}”`);
           hasNewRecord = true;
         }
@@ -937,47 +917,7 @@
         return true;
       },
 
-      login(identifier) {
-        state.isLoggedIn = true;
-        state.currentUserIdentifier = identifier && identifier.trim()
-          ? identifier.trim()
-          : DEFAULT_LOGIN_IDENTIFIER;
-        state.unauthenticatedErrorToastCount = 0;
-        state.identificationNudgeTick = 0;
-        state.currentParticipantCode = generateParticipantCode();
-        state.currentParticipantCourse = DEFAULT_PARTICIPANT.course;
-        state.currentFirstAccessDate = formatDate(new Date());
-        state.currentLastAccessDateTime = formatDateTime(new Date());
-        state.currentSessionId = generateSessionReference();
-        state.lastManageWorkshopAccessTitle = "";
-        state.participantRecords = [];
-        state.participantRecordCounter = 0;
-        state.linkedWorkshopCodes = [];
-        state.completedWorkshopCodes = [];
-        state.pinnedWorkshopCodes = [];
-        state.hasWorkshopSearch = false;
-        state.workshopSearchQuery = "";
-        state.workshopSearchMode = "";
-        state.workshopSearchFilters = [];
-        state.workshopSearchHistory = [];
-        state.workshopSearchMatchedTerms = [];
-        state.workshopSearchResults = [];
-        resetWorkshopSearchDetailState();
-        state.selectedWorkshopCode = "";
-        state.selectedWorkshopSource = "";
-        state.isOfficeModalOpen = false;
-        state.isConfirmModalOpen = false;
-        addParticipantRecord("Realizou identificação");
-        state.activeView = "home";
-        metrics.trackView("home");
-        notify();
-      },
-
       resetApp() {
-        state.isLoggedIn = false;
-        state.currentUserIdentifier = "";
-        state.unauthenticatedErrorToastCount = 0;
-        state.identificationNudgeTick = 0;
         state.currentParticipantCode = DEFAULT_PARTICIPANT.identifier;
         state.currentParticipantCourse = DEFAULT_PARTICIPANT.course;
         state.currentFirstAccessDate = DEFAULT_PARTICIPANT.firstAccessDate;
@@ -1023,9 +963,7 @@
         state.isOfficeModalOpen = true;
         state.isConfirmModalOpen = false;
 
-        if (state.isLoggedIn) {
-          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
-        }
+        addParticipantRecord(`Acessou oficina “${workshop.title}”`);
 
         handleWorkshopOpened(workshop, source);
         notify();
@@ -1046,9 +984,7 @@
         state.isConfirmModalOpen = false;
         setActiveView("gerenciar-detalhes");
 
-        if (state.isLoggedIn) {
-          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
-        }
+        addParticipantRecord(`Acessou oficina “${workshop.title}”`);
 
         handleWorkshopOpened(workshop, source);
         notify();
@@ -1078,9 +1014,7 @@
         state.isConfirmModalOpen = false;
         setActiveView("pesquisa-detalhes");
 
-        if (state.isLoggedIn) {
-          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
-        }
+        addParticipantRecord(`Acessou oficina “${workshop.title}”`);
 
         notify();
         return true;
@@ -1112,9 +1046,7 @@
         state.isConfirmModalOpen = false;
         setActiveView("pesquisa-detalhes");
 
-        if (state.isLoggedIn) {
-          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
-        }
+        addParticipantRecord(`Acessou oficina “${workshop.title}”`);
 
         notify();
         return true;
@@ -1146,9 +1078,7 @@
         state.isConfirmModalOpen = false;
         setActiveView("gerenciar-detalhes");
 
-        if (state.isLoggedIn) {
-          addParticipantRecord(`Acessou oficina “${workshop.title}”`);
-        }
+        addParticipantRecord(`Acessou oficina “${workshop.title}”`);
 
         notify();
         return true;
@@ -1181,14 +1111,6 @@
         const shouldKeepSearchDetailOpen = uiVersion === "v1" && state.activeView === "pesquisa-detalhes";
 
         if (!workshop) {
-          return false;
-        }
-
-        if (!state.isLoggedIn) {
-          metrics.trackError("inscricao_sem_identificacao");
-          registerUnauthenticatedErrorToast();
-          onToast(TOAST_MESSAGES.blockedAccess);
-          notify();
           return false;
         }
 
@@ -1357,9 +1279,7 @@
         state.workshopSearchMatchedTerms = searchResult.matchedTerms.slice();
         state.workshopSearchResults = searchResult.results.map((result) => ({ ...result }));
 
-        if (state.isLoggedIn) {
-          addParticipantRecord(`Executou pesquisa por ${searchResult.modeLabel}`);
-        }
+        addParticipantRecord(`Executou pesquisa por ${searchResult.modeLabel}`);
 
         notify();
         return searchResult;

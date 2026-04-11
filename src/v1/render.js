@@ -1,8 +1,6 @@
 (function attachv1Renderer(global) {
   function getTextContent(state) {
-    return state.currentUserIdentifier
-      ? `Olá, ${state.currentUserIdentifier}`
-      : "Olá, Seja Bem Vindo";
+    return "Olá, Seja Bem Vindo";
   }
 
   function createParticipantRecordsMarkup(records) {
@@ -709,7 +707,6 @@
       searchSideCard: documentRef.querySelector(".search-side-card"),
       searchDetailPanel: documentRef.querySelector("#search-detail-panel"),
       searchHistoryList: documentRef.querySelector("#search-history-list"),
-      identificationTrigger: documentRef.querySelector(".header-link[data-view='identificacao']"),
       toastStack: documentRef.querySelector("#toast-stack"),
       confirmModal: documentRef.querySelector("#confirm-modal"),
     };
@@ -723,7 +720,6 @@
     let lastObjectiveGuideMarkup = "";
     let lastObjectiveGuideHidden = true;
     let lastObjectiveGuideIsTransitioning = false;
-    let lastIdentificationNudgeTick = 0;
 
     function clearObjectiveTransitionTimeout() {
       if (!activeObjectiveTransitionTimeout) {
@@ -905,7 +901,6 @@
         documentRef.body.classList.toggle("is-session-locked", !state.isResearchStarted);
 
         if (elements.appShell) {
-          elements.appShell.classList.toggle("login-mode", state.activeView === "identificacao");
           elements.appShell.dataset.activeView = state.activeView;
         }
 
@@ -919,25 +914,6 @@
 
         syncObjectiveTransitionState(state);
         renderObjectiveGuide(state);
-
-        if (elements.identificationTrigger) {
-          elements.identificationTrigger.classList.toggle("is-logged-in", state.isLoggedIn);
-
-          if (
-            state.identificationNudgeTick > 0
-            && state.identificationNudgeTick !== lastIdentificationNudgeTick
-          ) {
-            elements.identificationTrigger.classList.remove("is-nudging");
-            void elements.identificationTrigger.offsetWidth;
-            elements.identificationTrigger.classList.add("is-nudging");
-          }
-
-          if (!state.identificationNudgeTick) {
-            elements.identificationTrigger.classList.remove("is-nudging");
-          }
-
-          lastIdentificationNudgeTick = state.identificationNudgeTick;
-        }
 
         elements.views.forEach((view) => {
           const shouldShow = view.id === `view-${state.activeView}`;
@@ -972,7 +948,7 @@
         }
 
         if (elements.participantName) {
-          elements.participantName.textContent = state.currentUserIdentifier || "2022667789";
+          elements.participantName.textContent = state.currentParticipantCode;
         }
 
         if (elements.participantIdentifier) {

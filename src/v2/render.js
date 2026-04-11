@@ -1,8 +1,6 @@
 (function attachv2Renderer(global) {
   function getTextContent(state) {
-    return state.currentUserIdentifier
-      ? `Olá, ${state.currentUserIdentifier}`
-      : "Olá, Seja Bem Vindo";
+    return "Olá, Seja Bem Vindo";
   }
 
   function createParticipantRecordsMarkup(records) {
@@ -535,7 +533,6 @@
         documentRef.body.classList.toggle("is-session-locked", !state.isResearchStarted);
 
         if (elements.appShell) {
-          elements.appShell.classList.toggle("login-mode", state.activeView === "identificacao");
           elements.appShell.dataset.activeView = state.activeView;
         }
 
@@ -583,7 +580,7 @@
         }
 
         if (elements.participantName) {
-          elements.participantName.textContent = state.currentUserIdentifier || "2022667789";
+          elements.participantName.textContent = state.currentParticipantCode;
         }
 
         if (elements.participantIdentifier) {

@@ -84,14 +84,12 @@
 
   const data = {
     MAX_VISIBLE_RECORDS: 20,
-    DEFAULT_LOGIN_IDENTIFIER: "2022667789",
     SIDEBAR_FIRST_OPEN_PREFIX: "sgoa-sidebar-first-open",
     RESEARCH_TASK_ID: "research-objectives",
     RESEARCH_OBJECTIVE_PROFILES: {
       v1: createResearchObjectiveProfile("v1-default", "11/05 a 31/05", "Área do Participante"),
       v2: createResearchObjectiveProfile("v2-default", "05/04 a 25/04", "Área do Participante"),
     },
-    BLOCKED_VIEWS: new Set(["participante", "gerenciar", "gerenciar-detalhes"]),
     VIEW_LABELS: {
       home: "Informações Gerais",
       "pesquisa-geral": "Busca e Inscricao",
@@ -100,7 +98,6 @@
       gerenciar: "Gerenciar Oficinas",
       "gerenciar-detalhes": "Gerenciar Oficinas",
       oficinas: "Oficinas Cadastradas",
-      identificacao: "Identificação",
     },
     DEFAULT_PARTICIPANT: {
       identifier: "1145",
@@ -110,10 +107,6 @@
     },
     SYSTEM_VERSION: "SGOA 1.7.4",
     TOAST_MESSAGES: {
-      blockedAccess: {
-        title: "Ação interrompida:",
-        message: "É necessário validar as suas credenciais de acesso principal antes de visualizar esta área.",
-      },
       participantOperation: {
         title: "Não Realizado:",
         message: "SYS-OP-004 - Falha na execução da operação solicitada.",

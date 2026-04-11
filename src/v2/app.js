@@ -17,10 +17,7 @@
   });
 
   const { elements } = renderer;
-  const loginUserInput = documentRef.querySelector("#login-user-input");
   const researchStartButton = documentRef.querySelector("#research-start-button");
-  const loginSubmitButton = documentRef.querySelector("#login-submit");
-  const loginResetButton = documentRef.querySelector("#login-reset");
   const participantModifyButton = documentRef.querySelector(".participant-link");
   const officeModalClose = documentRef.querySelector("#office-modal-close");
   const officeModal = documentRef.querySelector("#office-modal");
@@ -119,29 +116,13 @@
     }
   }
 
-  function bindAuth() {
+  function bindResearchGate() {
     if (researchStartButton) {
       researchStartButton.addEventListener("click", () => {
         const started = controller.startResearchSession();
 
         if (started) {
           metrics.trackViewport(getViewportSnapshot());
-        }
-      });
-    }
-
-    if (loginSubmitButton) {
-      loginSubmitButton.addEventListener("click", () => {
-        controller.login(loginUserInput ? loginUserInput.value : "");
-      });
-    }
-
-    if (loginResetButton) {
-      loginResetButton.addEventListener("click", () => {
-        controller.resetApp();
-
-        if (loginUserInput) {
-          loginUserInput.value = "";
         }
       });
     }
@@ -283,7 +264,7 @@
   bindGlobalClickMetrics();
   bindMouseTracking();
   bindNavigation();
-  bindAuth();
+  bindResearchGate();
   bindWorkshopInteractions();
   bindCarousel();
   bindMetricsExport();
