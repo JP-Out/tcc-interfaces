@@ -11,7 +11,7 @@
   } = global.SGOAData;
   const { createInitialState } = global.SGOAState;
   const MAX_SEARCH_HISTORY = 8;
-  const ACTIVE_ONBOARDING_TOUR_LAST_STEP_INDEX = 1;
+  const ACTIVE_ONBOARDING_TOUR_LAST_STEP_INDEX = 2;
 
   function cloneResearchObjectiveProfile(profile) {
     if (!profile) {

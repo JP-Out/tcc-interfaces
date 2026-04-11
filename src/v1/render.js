@@ -26,7 +26,7 @@
       activeDots: 3,
     },
   ];
-  const ACTIVE_ONBOARDING_TOUR_STEP_COUNT = 2;
+  const ACTIVE_ONBOARDING_TOUR_STEP_COUNT = 3;
 
   function getActiveOnboardingTourStep(state) {
     const requestedIndex = Number.isInteger(state && state.onboardingTourStepIndex)

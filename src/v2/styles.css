@@ -531,14 +531,14 @@ body[data-ui="v2"] .onboarding-tour-step-abandon .onboarding-tour-container {
 body[data-ui="v2"] .onboarding-tour-step-abandon .onboarding-tour-arrow {
   top: 0;
   left: 217.71px;
-  width: 143px;
-  height: 148px;
+  width: 124.29px;
+  height: 153.82px;
   transform: rotate(5.49deg);
   transform-origin: center;
 }
 
 body[data-ui="v2"] .onboarding-tour-step-abandon .onboarding-tour-card {
-  top: 166.78px;
+  top: 144.78px;
   left: 0;
   width: 489px;
   height: 98px;
@@ -555,6 +555,10 @@ body[data-ui="v2"] .onboarding-tour-step-abandon .onboarding-tour-indicator {
   top: 251.78px;
   bottom: auto;
   left: 224.5px;
+}
+
+body[data-ui="v2"] .onboarding-tour-step-abandon .onboarding-tour-button {
+  bottom: 22px;
 }
 
 body[data-ui="v2"] .objective-failure-copy,
