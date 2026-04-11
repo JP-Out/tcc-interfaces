@@ -5,13 +5,13 @@
     MOCK_WORKSHOPS,
     RESEARCH_OBJECTIVE_PROFILES,
     RESEARCH_TASK_ID,
-    SIDEBAR_FIRST_OPEN_PREFIX,
     SYSTEM_VERSION,
     TOAST_MESSAGES,
     VIEW_LABELS,
   } = global.SGOAData;
   const { createInitialState } = global.SGOAState;
   const MAX_SEARCH_HISTORY = 8;
+  const ACTIVE_ONBOARDING_TOUR_LAST_STEP_INDEX = 1;
 
   function cloneResearchObjectiveProfile(profile) {
     if (!profile) {
@@ -369,7 +369,6 @@
   function createAppController({
     uiVersion,
     metrics,
-    storage = typeof window !== "undefined" ? window.localStorage : null,
     taskId = "main-flow",
     researchObjectiveProfileKey = null,
     onToast = () => {},
@@ -392,6 +391,28 @@
 
     function getResearchTimestamp() {
       return new Date().toISOString();
+    }
+
+    function createIntroChallenge() {
+      if (uiVersion !== "v1") {
+        return null;
+      }
+
+      return {
+        id: "intro-sidebar",
+        title: "Abra o menu",
+        description: "Use o botão do menu para ver as opções do sistema.",
+        status: "pendente",
+      };
+    }
+
+    function resetOnboardingState() {
+      state.isResearchStarted = false;
+      state.isResearchGateDismissed = false;
+      state.isOnboardingTourOpen = false;
+      state.hasOnboardingTourBeenAcknowledged = false;
+      state.onboardingTourStepIndex = 0;
+      state.introChallenge = createIntroChallenge();
     }
 
     function resetResearchObjectives() {
@@ -498,6 +519,10 @@
     }
 
     function syncResearchMetrics() {
+      if (typeof metrics.hasStarted === "function" && !metrics.hasStarted()) {
+        return;
+      }
+
       if (typeof metrics.setResearchObjectives === "function") {
         metrics.setResearchObjectives(createResearchMetricsSnapshot());
       }
@@ -515,6 +540,20 @@
         message: status === "concluido"
           ? `Objetivo ${objective.id} concluido automaticamente.`
           : `Objetivo ${objective.id} marcado como falhou.`,
+      };
+    }
+
+    function setIntroChallengeFeedback() {
+      if (!state.introChallenge) {
+        return;
+      }
+
+      state.objectiveFeedback = {
+        objectiveId: state.introChallenge.id,
+        status: "concluido",
+        title: state.introChallenge.title,
+        message: "Tutorial concluido.",
+        resolutionType: "tutorial",
       };
     }
 
@@ -819,30 +858,6 @@
       }
     }
 
-    function getSidebarPreferenceKey() {
-      return `${SIDEBAR_FIRST_OPEN_PREFIX}:${uiVersion}`;
-    }
-
-    function shouldStartWithSidebarOpen() {
-      try {
-        if (!storage) {
-          return true;
-        }
-
-        const key = getSidebarPreferenceKey();
-        const hasOpenedBefore = storage.getItem(key) === "true";
-
-        if (hasOpenedBefore) {
-          return false;
-        }
-
-        storage.setItem(key, "true");
-        return true;
-      } catch {
-        return true;
-      }
-    }
-
     function setActiveView(viewName) {
       if (state.activeView === viewName) {
         return false;
@@ -865,7 +880,8 @@
 
       init() {
         state.currentSessionId = generateSessionReference();
-        state.isSidebarCollapsed = !shouldStartWithSidebarOpen();
+        state.isSidebarCollapsed = true;
+        resetOnboardingState();
         resetResearchObjectives();
         notify();
       },
@@ -875,10 +891,34 @@
       },
 
       startResearchSession() {
-        if (state.isResearchStarted) {
+        if (state.isResearchStarted || state.isResearchGateDismissed) {
           return false;
         }
 
+        state.isResearchGateDismissed = true;
+        state.isOnboardingTourOpen = true;
+        state.onboardingTourStepIndex = 0;
+        notify();
+        return true;
+      },
+
+      acknowledgeOnboardingTour() {
+        if (!state.isResearchGateDismissed || state.hasOnboardingTourBeenAcknowledged) {
+          return false;
+        }
+
+        if (
+          state.isOnboardingTourOpen
+          && state.onboardingTourStepIndex < ACTIVE_ONBOARDING_TOUR_LAST_STEP_INDEX
+        ) {
+          state.onboardingTourStepIndex += 1;
+          notify();
+          return false;
+        }
+
+        state.isOnboardingTourOpen = false;
+        state.hasOnboardingTourBeenAcknowledged = true;
+        state.onboardingTourStepIndex = ACTIVE_ONBOARDING_TOUR_LAST_STEP_INDEX;
         state.isResearchStarted = true;
         metrics.start();
         metrics.trackView(state.activeView);
@@ -894,7 +934,21 @@
       },
 
       toggleSidebar() {
+        const shouldOpen = state.isSidebarCollapsed;
         state.isSidebarCollapsed = !state.isSidebarCollapsed;
+
+        if (
+          shouldOpen
+          && state.introChallenge
+          && state.introChallenge.status === "pendente"
+        ) {
+          state.introChallenge = {
+            ...state.introChallenge,
+            status: "concluido",
+          };
+          setIntroChallengeFeedback();
+        }
+
         notify();
       },
 
@@ -942,8 +996,9 @@
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         state.activeView = "home";
+        state.isSidebarCollapsed = true;
+        resetOnboardingState();
         resetResearchObjectives();
-        metrics.trackView("home");
         notify();
       },
 
@@ -1326,6 +1381,10 @@
       },
 
       finishMetrics() {
+        if (!state.isResearchStarted) {
+          return metrics.toJSON();
+        }
+
         syncResearchMetrics();
         return metrics.finish();
       },

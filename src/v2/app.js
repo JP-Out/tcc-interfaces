@@ -50,7 +50,7 @@
         return;
       }
 
-      if (event.target.closest("#research-gate")) {
+      if (event.target.closest("#research-gate, #onboarding-tour")) {
         return;
       }
 
@@ -119,13 +119,25 @@
   function bindResearchGate() {
     if (researchStartButton) {
       researchStartButton.addEventListener("click", () => {
-        const started = controller.startResearchSession();
-
-        if (started) {
-          metrics.trackViewport(getViewportSnapshot());
-        }
+        controller.startResearchSession();
       });
     }
+
+    documentRef.addEventListener("click", (event) => {
+      if (!(event.target instanceof HTMLElement)) {
+        return;
+      }
+
+      if (!event.target.closest("[data-onboarding-tour-confirm]")) {
+        return;
+      }
+
+      const acknowledged = controller.acknowledgeOnboardingTour();
+
+      if (acknowledged) {
+        metrics.trackViewport(getViewportSnapshot());
+      }
+    });
   }
 
   function bindWorkshopInteractions() {

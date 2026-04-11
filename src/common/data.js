@@ -84,7 +84,6 @@
 
   const data = {
     MAX_VISIBLE_RECORDS: 20,
-    SIDEBAR_FIRST_OPEN_PREFIX: "sgoa-sidebar-first-open",
     RESEARCH_TASK_ID: "research-objectives",
     RESEARCH_OBJECTIVE_PROFILES: {
       v1: createResearchObjectiveProfile("v1-default", "11/05 a 31/05", "Área do Participante"),

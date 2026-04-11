@@ -1562,6 +1562,10 @@ body[data-ui="v1"] .objective-guide-shell-failure {
   --objective-transition-fill-strong: rgba(161, 91, 78, 0.18);
 }
 
+body[data-ui="v1"] .objective-guide-shell-intro {
+  background: rgba(255, 255, 255, 0.28);
+}
+
 body[data-ui="v1"] .objective-guide-copy-block {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -1779,6 +1783,195 @@ body[data-ui="v1"] .objective-guide-abandon-button:disabled {
 body[data-ui="v1"] .objective-failure-message {
   display: grid;
   gap: 12px;
+}
+
+body[data-ui="v1"] .onboarding-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 340;
+  pointer-events: none;
+}
+
+body[data-ui="v1"] .onboarding-tour-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(1px);
+  pointer-events: auto;
+}
+
+body[data-ui="v1"] .onboarding-tour-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+body[data-ui="v1"] .onboarding-tour-spotlight-target {
+  opacity: 1;
+  filter: none;
+  box-shadow: 0 22px 48px rgba(17, 33, 61, 0.34);
+}
+
+body[data-ui="v1"] .onboarding-tour-spotlight-card {
+  overflow: visible;
+}
+
+body[data-ui="v1"] .onboarding-tour-container {
+  position: absolute;
+  top: 113px;
+  left: calc(50% + 121.52px);
+  z-index: 2;
+  width: 548.48px;
+  height: 144px;
+  font-family: "Glegoo", Georgia, serif;
+  pointer-events: auto;
+}
+
+body[data-ui="v1"] .onboarding-tour-arrow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 177px;
+  height: 67px;
+  pointer-events: none;
+}
+
+body[data-ui="v1"] .onboarding-tour-card {
+  box-sizing: border-box;
+  position: absolute;
+  top: 3px;
+  left: 186.48px;
+  width: 362px;
+  height: 98px;
+  border: 1px solid #000000;
+  border-radius: 24px;
+  background: #212731;
+}
+
+body[data-ui="v1"] .onboarding-tour-description {
+  position: absolute;
+  top: 17px;
+  left: 52px;
+  display: flex;
+  align-items: center;
+  width: 266px;
+  height: 54px;
+  margin: 0;
+  color: #A6DAFB;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.372;
+  text-align: center;
+}
+
+body[data-ui="v1"] .onboarding-tour-indicator {
+  position: absolute;
+  left: 161px;
+  bottom: 6px;
+  display: flex;
+  gap: 8px;
+  width: 40px;
+  height: 8px;
+}
+
+body[data-ui="v1"] .onboarding-tour-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(166, 218, 251, 0.5);
+}
+
+body[data-ui="v1"] .onboarding-tour-indicator .is-active {
+  background: #A6DAFB;
+}
+
+body[data-ui="v1"] .onboarding-tour-button {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 107px;
+  height: 38px;
+  border: 0;
+  border-radius: 16px;
+  background: #7CAECE;
+  color: #212731;
+  font-family: "Glegoo", Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 25px;
+  text-align: center;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-progress .onboarding-tour-container {
+  top: 24px;
+  left: calc(50% + 180px);
+  width: 362px;
+  height: 250px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-progress .onboarding-tour-arrow {
+  top: 0;
+  left: 102.5px;
+  width: 74.64px;
+  height: 101.5px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-progress .onboarding-tour-card {
+  top: 109px;
+  left: 0;
+  width: 362px;
+  height: 98px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-progress .onboarding-tour-description {
+  top: 17px;
+  left: 46px;
+  width: 278px;
+  height: 54px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-progress .onboarding-tour-indicator {
+  top: 194px;
+  bottom: auto;
+  left: 161px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-abandon .onboarding-tour-container {
+  top: 60px;
+  left: calc(50% + 113px);
+  width: 489px;
+  height: 307.78px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-abandon .onboarding-tour-arrow {
+  top: 0;
+  left: 217.71px;
+  width: 143px;
+  height: 148px;
+  transform: rotate(5.49deg);
+  transform-origin: center;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-abandon .onboarding-tour-card {
+  top: 166.78px;
+  left: 0;
+  width: 489px;
+  height: 98px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-abandon .onboarding-tour-description {
+  top: 17px;
+  left: 23px;
+  width: 443px;
+  height: 54px;
+}
+
+body[data-ui="v1"] .onboarding-tour-step-abandon .onboarding-tour-indicator {
+  top: 251.78px;
+  bottom: auto;
+  left: 224.5px;
 }
 
 body[data-ui="v1"] .objective-failure-copy,
