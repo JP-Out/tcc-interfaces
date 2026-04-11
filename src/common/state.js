@@ -4,6 +4,11 @@
   function createInitialState() {
     return {
       isResearchStarted: false,
+      isResearchGateDismissed: false,
+      isOnboardingTourOpen: false,
+      hasOnboardingTourBeenAcknowledged: false,
+      onboardingTourStepIndex: 0,
+      introChallenge: null,
       activeView: "home",
       isSidebarCollapsed: true,
       researchTaskId: "",

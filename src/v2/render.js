@@ -3,6 +3,41 @@
     return "Olá, Seja Bem Vindo";
   }
 
+  const ONBOARDING_TOUR_STEPS = [
+    {
+      id: "card",
+      spotlightTarget: "card",
+      arrowSrc: "../assets/icons/onboarding-tour/arrow-1.svg",
+      descriptionMarkup: 'Este <span class="onboarding-tour-emphasis">cartão</span> acima mostra o título e a tarefa do desafio atual.',
+      activeDots: 1,
+    },
+    {
+      id: "progress",
+      spotlightTarget: ".objective-guide-progress-pill",
+      arrowSrc: "../assets/icons/onboarding-tour/arrow-2.svg",
+      descriptionMarkup: 'O <span class="onboarding-tour-emphasis">progresso</span> indica quantos desafios foram concluídos.',
+      activeDots: 2,
+    },
+    {
+      id: "abandon",
+      spotlightTarget: ".objective-guide-abandon-button",
+      arrowSrc: "../assets/icons/onboarding-tour/arrow-3.svg",
+      descriptionMarkup: 'Use <span class="onboarding-tour-emphasis">Desistir</span> apenas em último caso, quando não conseguir concluir um desafio.',
+      activeDots: 3,
+    },
+  ];
+  const ACTIVE_ONBOARDING_TOUR_STEP_COUNT = 3;
+
+  function getActiveOnboardingTourStep(state) {
+    const requestedIndex = Number.isInteger(state && state.onboardingTourStepIndex)
+      ? state.onboardingTourStepIndex
+      : 0;
+    const maxIndex = Math.min(ACTIVE_ONBOARDING_TOUR_STEP_COUNT, ONBOARDING_TOUR_STEPS.length) - 1;
+    const stepIndex = Math.min(Math.max(requestedIndex, 0), maxIndex);
+
+    return ONBOARDING_TOUR_STEPS[stepIndex] || ONBOARDING_TOUR_STEPS[0];
+  }
+
   function createParticipantRecordsMarkup(records) {
     if (!records.length) {
       return '<p class="participant-records-empty">Nenhum registro disponível.</p>';
@@ -111,6 +146,14 @@
       .find((objective) => objective.id === objectiveId) || null;
   }
 
+  function findIntroChallenge(state, objectiveId) {
+    if (!state.introChallenge || state.introChallenge.id !== objectiveId) {
+      return null;
+    }
+
+    return state.introChallenge;
+  }
+
   function findObjectiveSetByObjectiveId(state, objectiveId) {
     return (state.objectiveSets || []).find((set) => (
       (set.objectives || []).some((objective) => objective.id === objectiveId)
@@ -119,6 +162,28 @@
 
   function createObjectiveGuideMarkup(state) {
     if (!state.objectiveSets || !state.objectiveSets.length) {
+      if (state.isOnboardingTourOpen) {
+        return `
+          <div class="objective-guide-shell objective-guide-shell-intro">
+            <div class="objective-guide-copy-block">
+              <p class="objective-guide-kicker">Tutorial</p>
+              <div class="objective-guide-main-row">
+                ${createObjectiveStatusMarkup("pending")}
+                <div class="objective-guide-text-block">
+                  <h2 class="objective-guide-title">Card de desafios</h2>
+                  <p class="objective-guide-copy">Aqui aparecem o título, a tarefa e o progresso da pesquisa.</p>
+                </div>
+              </div>
+            </div>
+
+            ${createObjectiveGuideSideMarkup("0/1", {
+              showAbandonButton: true,
+              disableAbandonButton: true,
+            })}
+          </div>
+        `;
+      }
+
       return "";
     }
 
@@ -229,6 +294,33 @@
     `;
   }
 
+  function createOnboardingTourIndicatorMarkup(step) {
+    return ONBOARDING_TOUR_STEPS.map((item, index) => (
+      `<span class="${index < step.activeDots ? "is-active" : ""}"></span>`
+    )).join("");
+  }
+
+  function createOnboardingTourMarkup(step) {
+    return `
+      <div class="onboarding-tour-backdrop" aria-hidden="true"></div>
+      <div class="onboarding-tour-spotlight" aria-hidden="true" data-onboarding-tour-spotlight></div>
+      <section class="onboarding-tour-container onboarding-tour-container-${escapeHTML(step.id)}" role="dialog" aria-modal="true" aria-labelledby="onboarding-tour-title">
+        <img class="onboarding-tour-arrow" src="${escapeHTML(step.arrowSrc)}" alt="" aria-hidden="true" draggable="false">
+        <div class="onboarding-tour-card">
+          <h2 id="onboarding-tour-title" class="onboarding-tour-description">
+            <span class="onboarding-tour-description-text">${step.descriptionMarkup}</span>
+          </h2>
+          <div class="onboarding-tour-indicator" aria-hidden="true">
+            ${createOnboardingTourIndicatorMarkup(step)}
+          </div>
+        </div>
+        <button class="onboarding-tour-button" type="button" data-onboarding-tour-confirm>
+          Entendi
+        </button>
+      </section>
+    `;
+  }
+
   function getObjectiveTransitionState(state) {
     if (!state.objectiveFeedback) {
       return null;
@@ -237,11 +329,26 @@
     const allObjectives = (state.objectiveSets || []).flatMap((set) => set.objectives || []);
     const resolvedCount = allObjectives.filter((objective) => objective.status !== "pendente").length;
     const totalCount = allObjectives.length;
-    const transitionObjective = findObjectiveByIdInSets(state, state.objectiveFeedback.objectiveId);
+    const isIntroTransition = state.objectiveFeedback.resolutionType === "tutorial";
+    const transitionObjective = isIntroTransition
+      ? findIntroChallenge(state, state.objectiveFeedback.objectiveId)
+      : findObjectiveByIdInSets(state, state.objectiveFeedback.objectiveId);
     const transitionSet = findObjectiveSetByObjectiveId(state, state.objectiveFeedback.objectiveId);
 
     if (!transitionObjective) {
       return null;
+    }
+
+    if (isIntroTransition) {
+      return {
+        key: `${transitionObjective.id}:${state.objectiveFeedback.status}:tutorial`,
+        objectiveId: transitionObjective.id,
+        variant: "success",
+        kicker: "Tutorial concluido",
+        title: transitionObjective.title || "",
+        copy: transitionObjective.description || state.objectiveFeedback.title || "",
+        progressLabel: "1/1",
+      };
     }
 
     if (state.objectiveFeedback.status === "concluido") {
@@ -310,6 +417,8 @@
     const OBJECTIVE_TRANSITION_VISUAL_MS = 3600;
     const OBJECTIVE_STRIKE_REVEAL_START_MS = Math.round(OBJECTIVE_TRANSITION_VISUAL_MS * 0.22);
     const OBJECTIVE_STRIKE_REVEAL_END_MS = Math.round(OBJECTIVE_TRANSITION_VISUAL_MS * 0.64);
+    const RESEARCH_GATE_EXIT_ANIMATION_MS = 120;
+    const ONBOARDING_TOUR_EXIT_ANIMATION_MS = 220;
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
       screenTitle: documentRef.querySelector("#screen-title"),
@@ -351,6 +460,9 @@
     let lastObjectiveGuideMarkup = "";
     let lastObjectiveGuideHidden = true;
     let lastObjectiveGuideIsTransitioning = false;
+    let onboardingTourElement = null;
+    let onboardingTourExitTimeout = 0;
+    let researchGateExitTimeout = 0;
 
     function clearObjectiveTransitionTimeout() {
       if (!activeObjectiveTransitionTimeout) {
@@ -365,6 +477,46 @@
       clearObjectiveTransitionTimeout();
       activeObjectiveTransitionState = null;
       lastObjectiveTransitionKey = "";
+    }
+
+    function clearResearchGateExitTimeout() {
+      if (!researchGateExitTimeout) {
+        return;
+      }
+
+      global.clearTimeout(researchGateExitTimeout);
+      researchGateExitTimeout = 0;
+    }
+
+    function syncResearchGateVisibility(state) {
+      if (!elements.researchGate) {
+        return false;
+      }
+
+      const shouldShowGate = !(state.isResearchStarted || state.isResearchGateDismissed);
+
+      if (shouldShowGate) {
+        clearResearchGateExitTimeout();
+        elements.researchGate.hidden = false;
+        elements.researchGate.classList.remove("is-closing");
+        return false;
+      }
+
+      if (elements.researchGate.hidden) {
+        return false;
+      }
+
+      if (!elements.researchGate.classList.contains("is-closing")) {
+        elements.researchGate.classList.add("is-closing");
+        researchGateExitTimeout = global.setTimeout(() => {
+          elements.researchGate.hidden = true;
+          elements.researchGate.classList.remove("is-closing");
+          researchGateExitTimeout = 0;
+          renderOnboardingTour(latestState);
+        }, RESEARCH_GATE_EXIT_ANIMATION_MS);
+      }
+
+      return true;
     }
 
     function prepareSequentialStrikeText() {
@@ -476,7 +628,8 @@
       const nextMarkup = activeObjectiveTransitionState
         ? createObjectiveTransitionGuideMarkup(activeObjectiveTransitionState)
         : createObjectiveGuideMarkup(state);
-      const nextHidden = !state.objectiveSets || !state.objectiveSets.length;
+      const nextHidden = (!state.objectiveSets || !state.objectiveSets.length)
+        && !state.isOnboardingTourOpen;
       const nextIsTransitioning = Boolean(activeObjectiveTransitionState);
 
       if (nextMarkup !== lastObjectiveGuideMarkup) {
@@ -524,6 +677,130 @@
       }, OBJECTIVE_TRANSITION_VISUAL_MS);
     }
 
+    function getOnboardingTourSpotlightTarget(step) {
+      if (!elements.objectiveGuide) {
+        return null;
+      }
+
+      if (step.spotlightTarget === "card") {
+        return elements.objectiveGuide;
+      }
+
+      return elements.objectiveGuide.querySelector(step.spotlightTarget);
+    }
+
+    function syncOnboardingTourSpotlight(step) {
+      if (!onboardingTourElement) {
+        return;
+      }
+
+      const spotlightLayer = onboardingTourElement.querySelector("[data-onboarding-tour-spotlight]");
+
+      if (!spotlightLayer) {
+        return;
+      }
+
+      spotlightLayer.innerHTML = "";
+
+      const target = getOnboardingTourSpotlightTarget(step);
+
+      if (!target) {
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+
+      if (!rect.width || !rect.height) {
+        return;
+      }
+
+      const clone = target.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.removeAttribute("hidden");
+      clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+      clone.setAttribute("aria-hidden", "true");
+      clone.classList.remove("is-onboarding-focus");
+      clone.classList.add(
+        "onboarding-tour-spotlight-target",
+        step.spotlightTarget === "card"
+          ? "onboarding-tour-spotlight-card"
+          : "onboarding-tour-spotlight-control",
+      );
+      clone.style.position = "fixed";
+      clone.style.top = `${rect.top}px`;
+      clone.style.left = `${rect.left}px`;
+      clone.style.width = `${rect.width}px`;
+      clone.style.height = `${rect.height}px`;
+      clone.style.margin = "0";
+      clone.style.maxWidth = "none";
+      clone.style.transform = "none";
+      clone.style.pointerEvents = "none";
+
+      spotlightLayer.appendChild(clone);
+    }
+
+    function clearOnboardingTourExitTimeout() {
+      if (!onboardingTourExitTimeout) {
+        return;
+      }
+
+      global.clearTimeout(onboardingTourExitTimeout);
+      onboardingTourExitTimeout = 0;
+    }
+
+    function removeOnboardingTourElement() {
+      clearOnboardingTourExitTimeout();
+
+      if (onboardingTourElement) {
+        onboardingTourElement.remove();
+        onboardingTourElement = null;
+      }
+
+      delete documentRef.body.dataset.onboardingTourSpotlight;
+    }
+
+    function renderOnboardingTour(state) {
+      const shouldShowTour = Boolean(state.isOnboardingTourOpen);
+      const tourStep = getActiveOnboardingTourStep(state);
+
+      documentRef.body.classList.toggle("is-onboarding-tour-open", shouldShowTour);
+
+      if (elements.objectiveGuide) {
+        elements.objectiveGuide.classList.remove("is-onboarding-focus");
+      }
+
+      if (!shouldShowTour) {
+        if (!onboardingTourElement) {
+          delete documentRef.body.dataset.onboardingTourSpotlight;
+          return;
+        }
+
+        if (!onboardingTourElement.classList.contains("is-closing")) {
+          onboardingTourElement.classList.add("is-closing");
+          onboardingTourExitTimeout = global.setTimeout(
+            removeOnboardingTourElement,
+            ONBOARDING_TOUR_EXIT_ANIMATION_MS,
+          );
+        }
+
+        return;
+      }
+
+      clearOnboardingTourExitTimeout();
+      documentRef.body.dataset.onboardingTourSpotlight = tourStep.spotlightTarget;
+
+      if (!onboardingTourElement) {
+        onboardingTourElement = documentRef.createElement("div");
+        onboardingTourElement.id = "onboarding-tour";
+        documentRef.body.appendChild(onboardingTourElement);
+      }
+
+      onboardingTourElement.className = `onboarding-tour onboarding-tour-step-${tourStep.id}`;
+      onboardingTourElement.dataset.tourStep = tourStep.id;
+      onboardingTourElement.innerHTML = createOnboardingTourMarkup(tourStep);
+      syncOnboardingTourSpotlight(tourStep);
+    }
+
     return {
       elements,
 
@@ -535,9 +812,7 @@
           elements.appShell.dataset.activeView = state.activeView;
         }
 
-        if (elements.researchGate) {
-          elements.researchGate.hidden = state.isResearchStarted;
-        }
+        const isResearchGateClosing = syncResearchGateVisibility(state);
 
         if (elements.screenTitle) {
           elements.screenTitle.textContent = getTextContent(state);
@@ -545,6 +820,11 @@
 
         syncObjectiveTransitionState(state);
         renderObjectiveGuide(state);
+        renderOnboardingTour(
+          isResearchGateClosing
+            ? { ...state, isOnboardingTourOpen: false }
+            : state,
+        );
 
         elements.views.forEach((view) => {
           const shouldShow = view.id === `view-${state.activeView}`;
