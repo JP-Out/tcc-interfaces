@@ -8,21 +8,21 @@
       id: "card",
       spotlightTarget: "card",
       arrowSrc: "../assets/icons/onboarding-tour/arrow-1.svg",
-      description: "Este card mostra o título e a tarefa do desafio atual.",
+      descriptionMarkup: 'Este <span class="onboarding-tour-emphasis">cartão</span> acima mostra o título e a tarefa do desafio atual.',
       activeDots: 1,
     },
     {
       id: "progress",
       spotlightTarget: ".objective-guide-progress-pill",
       arrowSrc: "../assets/icons/onboarding-tour/arrow-2.svg",
-      description: "O progresso indica quantos desafios foram concluídos.",
+      descriptionMarkup: 'O <span class="onboarding-tour-emphasis">progresso</span> indica quantos desafios foram concluídos.',
       activeDots: 2,
     },
     {
       id: "abandon",
       spotlightTarget: ".objective-guide-abandon-button",
       arrowSrc: "../assets/icons/onboarding-tour/arrow-3.svg",
-      description: "Use Desistir apenas em último caso, quando não conseguir concluir um desafio.",
+      descriptionMarkup: 'Use <span class="onboarding-tour-emphasis">Desistir</span> apenas em último caso, quando não conseguir concluir um desafio.',
       activeDots: 3,
     },
   ];
@@ -305,10 +305,10 @@
       <div class="onboarding-tour-backdrop" aria-hidden="true"></div>
       <div class="onboarding-tour-spotlight" aria-hidden="true" data-onboarding-tour-spotlight></div>
       <section class="onboarding-tour-container onboarding-tour-container-${escapeHTML(step.id)}" role="dialog" aria-modal="true" aria-labelledby="onboarding-tour-title">
-        <img class="onboarding-tour-arrow" src="${escapeHTML(step.arrowSrc)}" alt="" aria-hidden="true">
+        <img class="onboarding-tour-arrow" src="${escapeHTML(step.arrowSrc)}" alt="" aria-hidden="true" draggable="false">
         <div class="onboarding-tour-card">
           <h2 id="onboarding-tour-title" class="onboarding-tour-description">
-            ${escapeHTML(step.description)}
+            <span class="onboarding-tour-description-text">${step.descriptionMarkup}</span>
           </h2>
           <div class="onboarding-tour-indicator" aria-hidden="true">
             ${createOnboardingTourIndicatorMarkup(step)}
@@ -417,6 +417,8 @@
     const OBJECTIVE_TRANSITION_VISUAL_MS = 3600;
     const OBJECTIVE_STRIKE_REVEAL_START_MS = Math.round(OBJECTIVE_TRANSITION_VISUAL_MS * 0.22);
     const OBJECTIVE_STRIKE_REVEAL_END_MS = Math.round(OBJECTIVE_TRANSITION_VISUAL_MS * 0.64);
+    const RESEARCH_GATE_EXIT_ANIMATION_MS = 120;
+    const ONBOARDING_TOUR_EXIT_ANIMATION_MS = 220;
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
       screenTitle: documentRef.querySelector("#screen-title"),
@@ -459,6 +461,8 @@
     let lastObjectiveGuideHidden = true;
     let lastObjectiveGuideIsTransitioning = false;
     let onboardingTourElement = null;
+    let onboardingTourExitTimeout = 0;
+    let researchGateExitTimeout = 0;
 
     function clearObjectiveTransitionTimeout() {
       if (!activeObjectiveTransitionTimeout) {
@@ -473,6 +477,46 @@
       clearObjectiveTransitionTimeout();
       activeObjectiveTransitionState = null;
       lastObjectiveTransitionKey = "";
+    }
+
+    function clearResearchGateExitTimeout() {
+      if (!researchGateExitTimeout) {
+        return;
+      }
+
+      global.clearTimeout(researchGateExitTimeout);
+      researchGateExitTimeout = 0;
+    }
+
+    function syncResearchGateVisibility(state) {
+      if (!elements.researchGate) {
+        return false;
+      }
+
+      const shouldShowGate = !(state.isResearchStarted || state.isResearchGateDismissed);
+
+      if (shouldShowGate) {
+        clearResearchGateExitTimeout();
+        elements.researchGate.hidden = false;
+        elements.researchGate.classList.remove("is-closing");
+        return false;
+      }
+
+      if (elements.researchGate.hidden) {
+        return false;
+      }
+
+      if (!elements.researchGate.classList.contains("is-closing")) {
+        elements.researchGate.classList.add("is-closing");
+        researchGateExitTimeout = global.setTimeout(() => {
+          elements.researchGate.hidden = true;
+          elements.researchGate.classList.remove("is-closing");
+          researchGateExitTimeout = 0;
+          renderOnboardingTour(latestState);
+        }, RESEARCH_GATE_EXIT_ANIMATION_MS);
+      }
+
+      return true;
     }
 
     function prepareSequentialStrikeText() {
@@ -695,27 +739,55 @@
       spotlightLayer.appendChild(clone);
     }
 
+    function clearOnboardingTourExitTimeout() {
+      if (!onboardingTourExitTimeout) {
+        return;
+      }
+
+      global.clearTimeout(onboardingTourExitTimeout);
+      onboardingTourExitTimeout = 0;
+    }
+
+    function removeOnboardingTourElement() {
+      clearOnboardingTourExitTimeout();
+
+      if (onboardingTourElement) {
+        onboardingTourElement.remove();
+        onboardingTourElement = null;
+      }
+
+      delete documentRef.body.dataset.onboardingTourSpotlight;
+    }
+
     function renderOnboardingTour(state) {
       const shouldShowTour = Boolean(state.isOnboardingTourOpen);
       const tourStep = getActiveOnboardingTourStep(state);
 
       documentRef.body.classList.toggle("is-onboarding-tour-open", shouldShowTour);
-      documentRef.body.dataset.onboardingTourSpotlight = shouldShowTour
-        ? tourStep.spotlightTarget
-        : "";
 
       if (elements.objectiveGuide) {
         elements.objectiveGuide.classList.remove("is-onboarding-focus");
       }
 
       if (!shouldShowTour) {
-        if (onboardingTourElement) {
-          onboardingTourElement.remove();
-          onboardingTourElement = null;
+        if (!onboardingTourElement) {
+          delete documentRef.body.dataset.onboardingTourSpotlight;
+          return;
         }
-        delete documentRef.body.dataset.onboardingTourSpotlight;
+
+        if (!onboardingTourElement.classList.contains("is-closing")) {
+          onboardingTourElement.classList.add("is-closing");
+          onboardingTourExitTimeout = global.setTimeout(
+            removeOnboardingTourElement,
+            ONBOARDING_TOUR_EXIT_ANIMATION_MS,
+          );
+        }
+
         return;
       }
+
+      clearOnboardingTourExitTimeout();
+      documentRef.body.dataset.onboardingTourSpotlight = tourStep.spotlightTarget;
 
       if (!onboardingTourElement) {
         onboardingTourElement = documentRef.createElement("div");
@@ -740,9 +812,7 @@
           elements.appShell.dataset.activeView = state.activeView;
         }
 
-        if (elements.researchGate) {
-          elements.researchGate.hidden = state.isResearchStarted || state.isResearchGateDismissed;
-        }
+        const isResearchGateClosing = syncResearchGateVisibility(state);
 
         if (elements.screenTitle) {
           elements.screenTitle.textContent = getTextContent(state);
@@ -750,7 +820,11 @@
 
         syncObjectiveTransitionState(state);
         renderObjectiveGuide(state);
-        renderOnboardingTour(state);
+        renderOnboardingTour(
+          isResearchGateClosing
+            ? { ...state, isOnboardingTourOpen: false }
+            : state,
+        );
 
         elements.views.forEach((view) => {
           const shouldShow = view.id === `view-${state.activeView}`;
