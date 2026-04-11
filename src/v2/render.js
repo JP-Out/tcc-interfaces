@@ -322,7 +322,6 @@
       sidebarNav: documentRef.querySelector("#sidebar-nav"),
       sidebarToggle: documentRef.querySelector("#sidebar-toggle"),
       researchGate: documentRef.querySelector("#research-gate"),
-      participantName: documentRef.querySelector("#participant-name"),
       participantIdentifier: documentRef.querySelector("#participant-identifier"),
       participantStatus: documentRef.querySelector("#participant-status"),
       participantFirstAccess: documentRef.querySelector("#participant-first-access"),
@@ -577,10 +576,6 @@
           Array.from(elements.sidebarNav.querySelectorAll("button")).forEach((button) => {
             button.tabIndex = state.isSidebarCollapsed ? -1 : 0;
           });
-        }
-
-        if (elements.participantName) {
-          elements.participantName.textContent = state.currentParticipantCode;
         }
 
         if (elements.participantIdentifier) {
