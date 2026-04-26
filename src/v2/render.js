@@ -1,6 +1,14 @@
 (function attachv2Renderer(global) {
   function getTextContent(state) {
-    return "Olá, Seja Bem Vindo";
+    if (state && state.activeView === "oficinas") {
+      return "Explorar Oficinas";
+    }
+
+    if (state && state.activeView === "gerenciar") {
+      return "Minhas Oficinas";
+    }
+
+    return "Sistema de Gestão de Oficinas Acadêmicas";
   }
 
   const ONBOARDING_TOUR_STEPS = [
@@ -27,6 +35,36 @@
     },
   ];
   const ACTIVE_ONBOARDING_TOUR_STEP_COUNT = 3;
+  const OFFICE_MODAL_LINKED_EXIT_ANIMATION_MS = 500;
+  const WORKSHOP_TONE_NAMES = [
+    "lime",
+    "rose",
+    "green",
+    "orange",
+    "yellow",
+    "magenta",
+    "blue",
+    "cyan",
+  ];
+
+  function getWorkshopToneName(workshop, workshops) {
+    const workshopTitle = workshop && workshop.title ? workshop.title : "";
+    const workshopTitles = [];
+
+    (workshops || []).forEach((item) => {
+      if (item && item.title && !workshopTitles.includes(item.title)) {
+        workshopTitles.push(item.title);
+      }
+    });
+
+    const toneIndex = Math.max(workshopTitles.indexOf(workshopTitle), 0);
+
+    return WORKSHOP_TONE_NAMES[toneIndex % WORKSHOP_TONE_NAMES.length];
+  }
+
+  function getWorkshopToneClass(workshop, workshops, prefix) {
+    return `${prefix}-${getWorkshopToneName(workshop, workshops)}`;
+  }
 
   function getActiveOnboardingTourStep(state) {
     const requestedIndex = Number.isInteger(state && state.onboardingTourStepIndex)
@@ -51,30 +89,294 @@
     `).join("");
   }
 
-  function createLinkedWorkshopsMarkup(state) {
-    if (!state.linkedWorkshopCodes.length) {
-      return '<div class="manage-panel-empty"></div>';
-    }
-
-    return state.linkedWorkshopCodes
+  function getLinkedWorkshops(state, modalityFilter) {
+    return (state.linkedWorkshopCodes || [])
       .map((code) => state.workshops.find((item) => item.cod === code))
       .filter(Boolean)
-      .map((workshop) => `
-        <button class="manage-panel-row" type="button" data-workshop-code="${workshop.cod}">
-          ${workshop.title}
-        </button>
-      `)
-      .join("");
+      .filter((workshop) => matchesExploreModalityFilter(workshop, modalityFilter));
   }
 
-  function createWorkshopsMarkup(workshops) {
-    return workshops.map((workshop) => `
-      <button class="offices-row offices-row-button" type="button" data-workshop-code="${workshop.cod}">
-        <span class="offices-cell">${workshop.cod}</span>
-        <span class="offices-cell">${workshop.title}</span>
-        <span class="offices-cell">${workshop.period}</span>
+  function getPinnedWorkshops(state) {
+    return (state.pinnedWorkshopCodes || [])
+      .map((code) => state.workshops.find((item) => item.cod === code))
+      .filter(Boolean);
+  }
+
+  function getWorkshopCollectionSignature(workshops) {
+    return (workshops || []).map((workshop) => [
+      workshop.cod,
+      workshop.title,
+      workshop.status,
+      workshop.modality,
+      workshop.hours,
+    ].join(":")).join("|");
+  }
+
+  function createLinkedWorkshopsMarkup(state, modalityFilter) {
+    if (!state.linkedWorkshopCodes.length) {
+      return `
+        <div class="offices-empty-state manage-empty-state">
+          <img
+            class="offices-empty-icon"
+            src="../assets/icons/v2-template/oficinas_vazias_icone.svg"
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+          >
+          <p>Nenhuma oficina inscrita no momento.</p>
+          <p>Explore oficinas disponíveis para realizar uma inscrição.</p>
+        </div>
+      `;
+    }
+
+    const linkedWorkshops = getLinkedWorkshops(state, modalityFilter);
+
+    if (!linkedWorkshops.length) {
+      return `
+        <div class="offices-empty-state manage-empty-state">
+          <img
+            class="offices-empty-icon"
+            src="../assets/icons/v2-template/oficinas_vazias_icone.svg"
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+          >
+          <p>Nenhuma oficina inscrita nesta modalidade.</p>
+          <p>Escolha outra modalidade para visualizar suas oficinas.</p>
+        </div>
+      `;
+    }
+
+    return createWorkshopCardsMarkup(linkedWorkshops, state.workshops, "manage");
+  }
+
+  function formatWorkshopHours(value) {
+    return String(value || "")
+      .replace(/\bHrs?\b/i, "horas")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function getWorkshopModalityLabel(modality) {
+    return modality;
+  }
+
+  function createHomeQuickAccessMarkup(state) {
+    const pinnedWorkshops = getPinnedWorkshops(state);
+
+    if (!pinnedWorkshops.length) {
+      return `
+        <div class="home-quick-empty-state">
+          <img
+            class="home-quick-empty-icon"
+            src="../assets/icons/v2-template/acesso_rapido_vazio_icone.svg"
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+          >
+          <p>Parece que você não possui nenhuma oficina fixada ao acesso rapido no momento.</p>
+        </div>
+      `;
+    }
+
+    const pinnedWorkshopsMarkup = pinnedWorkshops.map((workshop, index) => `
+      <button
+        class="home-quick-card ${getWorkshopToneClass(workshop, state.workshops, "home-quick-card")}"
+        type="button"
+        style="--home-quick-card-index: ${index};"
+        data-workshop-code="${escapeHTML(workshop.cod)}"
+        data-workshop-source="quick_access"
+      >
+        <span class="home-quick-title">
+          <span class="home-quick-title-text">${escapeHTML(workshop.title)}</span>
+        </span>
+        <span class="home-quick-meta">Código: <strong>${escapeHTML(workshop.cod)}</strong></span>
+        <span class="home-quick-details">
+          <span>Carga: <strong>${escapeHTML(formatWorkshopHours(workshop.hours))}</strong></span>
+          <span>Modalidade: <strong>${escapeHTML(getWorkshopModalityLabel(workshop.modality))}</strong></span>
+        </span>
       </button>
     `).join("");
+    const placeholderCount = pinnedWorkshops.length < 4
+      ? 4 - pinnedWorkshops.length
+      : pinnedWorkshops.length % 2;
+    const placeholdersMarkup = Array.from({ length: placeholderCount }, (_, index) => `
+      <div
+        class="home-quick-placeholder"
+        aria-hidden="true"
+        data-placeholder-index="${index + 1}"
+      ></div>
+    `).join("");
+
+    return `${pinnedWorkshopsMarkup}${placeholdersMarkup}`;
+  }
+
+  function normalizeExploreSearchText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+
+  function extractExploreCodeDigits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function normalizeExploreCode(value) {
+    const digits = extractExploreCodeDigits(value);
+
+    if (!digits) {
+      return "";
+    }
+
+    return `ELM-${digits}`;
+  }
+
+  function matchesExploreStatusFilter(workshop, statusFilter) {
+    if (statusFilter === "closed") {
+      return workshop.status === "Fechada";
+    }
+
+    if (statusFilter === "all") {
+      return true;
+    }
+
+    return workshop.status === "Aberta";
+  }
+
+  function matchesExploreModalityFilter(workshop, modalityFilter) {
+    if (!modalityFilter || modalityFilter === "all") {
+      return true;
+    }
+
+    return workshop.modality === modalityFilter;
+  }
+
+  function filterExploreWorkshops(workshops, searchState) {
+    const titleQuery = normalizeExploreSearchText(searchState.title);
+    const codeQuery = normalizeExploreCode(searchState.code);
+
+    if (!titleQuery && !codeQuery) {
+      return [];
+    }
+
+    return workshops.filter((workshop) => {
+      if (!matchesExploreStatusFilter(workshop, searchState.status)) {
+        return false;
+      }
+
+      if (!matchesExploreModalityFilter(workshop, searchState.modality)) {
+        return false;
+      }
+
+      if (titleQuery && !normalizeExploreSearchText(workshop.title).includes(titleQuery)) {
+        return false;
+      }
+
+      if (codeQuery && !normalizeExploreCode(workshop.cod).startsWith(codeQuery)) {
+        return false;
+      }
+
+      return true;
+    });
+  }
+
+  function filterExploreWorkshopsByActiveFilters(workshops, searchState) {
+    return (workshops || []).filter((workshop) => (
+      matchesExploreStatusFilter(workshop, searchState.status)
+        && matchesExploreModalityFilter(workshop, searchState.modality)
+    ));
+  }
+
+  function createExploreEmptyMarkup() {
+    return `
+      <div class="offices-empty-state">
+        <img
+          class="offices-empty-icon"
+          src="../assets/icons/v2-template/oficinas_vazias_icone.svg"
+          alt=""
+          aria-hidden="true"
+          draggable="false"
+        >
+        <p>Nenhuma oficina exibida no momento.</p>
+        <p>Digite um código ou título acima para pesquisar oficinas disponíveis.</p>
+      </div>
+    `;
+  }
+
+  function createManageWorkshopPlaceholdersMarkup(workshopCount) {
+    const rowCompletionCount = workshopCount > 0 ? (3 - (workshopCount % 3)) % 3 : 0;
+    const extraPlaceholderRowCount = workshopCount > 0 && workshopCount <= 3 ? 3 : 0;
+    const placeholderCount = rowCompletionCount + extraPlaceholderRowCount;
+
+    return Array.from({ length: placeholderCount }, (_, index) => `
+      <div
+        class="offices-result-card manage-result-placeholder"
+        aria-hidden="true"
+        data-placeholder-index="${index + 1}"
+      ></div>
+    `).join("");
+  }
+
+  function createWorkshopCardsMarkup(workshops, allWorkshops, source) {
+    const placeholdersMarkup = source === "manage"
+      ? createManageWorkshopPlaceholdersMarkup(workshops.length)
+      : "";
+    const gridAnimationClass = source === "catalog" ? " offices-result-grid-animated" : "";
+
+    return `
+      <div class="offices-result-grid${gridAnimationClass}">
+        ${workshops.map((workshop, index) => `
+          <article
+            class="offices-result-card ${getWorkshopToneClass(workshop, allWorkshops, "offices-result-card")}"
+            role="button"
+            tabindex="0"
+            style="--office-card-index: ${index};"
+            data-workshop-code="${escapeHTML(workshop.cod)}"
+            data-workshop-source="${escapeHTML(source)}"
+            aria-label="Abrir detalhes da oficina ${escapeHTML(workshop.title)}"
+          >
+            <span class="offices-result-card-title">
+              <span class="offices-result-card-title-text">${escapeHTML(workshop.title)}</span>
+            </span>
+            <span class="offices-result-card-meta">Código: <strong>${escapeHTML(workshop.cod)}</strong></span>
+            <span class="offices-result-card-details">
+              <span>Modalidade: <strong>${escapeHTML(getWorkshopModalityLabel(workshop.modality))}</strong></span>
+              <span>Carga Horária: <strong>${escapeHTML(formatWorkshopHours(workshop.hours))}</strong></span>
+            </span>
+            <span class="offices-result-card-action" aria-hidden="true">
+              <img
+                src="../assets/icons/v2-template/access_details_icone.svg"
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+              >
+              <span>Acessar Detalhes</span>
+            </span>
+          </article>
+        `).join("")}
+        ${placeholdersMarkup}
+      </div>
+    `;
+  }
+
+  function createExploreWorkshopCardsMarkup(workshops, allWorkshops) {
+    return createWorkshopCardsMarkup(workshops, allWorkshops, "catalog");
+  }
+
+  function createExploreOfficesMarkup(state, searchState) {
+    if (!searchState.hasSearched) {
+      return createExploreEmptyMarkup();
+    }
+
+    const results = filterExploreWorkshops(state.workshops || [], searchState);
+
+    if (!results.length) {
+      return createExploreEmptyMarkup();
+    }
+
+    return createExploreWorkshopCardsMarkup(results, state.workshops || []);
   }
 
   function escapeHTML(value) {
@@ -161,33 +463,36 @@
   }
 
   function createObjectiveGuideMarkup(state) {
-    if (!state.objectiveSets || !state.objectiveSets.length) {
-      if (state.isOnboardingTourOpen) {
-        return `
-          <div class="objective-guide-shell objective-guide-shell-intro">
-            <div class="objective-guide-copy-block">
-              <p class="objective-guide-kicker">Tutorial</p>
-              <div class="objective-guide-main-row">
-                ${createObjectiveStatusMarkup("pending")}
-                <div class="objective-guide-text-block">
-                  <h2 class="objective-guide-title">Card de desafios</h2>
-                  <p class="objective-guide-copy">Aqui aparecem o título, a tarefa e o progresso da pesquisa.</p>
-                </div>
+    if (state.isOnboardingTourOpen) {
+      return `
+        <div class="objective-guide-shell objective-guide-shell-intro">
+          <div class="objective-guide-copy-block">
+            <p class="objective-guide-kicker">Tutorial</p>
+            <div class="objective-guide-main-row">
+              ${createObjectiveStatusMarkup("pending")}
+              <div class="objective-guide-text-block">
+                <h2 class="objective-guide-title">Cartão de desafios</h2>
+                <p class="objective-guide-copy">Aqui aparece o titulo, descrição e progresso da tarefa.</p>
               </div>
             </div>
-
-            ${createObjectiveGuideSideMarkup("0/1", {
-              showAbandonButton: true,
-              disableAbandonButton: true,
-            })}
           </div>
-        `;
-      }
 
+          ${createObjectiveGuideSideMarkup("0/1", {
+            showAbandonButton: true,
+            disableAbandonButton: true,
+          })}
+        </div>
+      `;
+    }
+
+    if (!state.objectiveSets || !state.objectiveSets.length) {
       return "";
     }
 
     const allObjectives = state.objectiveSets.flatMap((set) => set.objectives || []);
+    const introChallenge = state.introChallenge && state.introChallenge.status === "pendente"
+      ? state.introChallenge
+      : null;
     const currentObjective = state.currentObjective;
     const currentSet = state.objectiveSets.find((set) => (
       currentObjective && (set.objectives || []).some((objective) => objective.id === currentObjective.id)
@@ -227,6 +532,30 @@
           </div>
 
           ${createObjectiveGuideSideMarkup("9/9", { showAbandonButton: false })}
+        </div>
+
+        ${feedbackMarkup}
+      `;
+    }
+
+    if (introChallenge) {
+      return `
+        <div class="objective-guide-shell objective-guide-shell-intro">
+          <div class="objective-guide-copy-block">
+            <p class="objective-guide-kicker">Tutorial</p>
+            <div class="objective-guide-main-row">
+              ${createObjectiveStatusMarkup("pending")}
+              <div class="objective-guide-text-block">
+                <h2 class="objective-guide-title">${escapeHTML(introChallenge.title)}</h2>
+                <p class="objective-guide-copy">${escapeHTML(introChallenge.description)}</p>
+              </div>
+            </div>
+          </div>
+
+          ${createObjectiveGuideSideMarkup("0/1", {
+            showAbandonButton: true,
+            disableAbandonButton: true,
+          })}
         </div>
 
         ${feedbackMarkup}
@@ -390,10 +719,12 @@
     const dependentMarkup = state.objectiveFailureDependents.length
       ? `
           <div class="objective-failure-list-block">
-            <p>As tarefas abaixo nao poderao mais ser concluídas nesta sessao:</p>
+            <p>As tarefas pendentes abaixo não poderão mais ser concluídas nesta sessão:</p>
             <ul class="objective-failure-list">
               ${state.objectiveFailureDependents.map((objective) => `
-                <li>${escapeHTML(objective.id)} - ${escapeHTML(objective.title)}</li>
+                <li class="objective-failure-list-item${objective.status === "pendente" ? " is-pending" : ""}">
+                  ${escapeHTML(objective.id)} - ${escapeHTML(objective.title)}
+                </li>
               `).join("")}
             </ul>
           </div>
@@ -422,6 +753,12 @@
     const elements = {
       appShell: documentRef.querySelector(".app-shell"),
       screenTitle: documentRef.querySelector("#screen-title"),
+      profileButton: documentRef.querySelector(".profile-button"),
+      profileMenu: documentRef.querySelector(".profile-menu"),
+      profileButtonIcon: documentRef.querySelector(".profile-button-icon"),
+      profileButtonLabel: documentRef.querySelector(".profile-button-label"),
+      profileButtonDivider: documentRef.querySelector(".profile-button-divider"),
+      profileButtonCaret: documentRef.querySelector(".profile-button-caret"),
       objectiveGuide: documentRef.querySelector("#objective-guide"),
       objectiveFailureModal: documentRef.querySelector("#objective-failure-modal"),
       objectiveFailureContent: documentRef.querySelector("#objective-failure-content"),
@@ -437,18 +774,33 @@
       participantLastAccess: documentRef.querySelector("#participant-last-access"),
       participantRecordsBody: documentRef.querySelector("#participant-records-body"),
       manageLinkedWorkshops: documentRef.querySelector("#manage-linked-workshops"),
+      manageModalityButtons: Array.from(documentRef.querySelectorAll("[data-manage-modality-filter]")),
+      homeQuickSeparator: documentRef.querySelector(".home-quick-separator"),
+      homeQuickAccessGrid: documentRef.querySelector("#home-quick-access-grid"),
       officesTableBody: documentRef.querySelector("#offices-table-body"),
+      officesModalityToolbar: documentRef.querySelector(".offices-modality-toolbar"),
+      officesModalityButtons: Array.from(documentRef.querySelectorAll("[data-offices-modality-filter]")),
       toastStack: documentRef.querySelector("#toast-stack"),
       officeModal: documentRef.querySelector("#office-modal"),
+      officeModalDialog: documentRef.querySelector(".office-modal-dialog"),
       officeModalTitle: documentRef.querySelector("#office-modal-title"),
       officeModalDescription: documentRef.querySelector("#office-modal-description"),
       officeModalCode: documentRef.querySelector("#office-modal-code"),
       officeModalHours: documentRef.querySelector("#office-modal-hours"),
       officeModalModality: documentRef.querySelector("#office-modal-modality"),
       officeModalStatus: documentRef.querySelector("#office-modal-status"),
+      officeModalStatusCard: documentRef.querySelector("#office-modal-status-card"),
+      officeModalStatusIcon: documentRef.querySelector("#office-modal-status-icon"),
+      officeModalStatusNote: documentRef.querySelector("#office-modal-status-note"),
       officeModalPeriod: documentRef.querySelector("#office-modal-period"),
       officeModalParticipate: documentRef.querySelector("#office-modal-participate"),
+      officeModalParticipateLabel: documentRef.querySelector("#office-modal-participate-label"),
+      officeModalPin: documentRef.querySelector("#office-modal-pin"),
+      officeModalPinLabel: documentRef.querySelector("#office-modal-pin-label"),
       officeModalCancelLink: documentRef.querySelector("#office-modal-cancel-link"),
+      officeModalActionIcon: documentRef.querySelector("#office-modal-action-icon-img"),
+      officeModalActionTitle: documentRef.querySelector("#office-modal-action-title"),
+      officeModalActionNote: documentRef.querySelector("#office-modal-action-note"),
       confirmModal: documentRef.querySelector("#confirm-modal"),
       carouselSlides: Array.from(documentRef.querySelectorAll(".carousel-slide")),
       carouselDots: Array.from(documentRef.querySelectorAll(".carousel-dot")),
@@ -463,6 +815,21 @@
     let onboardingTourElement = null;
     let onboardingTourExitTimeout = 0;
     let researchGateExitTimeout = 0;
+    let lastExploreResultsSignature = "";
+    let lastManageWorkshopsSignature = "";
+    let lastQuickAccessSignature = "";
+    let lastOfficeModalWorkshopCode = "";
+    let lastOfficeModalAvailabilityState = "";
+    let officeModalLinkedExitTimeout = 0;
+    let officeModalHeightTimeout = 0;
+    let officeSearchState = {
+      hasSearched: false,
+      title: "",
+      code: "",
+      status: "open",
+      modality: "all",
+    };
+    let manageModalityFilter = "all";
 
     function clearObjectiveTransitionTimeout() {
       if (!activeObjectiveTransitionTimeout) {
@@ -488,6 +855,46 @@
       researchGateExitTimeout = 0;
     }
 
+    function setElementInteractionLocked(element, isLocked) {
+      if (!element) {
+        return;
+      }
+
+      element.inert = isLocked;
+
+      if (isLocked) {
+        element.setAttribute("inert", "");
+        element.setAttribute("aria-hidden", "true");
+        return;
+      }
+
+      element.removeAttribute("inert");
+      element.removeAttribute("aria-hidden");
+    }
+
+    function setResearchGateFocusScope(isLocked) {
+      setElementInteractionLocked(elements.appShell, isLocked);
+      setElementInteractionLocked(elements.objectiveGuide, isLocked);
+    }
+
+    function focusResearchGateAction() {
+      if (!elements.researchGate || elements.researchGate.hidden) {
+        return;
+      }
+
+      const activeElement = documentRef.activeElement;
+
+      if (activeElement && elements.researchGate.contains(activeElement)) {
+        return;
+      }
+
+      const actionButton = elements.researchGate.querySelector("button");
+
+      if (actionButton) {
+        actionButton.focus({ preventScroll: true });
+      }
+    }
+
     function syncResearchGateVisibility(state) {
       if (!elements.researchGate) {
         return false;
@@ -498,20 +905,29 @@
       if (shouldShowGate) {
         clearResearchGateExitTimeout();
         elements.researchGate.hidden = false;
+        elements.researchGate.removeAttribute("aria-hidden");
         elements.researchGate.classList.remove("is-closing");
+        focusResearchGateAction();
+        setResearchGateFocusScope(true);
         return false;
       }
 
       if (elements.researchGate.hidden) {
+        elements.researchGate.setAttribute("aria-hidden", "true");
+        setResearchGateFocusScope(false);
         return false;
       }
+
+      setResearchGateFocusScope(true);
 
       if (!elements.researchGate.classList.contains("is-closing")) {
         elements.researchGate.classList.add("is-closing");
         researchGateExitTimeout = global.setTimeout(() => {
           elements.researchGate.hidden = true;
+          elements.researchGate.setAttribute("aria-hidden", "true");
           elements.researchGate.classList.remove("is-closing");
           researchGateExitTimeout = 0;
+          setResearchGateFocusScope(false);
           renderOnboardingTour(latestState);
         }, RESEARCH_GATE_EXIT_ANIMATION_MS);
       }
@@ -801,8 +1217,525 @@
       syncOnboardingTourSpotlight(tourStep);
     }
 
+    function renderExploreOfficesResults(state) {
+      const filteredResults = officeSearchState.hasSearched
+        ? filterExploreWorkshops(state.workshops || [], officeSearchState)
+        : [];
+      const isListingAllWorkshops = officeSearchState.hasSearched && filteredResults.length === 0;
+      const results = isListingAllWorkshops
+        ? filterExploreWorkshopsByActiveFilters(state.workshops || [], officeSearchState)
+        : filteredResults;
+      const hasResults = results.length > 0;
+
+      if (elements.officesModalityToolbar) {
+        elements.officesModalityToolbar.hidden = !hasResults;
+      }
+
+      if (elements.officesModalityButtons && elements.officesModalityButtons.length) {
+        elements.officesModalityButtons.forEach((button) => {
+          const isActive = button.dataset.officesModalityFilter === officeSearchState.modality;
+          const iconElement = button.querySelector("img");
+          const nextIconSrc = isActive
+            ? button.dataset.activeIcon
+            : button.dataset.defaultIcon;
+
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+
+          if (iconElement && nextIconSrc) {
+            iconElement.src = nextIconSrc;
+          }
+        });
+      }
+
+      if (!elements.officesTableBody) {
+        return {
+          hasResults,
+          resultCount: results.length,
+          matchedResultCount: filteredResults.length,
+          isListingAllWorkshops,
+        };
+      }
+
+      const searchSignature = [
+        officeSearchState.hasSearched ? "searched" : "idle",
+        isListingAllWorkshops ? "listing_all" : "filtered",
+        officeSearchState.title,
+        officeSearchState.code,
+        officeSearchState.status,
+        officeSearchState.modality,
+        results.map((workshop) => [
+          workshop.cod,
+          workshop.title,
+          workshop.status,
+          workshop.modality,
+          workshop.hours,
+        ].join(":")).join("|"),
+      ].join("::");
+
+      if (!officeSearchState.hasSearched || !hasResults) {
+        if (lastExploreResultsSignature !== searchSignature) {
+          elements.officesTableBody.innerHTML = createExploreEmptyMarkup();
+          lastExploreResultsSignature = searchSignature;
+        }
+
+        return {
+          hasResults,
+          resultCount: results.length,
+          matchedResultCount: filteredResults.length,
+          isListingAllWorkshops,
+        };
+      }
+
+      if (lastExploreResultsSignature !== searchSignature) {
+        elements.officesTableBody.innerHTML = createExploreWorkshopCardsMarkup(results, state.workshops || []);
+        lastExploreResultsSignature = searchSignature;
+      }
+
+      return {
+        hasResults,
+        resultCount: results.length,
+        matchedResultCount: filteredResults.length,
+        isListingAllWorkshops,
+      };
+    }
+
+    function syncManageModalityButtons() {
+      if (!elements.manageModalityButtons || !elements.manageModalityButtons.length) {
+        return;
+      }
+
+      elements.manageModalityButtons.forEach((button) => {
+        const isActive = button.dataset.manageModalityFilter === manageModalityFilter;
+        const iconElement = button.querySelector("img");
+        const nextIconSrc = isActive
+          ? button.dataset.activeIcon
+          : button.dataset.defaultIcon;
+
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+
+        if (iconElement && nextIconSrc) {
+          iconElement.src = nextIconSrc;
+        }
+      });
+    }
+
+    function renderManageWorkshops(state) {
+      syncManageModalityButtons();
+
+      if (elements.manageLinkedWorkshops) {
+        const linkedWorkshops = getLinkedWorkshops(state, manageModalityFilter);
+        const manageWorkshopsSignature = [
+          manageModalityFilter,
+          (state.linkedWorkshopCodes || []).join("|"),
+          getWorkshopCollectionSignature(linkedWorkshops),
+        ].join("::");
+
+        if (lastManageWorkshopsSignature === manageWorkshopsSignature) {
+          return;
+        }
+
+        elements.manageLinkedWorkshops.classList.toggle(
+          "manage-results-body-animated",
+          lastManageWorkshopsSignature !== "",
+        );
+        elements.manageLinkedWorkshops.innerHTML = createLinkedWorkshopsMarkup(state, manageModalityFilter);
+        lastManageWorkshopsSignature = manageWorkshopsSignature;
+      }
+    }
+
+    function renderHomeQuickAccess(state) {
+      if (!elements.homeQuickAccessGrid) {
+        return;
+      }
+
+      const pinnedWorkshops = getPinnedWorkshops(state);
+      const quickAccessSignature = [
+        "quick_access",
+        (state.pinnedWorkshopCodes || []).join("|"),
+        getWorkshopCollectionSignature(pinnedWorkshops),
+      ].join("::");
+
+      if (lastQuickAccessSignature === quickAccessSignature) {
+        return;
+      }
+
+      if (elements.homeQuickSeparator) {
+        elements.homeQuickSeparator.hidden = pinnedWorkshops.length === 0;
+      }
+
+      elements.homeQuickAccessGrid.classList.toggle(
+        "home-quick-grid-animated",
+        lastQuickAccessSignature !== "",
+      );
+      elements.homeQuickAccessGrid.innerHTML = createHomeQuickAccessMarkup(state);
+      lastQuickAccessSignature = quickAccessSignature;
+    }
+
+    function syncOfficeModalLinkedEntryAnimation(shouldAnimate) {
+      [
+        elements.officeModalStatusCard,
+        elements.officeModalParticipate,
+        elements.officeModalPin,
+        elements.officeModalCancelLink,
+      ].forEach((element) => {
+        if (element) {
+          element.classList.toggle("is-linked-entry-animated", shouldAnimate);
+        }
+      });
+    }
+
+    function syncOfficeModalLinkedExitAnimation(shouldAnimate) {
+      [
+        elements.officeModalStatusCard,
+        elements.officeModalParticipate,
+        elements.officeModalPin,
+        elements.officeModalCancelLink,
+      ].forEach((element) => {
+        if (element) {
+          element.classList.toggle("is-linked-exit-animated", shouldAnimate);
+        }
+      });
+    }
+
+    function clearOfficeModalLinkedExitTimeout() {
+      if (!officeModalLinkedExitTimeout) {
+        return;
+      }
+
+      global.clearTimeout(officeModalLinkedExitTimeout);
+      officeModalLinkedExitTimeout = 0;
+    }
+
+    function clearOfficeModalHeightAnimation() {
+      if (officeModalHeightTimeout) {
+        global.clearTimeout(officeModalHeightTimeout);
+        officeModalHeightTimeout = 0;
+      }
+
+      if (elements.officeModalDialog) {
+        elements.officeModalDialog.classList.remove("is-height-animating");
+        elements.officeModalDialog.style.height = "";
+        elements.officeModalDialog.style.overflow = "";
+      }
+    }
+
+    function prepareOfficeModalHeightAnimation(shouldAnimate) {
+      if (!shouldAnimate || !elements.officeModalDialog || elements.officeModal.hidden) {
+        return 0;
+      }
+
+      const previousHeight = elements.officeModalDialog.getBoundingClientRect().height;
+
+      if (!previousHeight) {
+        return 0;
+      }
+
+      if (officeModalHeightTimeout) {
+        global.clearTimeout(officeModalHeightTimeout);
+        officeModalHeightTimeout = 0;
+      }
+
+      elements.officeModalDialog.classList.remove("is-height-animating");
+      elements.officeModalDialog.style.height = "";
+      elements.officeModalDialog.style.overflow = "";
+
+      return previousHeight;
+    }
+
+    function finishOfficeModalHeightAnimation(previousHeight) {
+      if (!previousHeight || !elements.officeModalDialog || elements.officeModal.hidden) {
+        return;
+      }
+
+      const nextHeight = elements.officeModalDialog.getBoundingClientRect().height;
+
+      if (!nextHeight || Math.abs(nextHeight - previousHeight) < 2) {
+        clearOfficeModalHeightAnimation();
+        return;
+      }
+
+      elements.officeModalDialog.classList.add("is-height-animating");
+      elements.officeModalDialog.style.height = `${previousHeight}px`;
+      elements.officeModalDialog.style.overflow = "hidden";
+      elements.officeModalDialog.offsetHeight;
+      elements.officeModalDialog.style.height = `${nextHeight}px`;
+
+      officeModalHeightTimeout = global.setTimeout(() => {
+        clearOfficeModalHeightAnimation();
+      }, 300);
+    }
+
+    function renderOfficeModal(state, options) {
+      const forceFinalState = Boolean(options && options.forceFinalState);
+
+      if (!elements.officeModal) {
+        syncOfficeModalLinkedEntryAnimation(false);
+        syncOfficeModalLinkedExitAnimation(false);
+        clearOfficeModalLinkedExitTimeout();
+        clearOfficeModalHeightAnimation();
+        lastOfficeModalWorkshopCode = "";
+        lastOfficeModalAvailabilityState = "";
+        return;
+      }
+
+      elements.officeModal.hidden = !state.isOfficeModalOpen;
+
+      if (!state.isOfficeModalOpen || !state.selectedWorkshop) {
+        syncOfficeModalLinkedEntryAnimation(false);
+        syncOfficeModalLinkedExitAnimation(false);
+        clearOfficeModalLinkedExitTimeout();
+        clearOfficeModalHeightAnimation();
+        lastOfficeModalWorkshopCode = "";
+        lastOfficeModalAvailabilityState = "";
+        return;
+      }
+
+      const isWorkshopClosed = state.selectedWorkshop.status === "Fechada";
+      const isWorkshopLinked = Boolean(state.selectedWorkshopIsLinked);
+      const isManageWorkshopSource = state.selectedWorkshopSource === "manage";
+      const availabilityState = isWorkshopClosed
+        ? "closed"
+        : isWorkshopLinked
+          ? "linked"
+          : "open";
+      const shouldAnimateLinkedExit = !forceFinalState
+        && availabilityState === "open"
+        && lastOfficeModalWorkshopCode === state.selectedWorkshop.cod
+        && lastOfficeModalAvailabilityState === "linked";
+
+      if (
+        !forceFinalState
+        && availabilityState === "open"
+        && lastOfficeModalWorkshopCode === state.selectedWorkshop.cod
+        && lastOfficeModalAvailabilityState === "linked-exiting"
+      ) {
+        return;
+      }
+
+      if (shouldAnimateLinkedExit) {
+        syncOfficeModalLinkedEntryAnimation(false);
+        syncOfficeModalLinkedExitAnimation(true);
+        clearOfficeModalLinkedExitTimeout();
+        lastOfficeModalAvailabilityState = "linked-exiting";
+        officeModalLinkedExitTimeout = global.setTimeout(() => {
+          officeModalLinkedExitTimeout = 0;
+          syncOfficeModalLinkedExitAnimation(false);
+
+          if (latestState) {
+            renderOfficeModal(latestState, { forceFinalState: true });
+          }
+        }, OFFICE_MODAL_LINKED_EXIT_ANIMATION_MS);
+        return;
+      }
+
+      clearOfficeModalLinkedExitTimeout();
+      syncOfficeModalLinkedExitAnimation(false);
+
+      const statusLabel = isWorkshopClosed
+        ? "Fechada"
+        : isWorkshopLinked
+          ? "Inscrito"
+          : "Disponível";
+      const statusNote = isWorkshopClosed
+        ? "Esta oficina não aceita novas inscrições."
+        : isWorkshopLinked
+          ? "Você já está inscrito nesta oficina."
+          : "Disponível para inscrição.";
+      const actionTitle = isWorkshopClosed
+        ? "Inscrição indisponível"
+        : isWorkshopLinked
+          ? "Você já está inscrito"
+          : "Inscrever-se nesta oficina";
+      const actionNote = isWorkshopClosed
+        ? "Confira outra turma ou período disponível para continuar."
+        : isWorkshopLinked
+          ? ""
+          : "A oficina está disponível para você se inscrever agora.";
+      const participateLabel = isWorkshopClosed
+        ? "Indisponível"
+        : isWorkshopLinked
+          ? "Minhas Oficinas"
+          : "Inscrever-se";
+      const statusIconPath = isWorkshopClosed
+        ? "../assets/icons/office-modal/error_outline.svg"
+        : isWorkshopLinked
+          ? "../assets/icons/office-modal/bookmark_added.svg"
+          : "../assets/icons/office-modal/check_circle.svg";
+      const participateIconPath = isWorkshopClosed
+        ? "../assets/icons/office-modal/person_add_disabled.svg"
+        : isWorkshopLinked
+          ? "../assets/icons/office-modal/open_in_new.svg"
+          : "../assets/icons/office-modal/person_add.svg";
+      const actionIconPath = isWorkshopClosed
+        ? "../assets/icons/office-modal/paste_disable.svg"
+        : isWorkshopLinked
+          ? "../assets/icons/office-modal/paste_done.svg"
+          : "../assets/icons/office-modal/paste.svg";
+      const shouldAnimateLinkedEntry = availabilityState === "linked"
+        && lastOfficeModalWorkshopCode === state.selectedWorkshop.cod
+        && lastOfficeModalAvailabilityState !== ""
+        && lastOfficeModalAvailabilityState !== "linked";
+      const shouldAnimateModalHeight = lastOfficeModalWorkshopCode === state.selectedWorkshop.cod
+        && (
+          (
+            lastOfficeModalAvailabilityState !== ""
+            && lastOfficeModalAvailabilityState !== "linked-exiting"
+            && lastOfficeModalAvailabilityState !== availabilityState
+          )
+          || (forceFinalState && lastOfficeModalAvailabilityState === "linked-exiting")
+        );
+      const previousModalHeight = prepareOfficeModalHeightAnimation(shouldAnimateModalHeight);
+
+      elements.officeModalTitle.textContent = state.selectedWorkshop.title;
+      elements.officeModalDescription.textContent = state.selectedWorkshop.description;
+      elements.officeModalCode.textContent = state.selectedWorkshop.cod;
+      elements.officeModalHours.textContent = state.selectedWorkshop.hours;
+      elements.officeModalModality.textContent = state.selectedWorkshop.modality;
+      elements.officeModalStatus.textContent = statusLabel;
+      elements.officeModalPeriod.textContent = state.selectedWorkshop.period;
+      elements.officeModalParticipate.disabled = isWorkshopClosed;
+      elements.officeModalParticipate.hidden = isWorkshopLinked && isManageWorkshopSource;
+
+      if (elements.officeModalParticipate) {
+        const participateIcon = elements.officeModalParticipate.querySelector("img");
+
+        if (participateIcon) {
+          participateIcon.src = participateIconPath;
+        }
+      }
+
+      if (elements.officeModalStatusCard) {
+        elements.officeModalStatusCard.dataset.availability = availabilityState;
+      }
+
+      if (elements.officeModalStatusIcon) {
+        elements.officeModalStatusIcon.src = statusIconPath;
+      }
+
+      if (elements.officeModalActionIcon) {
+        elements.officeModalActionIcon.src = actionIconPath;
+      }
+
+      if (elements.officeModalStatusNote) {
+        elements.officeModalStatusNote.textContent = statusNote;
+      }
+
+      if (elements.officeModalActionTitle) {
+        elements.officeModalActionTitle.textContent = actionTitle;
+      }
+
+      if (elements.officeModalActionNote) {
+        elements.officeModalActionNote.textContent = actionNote;
+        elements.officeModalActionNote.hidden = !actionNote;
+      }
+
+      if (elements.officeModalParticipateLabel) {
+        elements.officeModalParticipateLabel.textContent = participateLabel;
+      }
+
+      if (elements.officeModalPin) {
+        const isPinned = state.pinnedWorkshopCodes.includes(state.selectedWorkshop.cod);
+        const pinLabel = isPinned
+          ? "Remover do Acesso Rápido"
+          : "Adicionar ao Acesso Rápido";
+        const pinIcon = elements.officeModalPin.querySelector("img");
+
+        elements.officeModalPin.hidden = !state.selectedWorkshopIsLinked;
+        elements.officeModalPin.dataset.pinState = isPinned ? "remove" : "add";
+
+        if (elements.officeModalPinLabel) {
+          elements.officeModalPinLabel.textContent = pinLabel;
+        } else {
+          elements.officeModalPin.textContent = pinLabel;
+        }
+
+        if (pinIcon) {
+          pinIcon.src = isPinned
+            ? "../assets/icons/office-modal/bookmark_remove.svg"
+            : "../assets/icons/office-modal/bookmark_add.svg";
+        }
+      }
+
+      elements.officeModalCancelLink.hidden = !state.selectedWorkshopIsLinked;
+      syncOfficeModalLinkedEntryAnimation(shouldAnimateLinkedEntry);
+      lastOfficeModalWorkshopCode = state.selectedWorkshop.cod;
+      lastOfficeModalAvailabilityState = availabilityState;
+      finishOfficeModalHeightAnimation(previousModalHeight);
+    }
+
+    function syncHeaderNavigation(state) {
+      if (!elements.profileButton) {
+        return;
+      }
+
+      const isReturnHomeView = state.activeView === "oficinas" || state.activeView === "gerenciar";
+      elements.profileButton.setAttribute(
+        "aria-label",
+        isReturnHomeView ? "Voltar ao Início" : "Abrir perfil",
+      );
+
+      if (elements.profileMenu && isReturnHomeView) {
+        elements.profileMenu.open = false;
+      }
+
+      if (elements.profileButtonLabel) {
+        elements.profileButtonLabel.textContent = isReturnHomeView ? "Voltar ao Início" : "Perfil";
+      }
+
+      if (elements.profileButtonIcon) {
+        elements.profileButtonIcon.src = isReturnHomeView
+          ? "../assets/icons/v2-template/home_icone.svg"
+          : "../assets/icons/v2-template/perfil_icone.svg";
+      }
+
+      if (elements.profileButtonCaret) {
+        elements.profileButtonCaret.hidden = isReturnHomeView;
+      }
+
+      if (elements.profileButtonDivider) {
+        elements.profileButtonDivider.hidden = isReturnHomeView;
+      }
+    }
+
     return {
       elements,
+
+      setOfficeSearch(criteria) {
+        officeSearchState = {
+          hasSearched: criteria && Object.prototype.hasOwnProperty.call(criteria, "hasSearched")
+            ? Boolean(criteria.hasSearched)
+            : officeSearchState.hasSearched,
+          title: criteria && Object.prototype.hasOwnProperty.call(criteria, "title")
+            ? (criteria.title || "")
+            : officeSearchState.title,
+          code: criteria && Object.prototype.hasOwnProperty.call(criteria, "code")
+            ? (criteria.code || "")
+            : officeSearchState.code,
+          status: criteria && criteria.status ? criteria.status : officeSearchState.status,
+          modality: criteria && criteria.modality ? criteria.modality : officeSearchState.modality,
+        };
+
+        if (latestState) {
+          return renderExploreOfficesResults(latestState);
+        }
+
+        return {
+          hasResults: false,
+          resultCount: 0,
+          matchedResultCount: 0,
+          isListingAllWorkshops: false,
+        };
+      },
+
+      setManageModalityFilter(modalityFilter) {
+        manageModalityFilter = modalityFilter || "all";
+
+        if (latestState) {
+          renderManageWorkshops(latestState);
+        }
+      },
 
       render(state) {
         latestState = state;
@@ -813,6 +1746,7 @@
         }
 
         const isResearchGateClosing = syncResearchGateVisibility(state);
+        syncHeaderNavigation(state);
 
         if (elements.screenTitle) {
           elements.screenTitle.textContent = getTextContent(state);
@@ -836,12 +1770,10 @@
           const isActive = trigger.dataset.view === state.activeView;
           trigger.classList.toggle("is-active", isActive);
 
-          if (trigger.classList.contains("sidebar-link")) {
-            if (isActive) {
-              trigger.setAttribute("aria-current", "page");
-            } else {
-              trigger.removeAttribute("aria-current");
-            }
+          if (isActive) {
+            trigger.setAttribute("aria-current", "page");
+          } else {
+            trigger.removeAttribute("aria-current");
           }
         });
 
@@ -878,32 +1810,13 @@
           elements.participantRecordsBody.innerHTML = createParticipantRecordsMarkup(state.participantRecords);
         }
 
-        if (elements.manageLinkedWorkshops) {
-          elements.manageLinkedWorkshops.innerHTML = createLinkedWorkshopsMarkup(state);
-        }
+        renderManageWorkshops(state);
 
-        if (elements.officesTableBody) {
-          elements.officesTableBody.innerHTML = createWorkshopsMarkup(state.workshops);
-        }
+        renderHomeQuickAccess(state);
 
-        if (elements.officeModal) {
-          elements.officeModal.hidden = !state.isOfficeModalOpen;
+        renderExploreOfficesResults(state);
 
-          if (state.selectedWorkshop) {
-            elements.officeModalTitle.textContent = state.selectedWorkshop.title;
-            elements.officeModalDescription.textContent = state.selectedWorkshop.description;
-            elements.officeModalCode.textContent = state.selectedWorkshop.cod;
-            elements.officeModalHours.textContent = state.selectedWorkshop.hours;
-            elements.officeModalModality.textContent = state.selectedWorkshop.modality;
-            elements.officeModalStatus.textContent = state.selectedWorkshop.status === "Aberta"
-              ? "Ativa"
-              : state.selectedWorkshop.status;
-            elements.officeModalPeriod.textContent = state.selectedWorkshop.period;
-            elements.officeModalParticipate.disabled = state.selectedWorkshop.status === "Fechada"
-              || state.selectedWorkshopIsLinked;
-            elements.officeModalCancelLink.hidden = !state.selectedWorkshopIsLinked;
-          }
-        }
+        renderOfficeModal(state);
 
         if (elements.confirmModal) {
           elements.confirmModal.hidden = !state.isConfirmModalOpen;
@@ -930,19 +1843,70 @@
           return;
         }
 
+        const toastVariant = toast && toast.variant === "success" ? "success" : "default";
+        const toastIcon = toastVariant === "success"
+          ? "../assets/icons/office-modal/check_circle.svg"
+          : "../assets/icons/v2-template/toast_info_icone.svg";
         const toastElement = documentRef.createElement("section");
-        toastElement.className = "toast";
+        toastElement.className = toastVariant === "success" ? "toast toast-success" : "toast";
         toastElement.setAttribute("role", "status");
+        toastElement.style.setProperty("--toast-duration", "7600ms");
         toastElement.innerHTML = `
-          <p class="toast-title">${toast.title}</p>
-          <p>${toast.message}</p>
+          <img class="toast-icon" src="${toastIcon}" alt="" aria-hidden="true" draggable="false">
+          <div class="toast-copy">
+            <p class="toast-title">${escapeHTML(toast.title)}</p>
+            <p>${escapeHTML(toast.message)}</p>
+          </div>
         `;
 
         elements.toastStack.prepend(toastElement);
 
-        window.setTimeout(() => {
+        const visibleDurationMs = 7600;
+        const exitDurationMs = 320;
+        let remainingMs = visibleDurationMs;
+        let startedAt = window.performance ? window.performance.now() : Date.now();
+        let exitTimerId = null;
+        let removeTimerId = null;
+
+        function getCurrentTime() {
+          return window.performance ? window.performance.now() : Date.now();
+        }
+
+        function removeToast() {
           toastElement.remove();
-        }, 4000);
+        }
+
+        function beginToastExit() {
+          toastElement.classList.add("is-leaving");
+          removeTimerId = window.setTimeout(removeToast, exitDurationMs);
+        }
+
+        function scheduleToastExit() {
+          startedAt = getCurrentTime();
+          exitTimerId = window.setTimeout(beginToastExit, remainingMs);
+        }
+
+        toastElement.addEventListener("mouseenter", () => {
+          if (toastElement.classList.contains("is-leaving")) {
+            return;
+          }
+
+          window.clearTimeout(exitTimerId);
+          window.clearTimeout(removeTimerId);
+          remainingMs = Math.max(0, remainingMs - (getCurrentTime() - startedAt));
+          toastElement.classList.add("is-paused");
+        });
+
+        toastElement.addEventListener("mouseleave", () => {
+          if (toastElement.classList.contains("is-leaving")) {
+            return;
+          }
+
+          toastElement.classList.remove("is-paused");
+          scheduleToastExit();
+        });
+
+        scheduleToastExit();
       },
     };
   }

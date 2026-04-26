@@ -454,29 +454,29 @@
   }
 
   function createObjectiveGuideMarkup(state) {
-    if (!state.objectiveSets.length) {
-      if (state.isOnboardingTourOpen) {
-        return `
-          <div class="objective-guide-shell objective-guide-shell-intro">
-            <div class="objective-guide-copy-block">
-              <p class="objective-guide-kicker">Tutorial</p>
-              <div class="objective-guide-main-row">
-                ${createObjectiveStatusMarkup("pending")}
-                <div class="objective-guide-text-block">
-                  <h2 class="objective-guide-title">Card de desafios</h2>
-                  <p class="objective-guide-copy">Aqui aparecem o título, a tarefa e o progresso da pesquisa.</p>
-                </div>
+    if (state.isOnboardingTourOpen) {
+      return `
+        <div class="objective-guide-shell objective-guide-shell-intro">
+          <div class="objective-guide-copy-block">
+            <p class="objective-guide-kicker">Tutorial</p>
+            <div class="objective-guide-main-row">
+              ${createObjectiveStatusMarkup("pending")}
+              <div class="objective-guide-text-block">
+                <h2 class="objective-guide-title">Cartão de desafios</h2>
+                <p class="objective-guide-copy">Aqui aparece o titulo, descrição e progresso da tarefa.</p>
               </div>
             </div>
-
-            ${createObjectiveGuideSideMarkup("0/1", {
-              showAbandonButton: true,
-              disableAbandonButton: true,
-            })}
           </div>
-        `;
-      }
 
+          ${createObjectiveGuideSideMarkup("0/1", {
+            showAbandonButton: true,
+            disableAbandonButton: true,
+          })}
+        </div>
+      `;
+    }
+
+    if (!state.objectiveSets.length) {
       return "";
     }
 
@@ -786,10 +786,12 @@
     const dependentMarkup = state.objectiveFailureDependents.length
       ? `
           <div class="objective-failure-list-block">
-            <p>As tarefas abaixo nao poderao mais ser concluídas nesta sessao:</p>
+            <p>As tarefas pendentes abaixo não poderão mais ser concluídas nesta sessão:</p>
             <ul class="objective-failure-list">
               ${state.objectiveFailureDependents.map((objective) => `
-                <li>${escapeHTML(objective.id)} - ${escapeHTML(objective.title)}</li>
+                <li class="objective-failure-list-item${objective.status === "pendente" ? " is-pending" : ""}">
+                  ${escapeHTML(objective.id)} - ${escapeHTML(objective.title)}
+                </li>
               `).join("")}
             </ul>
           </div>
@@ -888,6 +890,46 @@
       researchGateExitTimeout = 0;
     }
 
+    function setElementInteractionLocked(element, isLocked) {
+      if (!element) {
+        return;
+      }
+
+      element.inert = isLocked;
+
+      if (isLocked) {
+        element.setAttribute("inert", "");
+        element.setAttribute("aria-hidden", "true");
+        return;
+      }
+
+      element.removeAttribute("inert");
+      element.removeAttribute("aria-hidden");
+    }
+
+    function setResearchGateFocusScope(isLocked) {
+      setElementInteractionLocked(elements.appShell, isLocked);
+      setElementInteractionLocked(elements.objectiveGuide, isLocked);
+    }
+
+    function focusResearchGateAction() {
+      if (!elements.researchGate || elements.researchGate.hidden) {
+        return;
+      }
+
+      const activeElement = documentRef.activeElement;
+
+      if (activeElement && elements.researchGate.contains(activeElement)) {
+        return;
+      }
+
+      const actionButton = elements.researchGate.querySelector("button");
+
+      if (actionButton) {
+        actionButton.focus({ preventScroll: true });
+      }
+    }
+
     function syncResearchGateVisibility(state) {
       if (!elements.researchGate) {
         return false;
@@ -898,20 +940,29 @@
       if (shouldShowGate) {
         clearResearchGateExitTimeout();
         elements.researchGate.hidden = false;
+        elements.researchGate.removeAttribute("aria-hidden");
         elements.researchGate.classList.remove("is-closing");
+        focusResearchGateAction();
+        setResearchGateFocusScope(true);
         return false;
       }
 
       if (elements.researchGate.hidden) {
+        elements.researchGate.setAttribute("aria-hidden", "true");
+        setResearchGateFocusScope(false);
         return false;
       }
+
+      setResearchGateFocusScope(true);
 
       if (!elements.researchGate.classList.contains("is-closing")) {
         elements.researchGate.classList.add("is-closing");
         researchGateExitTimeout = global.setTimeout(() => {
           elements.researchGate.hidden = true;
+          elements.researchGate.setAttribute("aria-hidden", "true");
           elements.researchGate.classList.remove("is-closing");
           researchGateExitTimeout = 0;
+          setResearchGateFocusScope(false);
           renderOnboardingTour(latestState);
         }, RESEARCH_GATE_EXIT_ANIMATION_MS);
       }

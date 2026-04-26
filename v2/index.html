@@ -5,169 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SGOA - Tela Inicial</title>
   <link rel="stylesheet" href="../src/v2/styles.css">
+  <link rel="stylesheet" href="../src/common/system.css">
 </head>
 <body data-ui="v2">
-  <div class="app-shell">
+  <section class="objective-guide-panel" id="objective-guide" aria-live="polite" hidden></section>
+
+  <div class="app-shell" inert aria-hidden="true">
     <header class="app-header">
-      <div class="brand-area">
-        <img
-          class="brand-logo"
-          src="../assets/images/logo-sgoa.svg"
-          alt="Logo do Sistema de Gestão de Oficinas Acadêmicas"
-        >
-      </div>
-
       <div class="header-title-area">
-        <h1 id="screen-title">Olá, Seja Bem Vindo</h1>
+        <h1 id="screen-title">Sistema de Gestão de Oficinas Acadêmicas</h1>
       </div>
 
-      <section class="objective-guide-panel" id="objective-guide" aria-live="polite" hidden></section>
+      <details class="profile-menu">
+        <summary class="profile-button" role="button" aria-haspopup="menu">
+          <img class="profile-button-icon" src="../assets/icons/v2-template/perfil_icone.svg" alt="" aria-hidden="true" draggable="false">
+          <span class="profile-button-label">Perfil</span>
+          <span class="profile-button-divider" aria-hidden="true"></span>
+          <span class="profile-button-caret" aria-hidden="true"></span>
+        </summary>
+
+        <div class="profile-menu-panel" aria-label="Menu do perfil">
+          <button class="profile-menu-option profile-menu-exit" type="button" id="profile-exit-button">
+            <img src="../assets/icons/v2-template/exit_icone.svg" alt="" aria-hidden="true" draggable="false">
+            <span>Sair/Encerrar</span>
+          </button>
+        </div>
+      </details>
     </header>
 
     <div class="app-body">
-      <aside class="sidebar">
-        <button
-          class="sidebar-toggle"
-          id="sidebar-toggle"
-          type="button"
-          aria-expanded="true"
-          aria-controls="sidebar-nav"
-          aria-label="Recolher menu principal"
-        >
-          <span class="sidebar-toggle-icon" aria-hidden="true"></span>
-        </button>
-
-        <nav class="sidebar-nav" id="sidebar-nav" aria-label="Menu principal">
-          <button class="sidebar-link nav-trigger is-active" type="button" data-view="home" aria-current="page">
-            Informações Gerais
-          </button>
-          <button class="sidebar-link nav-trigger" type="button" data-view="participante">
-            Área do Participante
-          </button>
-          <button class="sidebar-link nav-trigger" type="button" data-view="gerenciar">
-            Gerenciar Oficinas
-          </button>
-          <button class="sidebar-link nav-trigger" type="button" data-view="oficinas">
-            Oficinas Cadastradas
-          </button>
-        </nav>
-
-      </aside>
-
       <main class="content-area">
         <section class="content-view is-active" id="view-home" aria-labelledby="home-heading">
-          <div class="home-layout">
-            <div class="home-copy">
-              <h2 id="home-heading">Bem-vindo ao Sistema de Gestão de Oficinas Acadêmicas.</h2>
+          <div class="home-design-layout">
+            <h2 class="visually-hidden" id="home-heading">Tela inicial</h2>
 
-              <p class="home-intro-line">
-                Este sistema apresenta informações relacionadas às oficinas disponíveis e às atividades vinculadas ao seu perfil.
-              </p>
+            <nav class="home-action-panel" aria-label="Ações principais">
+              <button class="home-action-card home-action-card-explore nav-trigger" type="button" data-view="oficinas">
+                <img class="home-action-icon" src="../assets/icons/v2-template/explorar_oficinas_icone.svg" alt="" aria-hidden="true" draggable="false">
+                <span>Explorar<br>Oficinas</span>
+              </button>
 
-              <p>
-                Para visualizar conteúdos ou acessar funcionalidades, utilize as opções disponíveis no menu.
-              </p>
+              <button class="home-action-card home-action-card-workshops nav-trigger" type="button" data-view="gerenciar">
+                <img class="home-action-icon" src="../assets/icons/v2-template/minhas_oficinas_icone.svg" alt="" aria-hidden="true" draggable="false">
+                <span>Minhas<br>Oficinas</span>
+              </button>
 
-              <section class="carousel" aria-label="Destaques do sistema">
-                <div class="carousel-viewport">
-                  <div class="carousel-track">
-                    <button class="carousel-arrow carousel-arrow-left" type="button" data-carousel-action="prev" aria-label="Imagem anterior">
-                      &lt;
-                    </button>
+              <button class="home-action-card home-action-card-guide nav-trigger is-active" type="button" data-view="home" aria-current="page">
+                <img class="home-action-icon" src="../assets/icons/v2-template/guia_rapido_icone.svg" alt="" aria-hidden="true" draggable="false">
+                <span>Guia<br>Rápido</span>
+              </button>
+            </nav>
 
-                    <figure class="carousel-slide is-active">
-                      <img src="../assets/images/carousel/Container.png" alt="Participantes reunidos em uma oficina acadêmica com computador central">
-                    </figure>
-                    <figure class="carousel-slide">
-                      <img src="../assets/images/carousel/Container-1.png" alt="Participantes utilizando recursos acadêmicos em uma oficina colaborativa">
-                    </figure>
-                    <figure class="carousel-slide">
-                      <img src="../assets/images/carousel/Container-2.png" alt="Cena ilustrativa de interação com o sistema de oficinas acadêmicas">
-                    </figure>
+            <section class="home-quick-panel" aria-labelledby="home-quick-heading">
+              <div class="home-quick-heading-row">
+                <img class="home-quick-heading-icon" src="../assets/icons/v2-template/acesso_rapido_icone.svg" alt="" aria-hidden="true" draggable="false">
+                <h3 id="home-quick-heading">Acesso Rápido:</h3>
+              </div>
 
-                    <button class="carousel-arrow carousel-arrow-right" type="button" data-carousel-action="next" aria-label="Próxima imagem">
-                      &gt;
-                    </button>
-                  </div>
-                </div>
+              <div class="home-quick-separator" aria-hidden="true"></div>
 
-                <div class="carousel-controls">
-                  <div class="carousel-dots" aria-label="Indicadores do carrossel">
-                    <button class="carousel-dot is-active" type="button" aria-label="Imagem 1" aria-pressed="true" data-carousel-index="0"></button>
-                    <button class="carousel-dot" type="button" aria-label="Imagem 2" aria-pressed="false" data-carousel-index="1"></button>
-                    <button class="carousel-dot" type="button" aria-label="Imagem 3" aria-pressed="false" data-carousel-index="2"></button>
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            <aside class="recent-access" aria-labelledby="recent-access-heading">
-              <h3 id="recent-access-heading">Últimos Acessos:</h3>
-
-              <ul class="access-list">
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001235</a>
-                  <span>há 2min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001235</a>
-                  <span>há 8min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001235</a>
-                  <span>há 14min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2021001236</a>
-                  <span>há 15min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2024001237</a>
-                  <span>há 16min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2025001238</a>
-                  <span>há 22min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2022001239</a>
-                  <span>há 25min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2021001240</a>
-                  <span>há 28min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2026001241</a>
-                  <span>há 35min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2021001242</a>
-                  <span>há 38min</span>
-                </li>
-                <li>
-                  <img src="../assets/icons/user-access.svg" alt="" aria-hidden="true">
-                  <a href="#">2019001243</a>
-                  <span>há 47min</span>
-                </li>
-              </ul>
-            </aside>
+              <div class="home-quick-grid" id="home-quick-access-grid"></div>
+            </section>
           </div>
-
-          <p class="prototype-note">
-            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
-            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
-          </p>
         </section>
 
         <section class="content-view participant-view" id="view-participante" aria-labelledby="participante-heading" hidden>
@@ -211,72 +110,188 @@
         </section>
 
         <section class="content-view manage-view" id="view-gerenciar" aria-labelledby="gerenciar-heading" hidden>
-          <div class="manage-copy">
-            <h2 id="gerenciar-heading">Aqui estão as participações vinculadas ao seu perfil:</h2>
-            <p>Algumas informações podem depender de atualizações e disponibilidades do sistema.</p>
-            <p>
-              Caso necessário explore diferentes áreas para encontrar as opções desejadas quanto a inscrições e
-              visualizações de demais Oficinas publicadas no sistema.
-            </p>
-            <p>
-              Em caso de dúvidas, consulte a seção de ajuda ou entre em contato com o suporte técnico para obter
-              assistência adicional.
-            </p>
-          </div>
+          <section class="offices-results-panel manage-results-panel" aria-labelledby="gerenciar-heading">
+            <div class="offices-results-heading manage-results-heading">
+              <div class="offices-results-heading-main">
+                <img class="offices-results-heading-icon" src="../assets/icons/v2-template/oficinas_lista_icone.svg" alt="" aria-hidden="true" draggable="false">
+                <h2 id="gerenciar-heading">Suas Oficinas Inscritas:</h2>
+              </div>
 
-          <div class="manage-filters" aria-label="Filtros">
-            <div class="manage-filter">
-              <span>Filtros:</span>
-              <button class="manage-select" type="button">
-                <span>Todos</span>
-                <span class="manage-caret" aria-hidden="true"></span>
-              </button>
+              <div class="manage-modality-toolbar" aria-label="Filtro de modalidade">
+                <span class="manage-modality-label">Modalidade:</span>
+
+                <div class="manage-modality-actions" role="group" aria-label="Opções de modalidade">
+                  <button
+                    class="manage-modality-button is-active"
+                    type="button"
+                    data-manage-modality-filter="all"
+                    data-default-icon="../assets/icons/v2-template/offices_modality_todas_icone.svg"
+                    data-active-icon="../assets/icons/v2-template/offices_modality_selected_icone.svg"
+                    aria-pressed="true"
+                  >
+                    <img src="../assets/icons/v2-template/offices_modality_selected_icone.svg" alt="" aria-hidden="true" draggable="false">
+                    <span>Todas</span>
+                  </button>
+
+                  <button
+                    class="manage-modality-button"
+                    type="button"
+                    data-manage-modality-filter="Presencial"
+                    data-default-icon="../assets/icons/v2-template/offices_modality_presencial_icone.svg"
+                    data-active-icon="../assets/icons/v2-template/offices_modality_selected_icone.svg"
+                    aria-pressed="false"
+                  >
+                    <img src="../assets/icons/v2-template/offices_modality_presencial_icone.svg" alt="" aria-hidden="true" draggable="false">
+                    <span>Presencial</span>
+                  </button>
+
+                  <button
+                    class="manage-modality-button"
+                    type="button"
+                    data-manage-modality-filter="EaD"
+                    data-default-icon="../assets/icons/v2-template/offices_modality_ead_icone.svg"
+                    data-active-icon="../assets/icons/v2-template/offices_modality_selected_icone.svg"
+                    aria-pressed="false"
+                  >
+                    <img src="../assets/icons/v2-template/offices_modality_ead_icone.svg" alt="" aria-hidden="true" draggable="false">
+                    <span>EaD</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div class="manage-filter">
-              <span>Período:</span>
-              <button class="manage-select manage-select-small" type="button">
-                <span>Atual</span>
-                <span class="manage-caret" aria-hidden="true"></span>
-              </button>
-            </div>
+            <div class="offices-results-separator" aria-hidden="true"></div>
 
-            <button class="manage-apply" type="button">Definir</button>
-          </div>
-
-          <section class="manage-panel" aria-label="Oficina vinculada">
-            <div class="manage-panel-header">Oficina Vinculada</div>
-            <div class="manage-panel-body" id="manage-linked-workshops"></div>
+            <div class="offices-results-body manage-results-body" id="manage-linked-workshops"></div>
           </section>
-
-          <p class="prototype-note">
-            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
-            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
-          </p>
         </section>
 
         <section class="content-view offices-view" id="view-oficinas" aria-labelledby="oficinas-heading" hidden>
-          <div class="offices-table" aria-labelledby="oficinas-heading">
-            <div class="offices-table-header">
-              <span>Cod.</span>
-              <span id="oficinas-heading">Título da Oficina</span>
-              <span>Período</span>
-            </div>
+          <div class="offices-search-layout">
+            <section class="offices-search-panel" aria-labelledby="offices-search-heading">
+              <div class="offices-search-main">
+                <div class="offices-panel-heading">
+                  <img class="offices-panel-heading-icon" src="../assets/icons/v2-template/busca_icone.svg" alt="" aria-hidden="true" draggable="false">
+                  <h2 id="offices-search-heading">Busca de Oficinas</h2>
+                </div>
 
-            <div class="offices-table-body" id="offices-table-body"></div>
+                <div class="offices-search-separator" aria-hidden="true"></div>
+
+                <div class="offices-search-controls">
+                  <label class="offices-search-field" for="offices-title-input">
+                    <span>Digite o Título:</span>
+                    <input id="offices-title-input" type="text" placeholder="Digite o título da oficina" autocomplete="off">
+                  </label>
+
+                  <div class="offices-code-search-row">
+                    <label class="offices-code-field" for="offices-code-input">
+                      <span>Digite o Código:</span>
+                      <span class="offices-code-input-shell">
+                        <span aria-hidden="true">ELM -</span>
+                        <input id="offices-code-input" type="text" inputmode="numeric" autocomplete="off" aria-label="Código da oficina">
+                      </span>
+                    </label>
+
+                    <button class="offices-search-submit" id="offices-search-button" type="button">
+                      <img src="../assets/icons/v2-template/busca_icone.svg" alt="" aria-hidden="true" draggable="false">
+                      <span>Realizar Busca</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div class="offices-filter-toolbar">
+              <details class="offices-filter-menu">
+                <summary class="offices-filter-summary">
+                  <img src="../assets/icons/v2-template/filter_button_icone.svg" alt="" aria-hidden="true" draggable="false">
+                  <span id="offices-filter-heading">Situação da Oficina</span>
+                  <span class="offices-filter-divider" aria-hidden="true"></span>
+                </summary>
+
+                <div class="offices-filter-panel" aria-labelledby="offices-filter-heading">
+                  <label class="offices-filter-option">
+                    <input type="radio" name="offices-status-filter" value="open" checked>
+                    <span>Somente Abertas (Recomendado)</span>
+                  </label>
+
+                  <label class="offices-filter-option">
+                    <input type="radio" name="offices-status-filter" value="closed">
+                    <span>Somente Fechadas</span>
+                  </label>
+
+                  <label class="offices-filter-option">
+                    <input type="radio" name="offices-status-filter" value="all">
+                    <span>Todas (Abertas e Fechadas)</span>
+                  </label>
+                </div>
+              </details>
+            </div>
           </div>
 
-          <p class="prototype-note">
-            Este sistema é um protótipo utilizado apenas para fins de pesquisa.<br>
-            As ações realizadas aqui não possuem efeitos reais sobre cadastros, inscrições ou dados institucionais.
-          </p>
+          <div class="offices-results-layout">
+            <section class="offices-results-panel" aria-labelledby="oficinas-heading">
+              <div class="offices-results-heading">
+                <div class="offices-results-heading-main">
+                  <img class="offices-results-heading-icon" src="../assets/icons/v2-template/oficinas_lista_icone.svg" alt="" aria-hidden="true" draggable="false">
+                  <h2 id="oficinas-heading">Oficinas Encontradas:</h2>
+                </div>
+
+                <div class="offices-modality-toolbar" aria-label="Filtro de modalidade" hidden>
+                  <span class="offices-modality-label">Modalidade:</span>
+
+                  <div class="offices-modality-actions" role="group" aria-label="Opções de modalidade">
+                    <button
+                      class="offices-modality-button is-active"
+                      type="button"
+                      data-offices-modality-filter="all"
+                      data-default-icon="../assets/icons/v2-template/offices_modality_todas_icone.svg"
+                      data-active-icon="../assets/icons/v2-template/offices_modality_selected_icone.svg"
+                      aria-pressed="true"
+                    >
+                      <img src="../assets/icons/v2-template/offices_modality_selected_icone.svg" alt="" aria-hidden="true" draggable="false">
+                      <span>Todas</span>
+                    </button>
+
+                    <button
+                      class="offices-modality-button"
+                      type="button"
+                      data-offices-modality-filter="Presencial"
+                      data-default-icon="../assets/icons/v2-template/offices_modality_presencial_icone.svg"
+                      data-active-icon="../assets/icons/v2-template/offices_modality_selected_icone.svg"
+                      aria-pressed="false"
+                    >
+                      <img src="../assets/icons/v2-template/offices_modality_presencial_icone.svg" alt="" aria-hidden="true" draggable="false">
+                      <span>Presencial</span>
+                    </button>
+
+                    <button
+                      class="offices-modality-button"
+                      type="button"
+                      data-offices-modality-filter="EaD"
+                      data-default-icon="../assets/icons/v2-template/offices_modality_ead_icone.svg"
+                      data-active-icon="../assets/icons/v2-template/offices_modality_selected_icone.svg"
+                      aria-pressed="false"
+                    >
+                      <img src="../assets/icons/v2-template/offices_modality_ead_icone.svg" alt="" aria-hidden="true" draggable="false">
+                      <span>EaD</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="offices-results-separator" aria-hidden="true"></div>
+
+              <div class="offices-results-body" id="offices-table-body" aria-live="polite"></div>
+            </section>
+          </div>
         </section>
 
       </main>
     </div>
   </div>
 
-  <div class="research-gate" id="research-gate" aria-labelledby="research-gate-title">
+  <div class="research-gate" id="research-gate" role="dialog" aria-modal="true" aria-labelledby="research-gate-title">
     <div class="research-gate-panel">
       <h2 id="research-gate-title">Aguarde...</h2>
       <p>
@@ -296,50 +311,100 @@
     <div class="office-modal-backdrop" data-modal-close="true"></div>
     <section class="office-modal-dialog" aria-labelledby="office-modal-title" aria-modal="true" role="dialog">
       <div class="office-modal-header">
-        <h2 id="office-modal-title">Automação com CLPs Básicos</h2>
+        <div class="office-modal-title-group">
+          <span class="office-modal-eyebrow">Detalhes da oficina</span>
+          <h2 id="office-modal-title">Automação com CLPs Básicos</h2>
+          <span class="office-modal-code-chip">
+            <img src="../assets/icons/office-modal/confirmation_number.svg" alt="" aria-hidden="true" draggable="false">
+            Código <strong id="office-modal-code">ELT-4462</strong>
+          </span>
+        </div>
         <button class="office-modal-close" id="office-modal-close" type="button" aria-label="Fechar">
-          x
+          <img src="../assets/icons/office-modal/close.svg" alt="" aria-hidden="true" draggable="false">
+          <span>Fechar</span>
         </button>
       </div>
 
       <div class="office-modal-body">
-        <div class="office-modal-description" id="office-modal-description">
-          Sobre a oficina de Automação com CLPs Básicos e seus conceitos abordados e resultados práticos.
-        </div>
+        <div class="office-modal-content">
+          <div class="office-modal-main">
+            <div class="office-modal-decision-grid" aria-label="Informações principais da oficina">
+              <div class="office-modal-decision-card office-modal-period-card">
+                <span class="office-modal-card-icon">
+                  <img src="../assets/icons/office-modal/calendar_month.svg" alt="" aria-hidden="true" draggable="false">
+                </span>
+                <span class="office-modal-card-label">Período</span>
+                <strong id="office-modal-period">18/03 a 19/04</strong>
+                <small>Período para inscrição.</small>
+              </div>
 
-        <div class="office-modal-grid">
-          <button class="office-modal-participate" id="office-modal-participate" type="button">
-            Participar
-          </button>
+              <div class="office-modal-decision-card office-modal-status-card" id="office-modal-status-card">
+                <span class="office-modal-card-icon">
+                  <img id="office-modal-status-icon" src="../assets/icons/office-modal/check_circle.svg" alt="" aria-hidden="true" draggable="false">
+                </span>
+                <span class="office-modal-card-label">Inscrição</span>
+                <strong id="office-modal-status">Ativa</strong>
+                <small id="office-modal-status-note">Disponível para inscrição.</small>
+              </div>
+            </div>
 
-          <button class="office-modal-cancel-link" id="office-modal-cancel-link" type="button" hidden>
-            Cancelar
-          </button>
+            <div class="office-modal-info-stack">
+              <section class="office-modal-description-block" aria-labelledby="office-modal-description-title">
+                <h3 id="office-modal-description-title">
+                  <span class="office-modal-heading-icon">
+                    <img src="../assets/icons/office-modal/info.svg" alt="" aria-hidden="true" draggable="false">
+                  </span>
+                  <span>Sobre a oficina</span>
+                </h3>
+                <p id="office-modal-description">
+                  Sobre a oficina de Automação com CLPs Básicos e seus conceitos abordados e resultados práticos.
+                </p>
+              </section>
 
-          <div class="office-modal-field">
-            <span>Código:</span>
-            <div id="office-modal-code">ELT-4462</div>
+              <div class="office-modal-details" aria-label="Dados complementares da oficina">
+                <div class="office-modal-field">
+                  <span class="office-modal-field-icon">
+                    <img src="../assets/icons/office-modal/schedule.svg" alt="" aria-hidden="true" draggable="false">
+                  </span>
+                  <span>Carga horária</span>
+                  <strong id="office-modal-hours">33 Hrs</strong>
+                </div>
+
+                <div class="office-modal-field">
+                  <span class="office-modal-field-icon">
+                    <img src="../assets/icons/office-modal/school.svg" alt="" aria-hidden="true" draggable="false">
+                  </span>
+                  <span>Modalidade</span>
+                  <strong id="office-modal-modality">EaD</strong>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="office-modal-field">
-            <span>Carga Horária:</span>
-            <div id="office-modal-hours">33 Hrs</div>
-          </div>
+          <aside class="office-modal-action-panel" aria-labelledby="office-modal-action-title">
+            <span class="office-modal-action-icon">
+              <img id="office-modal-action-icon-img" src="../assets/icons/office-modal/paste.svg" alt="" aria-hidden="true" draggable="false">
+            </span>
+            <h3 id="office-modal-action-title">Inscrever-se nesta oficina</h3>
+            <p id="office-modal-action-note">A oficina está disponível para você se inscrever agora.</p>
 
-          <div class="office-modal-field">
-            <span>Modalidade:</span>
-            <div id="office-modal-modality">EaD</div>
-          </div>
+            <div class="office-modal-actions">
+              <button class="office-modal-participate" id="office-modal-participate" type="button">
+                <img src="../assets/icons/office-modal/person_add.svg" alt="" aria-hidden="true" draggable="false">
+                <span id="office-modal-participate-label">Participar</span>
+              </button>
 
-          <div class="office-modal-field">
-            <span>Situação:</span>
-            <div id="office-modal-status">Ativa</div>
-          </div>
+              <button class="office-modal-pin" id="office-modal-pin" type="button" hidden>
+                <img src="../assets/icons/office-modal/bookmark_add.svg" alt="" aria-hidden="true" draggable="false">
+                <span id="office-modal-pin-label">Adicionar ao Acesso Rápido</span>
+              </button>
 
-          <div class="office-modal-field">
-            <span>Data:</span>
-            <div id="office-modal-period">18/03 a 19/04</div>
-          </div>
+              <button class="office-modal-cancel-link" id="office-modal-cancel-link" type="button" hidden>
+                <img src="../assets/icons/office-modal/person_remove.svg" alt="" aria-hidden="true" draggable="false">
+                <span>Cancelar inscrição</span>
+              </button>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
@@ -372,14 +437,14 @@
     <section class="confirm-modal-dialog" aria-labelledby="objective-failure-title" aria-modal="true" role="dialog">
       <div class="confirm-modal-header">
         <h2 id="objective-failure-title">Desistir do objetivo</h2>
-        <button class="confirm-modal-close" id="objective-failure-close" type="button" aria-label="Fechar">
-          x
-        </button>
       </div>
 
       <div class="confirm-modal-message" id="objective-failure-content"></div>
 
       <div class="confirm-modal-actions">
+        <button class="confirm-modal-button objective-failure-dismiss-button" type="button" data-objective-failure-close="true">
+          Fechar Janela
+        </button>
         <button class="confirm-modal-button" id="objective-failure-submit" type="button">
           Confirmar desistência
         </button>

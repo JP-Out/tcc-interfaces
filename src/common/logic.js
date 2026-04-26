@@ -394,16 +394,26 @@
     }
 
     function createIntroChallenge() {
-      if (uiVersion !== "v1") {
-        return null;
+      if (uiVersion === "v1") {
+        return {
+          id: "intro-sidebar",
+          title: "Abra o menu",
+          description: "Use o botão do menu para ver as opções do sistema.",
+          status: "pendente",
+        };
       }
 
-      return {
-        id: "intro-sidebar",
-        title: "Abra o menu",
-        description: "Use o botão do menu para ver as opções do sistema.",
-        status: "pendente",
-      };
+      if (uiVersion === "v2") {
+        return {
+          id: "intro-quick-guide",
+          title: "Acesse Guia Rápido",
+          description: "Acesse o Guia Rapido para ver as funções do sistema.",
+          status: "pendente",
+          target: { viewName: "home" },
+        };
+      }
+
+      return null;
     }
 
     function resetOnboardingState() {
@@ -555,6 +565,31 @@
         message: "Tutorial concluido.",
         resolutionType: "tutorial",
       };
+    }
+
+    function completeIntroChallenge() {
+      if (!state.introChallenge || state.introChallenge.status !== "pendente") {
+        return false;
+      }
+
+      state.introChallenge = {
+        ...state.introChallenge,
+        status: "concluido",
+      };
+      setIntroChallengeFeedback();
+      return true;
+    }
+
+    function completeIntroChallengeForView(viewName) {
+      if (!state.introChallenge || state.introChallenge.status !== "pendente") {
+        return false;
+      }
+
+      if (!state.introChallenge.target || state.introChallenge.target.viewName !== viewName) {
+        return false;
+      }
+
+      return completeIntroChallenge();
     }
 
     function completeObjective(objectiveId, resolutionReason) {
@@ -942,11 +977,7 @@
           && state.introChallenge
           && state.introChallenge.status === "pendente"
         ) {
-          state.introChallenge = {
-            ...state.introChallenge,
-            status: "concluido",
-          };
-          setIntroChallengeFeedback();
+          completeIntroChallenge();
         }
 
         notify();
@@ -962,9 +993,10 @@
           hasNewRecord = true;
         }
 
+        const completedIntroChallenge = completeIntroChallengeForView(viewName);
         const changed = setActiveView(viewName);
 
-        if (changed || hasNewRecord) {
+        if (changed || hasNewRecord || completedIntroChallenge) {
           notify();
         }
 
@@ -1164,6 +1196,7 @@
       participateInSelectedWorkshop() {
         const workshop = getWorkshopByCode(state.selectedWorkshopCode);
         const shouldKeepSearchDetailOpen = uiVersion === "v1" && state.activeView === "pesquisa-detalhes";
+        const shouldKeepOfficeModalOpen = uiVersion === "v2" && state.isOfficeModalOpen;
 
         if (!workshop) {
           return false;
@@ -1188,6 +1221,13 @@
           return true;
         }
 
+        if (shouldKeepOfficeModalOpen) {
+          state.isOfficeModalOpen = true;
+          state.isConfirmModalOpen = false;
+          notify();
+          return true;
+        }
+
         state.isOfficeModalOpen = false;
         state.isConfirmModalOpen = false;
         state.selectedWorkshopCode = "";
@@ -1199,6 +1239,7 @@
         const workshop = getWorkshopByCode(state.selectedWorkshopCode);
         const shouldKeepSearchDetailOpen = uiVersion === "v1" && state.activeView === "pesquisa-detalhes";
         const shouldKeepManageDetailOpen = uiVersion === "v1" && state.activeView === "gerenciar-detalhes";
+        const shouldKeepOfficeModalOpen = uiVersion === "v2" && state.isOfficeModalOpen;
 
         if (!workshop) {
           state.isConfirmModalOpen = false;
@@ -1241,6 +1282,12 @@
             state.selectedWorkshopCode = state.linkedWorkshopCodes[nextIndex];
           }
 
+          notify();
+          return true;
+        }
+
+        if (shouldKeepOfficeModalOpen) {
+          state.isOfficeModalOpen = true;
           notify();
           return true;
         }

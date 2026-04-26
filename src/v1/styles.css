@@ -2157,10 +2157,6 @@ body[data-ui="v1"] .objective-failure-list-block {
   gap: 10px;
 }
 
-body[data-ui="v1"] .objective-failure-modal[hidden] {
-  display: none;
-}
-
 @keyframes onboarding-tour-backdrop-in {
   from {
     opacity: 0;
