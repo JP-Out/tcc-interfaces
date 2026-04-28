@@ -50,7 +50,7 @@
                 <span>Minhas<br>Oficinas</span>
               </button>
 
-              <button class="home-action-card home-action-card-guide nav-trigger is-active" type="button" data-view="home" aria-current="page">
+              <button class="home-action-card home-action-card-guide nav-trigger is-active" id="quick-guide-button" type="button" data-view="home" aria-current="page">
                 <img class="home-action-icon" src="../assets/icons/v2-template/guia_rapido_icone.svg" alt="" aria-hidden="true" draggable="false">
                 <span>Guia<br>Rápido</span>
               </button>
@@ -178,17 +178,18 @@
                 <div class="offices-search-separator" aria-hidden="true"></div>
 
                 <div class="offices-search-controls">
-                  <label class="offices-search-field" for="offices-title-input">
-                    <span>Digite o Título:</span>
-                    <input id="offices-title-input" type="text" placeholder="Digite o título da oficina" autocomplete="off">
+                  <label class="offices-search-field" for="offices-query-input">
+                    <span>Título ou Código:</span>
+                    <input id="offices-query-input" type="text" placeholder="Digite o título ou código da oficina" autocomplete="off">
                   </label>
 
-                  <div class="offices-code-search-row">
-                    <label class="offices-code-field" for="offices-code-input">
-                      <span>Digite o Código:</span>
-                      <span class="offices-code-input-shell">
-                        <span aria-hidden="true">ELM -</span>
-                        <input id="offices-code-input" type="text" inputmode="numeric" autocomplete="off" aria-label="Código da oficina">
+                  <div class="offices-period-search-row">
+                    <label class="offices-period-field" for="offices-period-start-input">
+                      <span>Pesquisar por Período:</span>
+                      <span class="offices-period-inputs">
+                        <input id="offices-period-start-input" type="text" inputmode="numeric" maxlength="5" placeholder="dd/mm" autocomplete="off" aria-label="Data inicial opcional do período">
+                        <span aria-hidden="true">a</span>
+                        <input id="offices-period-end-input" type="text" inputmode="numeric" maxlength="5" placeholder="dd/mm" autocomplete="off" aria-label="Data final opcional do período">
                       </span>
                     </label>
 
@@ -305,7 +306,56 @@
     </div>
   </div>
 
+  <div class="research-gate thank-you-gate" id="thank-you-gate" aria-labelledby="thank-you-title" hidden>
+    <div class="research-gate-panel thank-you-gate-panel">
+      <h2 id="thank-you-title">Obrigado pela sua participação!</h2>
+      <p>
+        Sua colaboração foi registrada com sucesso.
+      </p>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+  <div class="quick-guide-modal" id="quick-guide-modal" hidden>
+    <div class="quick-guide-modal-backdrop" data-quick-guide-close="true"></div>
+    <section class="quick-guide-modal-dialog" aria-labelledby="quick-guide-modal-title" aria-modal="true" role="dialog">
+      <div class="quick-guide-modal-header">
+        <div>
+          <span class="quick-guide-modal-eyebrow">Guia rápido</span>
+          <h2 id="quick-guide-modal-title">Como usar os botões principais</h2>
+        </div>
+      </div>
+
+      <div class="quick-guide-modal-body">
+        <section class="quick-guide-item quick-guide-item-explore" aria-labelledby="quick-guide-explore-title">
+          <span class="quick-guide-item-icon">
+            <img src="../assets/icons/v2-template/explorar_oficinas_icone.svg" alt="" aria-hidden="true" draggable="false">
+          </span>
+          <div class="quick-guide-item-copy">
+            <h3 id="quick-guide-explore-title">Explorar Oficinas</h3>
+            <p>Abre a listagem geral de oficinas disponíveis. Use para pesquisar por título ou código, aplicar filtros e acessar os detalhes antes de participar.</p>
+          </div>
+        </section>
+
+        <section class="quick-guide-item quick-guide-item-workshops" aria-labelledby="quick-guide-workshops-title">
+          <span class="quick-guide-item-icon">
+            <img src="../assets/icons/v2-template/minhas_oficinas_icone.svg" alt="" aria-hidden="true" draggable="false">
+          </span>
+          <div class="quick-guide-item-copy">
+            <h3 id="quick-guide-workshops-title">Minhas Oficinas</h3>
+            <p>Mostra as oficinas em que você já está inscrito. Use para acompanhar suas inscrições, abrir detalhes, fixar atalhos e cancelar participação quando necessário.</p>
+          </div>
+        </section>
+      </div>
+
+      <div class="quick-guide-modal-actions">
+        <button class="quick-guide-modal-button" id="quick-guide-modal-dismiss" type="button">
+          Entendi / Fechar
+        </button>
+      </div>
+    </section>
+  </div>
 
   <div class="office-modal" id="office-modal" hidden>
     <div class="office-modal-backdrop" data-modal-close="true"></div>
@@ -457,6 +507,7 @@
   <script src="../src/common/metrics.js"></script>
   <script src="../src/common/exporter.js"></script>
   <script src="../src/common/logic.js"></script>
+  <script src="../src/common/reloadGuard.js"></script>
   <script src="../src/v2/render.js"></script>
   <script src="../src/v2/app.js"></script>
 </body>

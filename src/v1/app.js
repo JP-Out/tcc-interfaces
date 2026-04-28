@@ -600,12 +600,22 @@
     }
 
     flushQueuedMetricExports();
-    global.addEventListener("beforeunload", queueMetricsOnExit);
     global.addEventListener("pagehide", queueMetricsOnExit);
 
     global.__SGOA_APP__ = controller;
     global.__SGOA_METRICS__ = metrics;
     global.exportSgoaMetrics = () => controller.finishMetrics();
+  }
+
+  function bindReloadProtection() {
+    if (!global.SGOAReloadGuard) {
+      return;
+    }
+
+    global.SGOAReloadGuard.bindReloadGuard({
+      documentRef,
+      controller,
+    });
   }
 
   bindGlobalClickMetrics();
@@ -615,6 +625,7 @@
   bindWorkshopInteractions();
   bindSearchControls();
   bindMetricsExport();
+  bindReloadProtection();
   controller.subscribe((state) => {
     if (
       previousViewName

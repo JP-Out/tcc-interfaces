@@ -663,6 +663,14 @@
       return researchProfileConfig ? researchProfileConfig.periodTarget : "";
     }
 
+    function isExitObjectiveResolved(exitObjective) {
+      return Boolean(exitObjective && ["falhou", "concluido"].includes(exitObjective.status));
+    }
+
+    function isWorkshopInTrackedPeriod(workshop) {
+      return Boolean(workshop && workshop.period === getTrackedPeriodTarget());
+    }
+
     function handleWorkshopLinked(workshop) {
       if (!isResearchTrackingEnabled() || !workshop) {
         return;
@@ -676,7 +684,7 @@
         completeObjective("1.2", "inscricao_realizada");
       }
 
-      if (workshop.period === getTrackedPeriodTarget()) {
+      if (isWorkshopInTrackedPeriod(workshop)) {
         completeObjective("1.3", "inscricao_realizada");
       }
     }
@@ -710,7 +718,7 @@
         isPinned
         && state.selectedWorkshopSource === "manage"
         && state.linkedWorkshopCodes.includes(workshop.cod)
-        && workshop.period === getTrackedPeriodTarget()
+        && isWorkshopInTrackedPeriod(workshop)
       ) {
         state.objectiveTrackedPinnedWorkshopCode = workshop.cod;
         completeObjective("2.3", "atalho_adicionado");
@@ -766,7 +774,7 @@
         return false;
       }
 
-      if (exitObjective.status === "falhou") {
+      if (isExitObjectiveResolved(exitObjective)) {
         return true;
       }
 
@@ -826,9 +834,9 @@
         selectedWorkshopIsLinked: selectedWorkshop
           ? state.linkedWorkshopCodes.includes(selectedWorkshop.cod)
           : false,
-        canFinishResearch: !isResearchTrackingEnabled() || state.currentObjectiveId === "3.3" || (
-          findObjectiveById("3.3") && findObjectiveById("3.3").status === "falhou"
-        ),
+        canFinishResearch: !isResearchTrackingEnabled()
+          || state.currentObjectiveId === "3.3"
+          || isExitObjectiveResolved(findObjectiveById("3.3")),
         lastManageWorkshopAccessTitle: state.lastManageWorkshopAccessTitle
           || "Nenhuma oficina consultada nesta área.",
         searchDetailPosition: searchDetailIndex >= 0 ? searchDetailIndex + 1 : 0,
@@ -1418,9 +1426,9 @@
 
       canFinishResearch() {
         const exitObjective = findObjectiveById("3.3");
-        return !isResearchTrackingEnabled() || state.currentObjectiveId === "3.3" || (
-          exitObjective && exitObjective.status === "falhou"
-        );
+        return !isResearchTrackingEnabled()
+          || state.currentObjectiveId === "3.3"
+          || isExitObjectiveResolved(exitObjective);
       },
 
       requestResearchExit() {

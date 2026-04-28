@@ -15,6 +15,123 @@
     return Number.isFinite(value) ? Number(value.toFixed(2)) : 1;
   }
 
+  function readSearchParams() {
+    try {
+      return new URLSearchParams(global.location ? global.location.search : "");
+    } catch {
+      return new URLSearchParams();
+    }
+  }
+
+  function readLocalStorageValue(key) {
+    try {
+      return global.localStorage ? global.localStorage.getItem(key) : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function writeLocalStorageValue(key, value) {
+    try {
+      if (global.localStorage) {
+        global.localStorage.setItem(key, value);
+      }
+    } catch {
+      // Ignore storage failures; device metadata is best-effort.
+    }
+  }
+
+  function getConfiguredComputerName() {
+    const searchParams = readSearchParams();
+    const parameterNames = ["computerName", "deviceName", "machineName", "stationName"];
+
+    for (const name of parameterNames) {
+      const value = String(searchParams.get(name) || "").trim();
+
+      if (value) {
+        writeLocalStorageValue("sgoa-computer-name", value);
+        return {
+          value,
+          source: `query:${name}`,
+        };
+      }
+    }
+
+    const storageKeys = ["sgoa-computer-name", "computerName", "deviceName", "machineName", "stationName"];
+
+    for (const key of storageKeys) {
+      const value = String(readLocalStorageValue(key) || "").trim();
+
+      if (value) {
+        return {
+          value,
+          source: `localStorage:${key}`,
+        };
+      }
+    }
+
+    return {
+      value: null,
+      source: "unavailable",
+    };
+  }
+
+  function getNavigatorPlatform(navigatorRef) {
+    if (!navigatorRef) {
+      return null;
+    }
+
+    if (navigatorRef.userAgentData && navigatorRef.userAgentData.platform) {
+      return navigatorRef.userAgentData.platform;
+    }
+
+    return navigatorRef.platform || null;
+  }
+
+  function createDeviceInfo() {
+    const computerName = getConfiguredComputerName();
+    const navigatorRef = global.navigator || null;
+    const screenRef = global.screen || null;
+    const timeZone = (() => {
+      try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+      } catch {
+        return null;
+      }
+    })();
+
+    return {
+      computerName: computerName.value,
+      computerNameSource: computerName.source,
+      platform: getNavigatorPlatform(navigatorRef),
+      userAgent: navigatorRef ? navigatorRef.userAgent || null : null,
+      language: navigatorRef ? navigatorRef.language || null : null,
+      languages: navigatorRef && Array.isArray(navigatorRef.languages)
+        ? navigatorRef.languages.slice()
+        : [],
+      timeZone,
+      hardwareConcurrency: navigatorRef && Number.isFinite(navigatorRef.hardwareConcurrency)
+        ? navigatorRef.hardwareConcurrency
+        : null,
+      deviceMemory: navigatorRef && Number.isFinite(navigatorRef.deviceMemory)
+        ? navigatorRef.deviceMemory
+        : null,
+      maxTouchPoints: navigatorRef && Number.isFinite(navigatorRef.maxTouchPoints)
+        ? navigatorRef.maxTouchPoints
+        : null,
+      screen: screenRef
+        ? {
+          width: normalizeNumber(screenRef.width),
+          height: normalizeNumber(screenRef.height),
+          availWidth: normalizeNumber(screenRef.availWidth),
+          availHeight: normalizeNumber(screenRef.availHeight),
+          colorDepth: normalizeNumber(screenRef.colorDepth),
+          pixelDepth: normalizeNumber(screenRef.pixelDepth),
+        }
+        : null,
+    };
+  }
+
   function createMetricsSession({
     uiVersion,
     taskId = "main-flow",
@@ -29,6 +146,7 @@
       sessionId: `${uiVersion}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       uiVersion,
       taskId,
+      deviceInfo: createDeviceInfo(),
       objectiveProfileId: null,
       objectiveSets: [],
       currentObjectiveId: null,
@@ -295,6 +413,8 @@
           sessionId: metrics.sessionId,
           uiVersion: metrics.uiVersion,
           taskId: metrics.taskId,
+          computerName: metrics.deviceInfo.computerName,
+          deviceInfo: { ...metrics.deviceInfo },
           objectiveProfileId: metrics.objectiveProfileId,
           objectiveSets: metrics.objectiveSets.map((set) => ({
             ...set,

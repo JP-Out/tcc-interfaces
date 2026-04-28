@@ -233,6 +233,101 @@
     return `ELM-${digits}`;
   }
 
+  function parseExploreDayMonth(value) {
+    const match = String(value || "").trim().match(/^(\d{2})\/(\d{2})$/);
+
+    if (!match) {
+      return null;
+    }
+
+    const day = Number.parseInt(match[1], 10);
+    const month = Number.parseInt(match[2], 10);
+    const maxDaysByMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    if (month < 1 || month > 12 || day < 1 || day > maxDaysByMonth[month - 1]) {
+      return null;
+    }
+
+    return { day, month };
+  }
+
+  function getDayMonthOrder(dayMonth) {
+    return (dayMonth.month * 31) + dayMonth.day;
+  }
+
+  function getDayMonthIntervals(start, end) {
+    const startOrder = getDayMonthOrder(start);
+    const endOrder = getDayMonthOrder(end);
+    const maxOrder = getDayMonthOrder({ day: 31, month: 12 });
+
+    if (startOrder <= endOrder) {
+      return [{ start: startOrder, end: endOrder }];
+    }
+
+    return [
+      { start: startOrder, end: maxOrder },
+      { start: getDayMonthOrder({ day: 1, month: 1 }), end: endOrder },
+    ];
+  }
+
+  function doDayMonthIntervalsOverlap(leftIntervals, rightIntervals) {
+    return leftIntervals.some((left) => (
+      rightIntervals.some((right) => Math.max(left.start, right.start) <= Math.min(left.end, right.end))
+    ));
+  }
+
+  function parseExplorePeriod(period) {
+    const match = String(period || "").match(/(\d{2}\/\d{2})\s*a\s*(\d{2}\/\d{2})/i);
+
+    if (!match) {
+      return null;
+    }
+
+    const start = parseExploreDayMonth(match[1]);
+    const end = parseExploreDayMonth(match[2]);
+
+    if (!start || !end) {
+      return null;
+    }
+
+    return { start, end };
+  }
+
+  function matchesExplorePeriodFilter(workshop, startValue, endValue) {
+    const start = parseExploreDayMonth(startValue);
+    const end = parseExploreDayMonth(endValue);
+
+    if (!start && !end) {
+      return true;
+    }
+
+    if ((startValue && !start) || (endValue && !end)) {
+      return false;
+    }
+
+    const period = parseExplorePeriod(workshop.period);
+
+    if (!period) {
+      return false;
+    }
+
+    const filterStart = start || end;
+    const filterEnd = end || start;
+    const workshopIntervals = getDayMonthIntervals(period.start, period.end);
+    const filterIntervals = getDayMonthIntervals(filterStart, filterEnd);
+
+    return doDayMonthIntervalsOverlap(workshopIntervals, filterIntervals);
+  }
+
+  function hasExploreSearchCriteria(searchState) {
+    return Boolean(
+      normalizeExploreSearchText(searchState.query)
+      || normalizeExploreCode(searchState.query)
+      || String(searchState.periodStart || "").trim()
+      || String(searchState.periodEnd || "").trim()
+    );
+  }
+
   function matchesExploreStatusFilter(workshop, statusFilter) {
     if (statusFilter === "closed") {
       return workshop.status === "Fechada";
@@ -254,10 +349,19 @@
   }
 
   function filterExploreWorkshops(workshops, searchState) {
-    const titleQuery = normalizeExploreSearchText(searchState.title);
-    const codeQuery = normalizeExploreCode(searchState.code);
+    const textQuery = normalizeExploreSearchText(searchState.query);
+    const codeQuery = normalizeExploreCode(searchState.query);
+    const periodStartQuery = String(searchState.periodStart || "").trim();
+    const periodEndQuery = String(searchState.periodEnd || "").trim();
 
-    if (!titleQuery && !codeQuery) {
+    if (!textQuery && !codeQuery && !periodStartQuery && !periodEndQuery) {
+      return [];
+    }
+
+    if (
+      (periodStartQuery && !parseExploreDayMonth(periodStartQuery))
+      || (periodEndQuery && !parseExploreDayMonth(periodEndQuery))
+    ) {
       return [];
     }
 
@@ -270,11 +374,16 @@
         return false;
       }
 
-      if (titleQuery && !normalizeExploreSearchText(workshop.title).includes(titleQuery)) {
-        return false;
+      if (textQuery || codeQuery) {
+        const matchesTitle = textQuery && normalizeExploreSearchText(workshop.title).includes(textQuery);
+        const matchesCode = codeQuery && normalizeExploreCode(workshop.cod).startsWith(codeQuery);
+
+        if (!matchesTitle && !matchesCode) {
+          return false;
+        }
       }
 
-      if (codeQuery && !normalizeExploreCode(workshop.cod).startsWith(codeQuery)) {
+      if (!matchesExplorePeriodFilter(workshop, periodStartQuery, periodEndQuery)) {
         return false;
       }
 
@@ -300,7 +409,7 @@
           draggable="false"
         >
         <p>Nenhuma oficina exibida no momento.</p>
-        <p>Digite um código ou título acima para pesquisar oficinas disponíveis.</p>
+        <p>Digite título, código ou um período opcional para pesquisar oficinas disponíveis.</p>
       </div>
     `;
   }
@@ -343,6 +452,9 @@
             <span class="offices-result-card-meta">Código: <strong>${escapeHTML(workshop.cod)}</strong></span>
             <span class="offices-result-card-details">
               <span>Modalidade: <strong>${escapeHTML(getWorkshopModalityLabel(workshop.modality))}</strong></span>
+              ${source === "manage" ? `
+                <span>Período: <strong>${escapeHTML(workshop.period)}</strong></span>
+              ` : ""}
               <span>Carga Horária: <strong>${escapeHTML(formatWorkshopHours(workshop.hours))}</strong></span>
             </span>
             <span class="offices-result-card-action" aria-hidden="true">
@@ -824,8 +936,9 @@
     let officeModalHeightTimeout = 0;
     let officeSearchState = {
       hasSearched: false,
-      title: "",
-      code: "",
+      query: "",
+      periodStart: "",
+      periodEnd: "",
       status: "open",
       modality: "all",
     };
@@ -1221,7 +1334,9 @@
       const filteredResults = officeSearchState.hasSearched
         ? filterExploreWorkshops(state.workshops || [], officeSearchState)
         : [];
-      const isListingAllWorkshops = officeSearchState.hasSearched && filteredResults.length === 0;
+      const isListingAllWorkshops = officeSearchState.hasSearched
+        && filteredResults.length === 0
+        && !hasExploreSearchCriteria(officeSearchState);
       const results = isListingAllWorkshops
         ? filterExploreWorkshopsByActiveFilters(state.workshops || [], officeSearchState)
         : filteredResults;
@@ -1260,13 +1375,15 @@
       const searchSignature = [
         officeSearchState.hasSearched ? "searched" : "idle",
         isListingAllWorkshops ? "listing_all" : "filtered",
-        officeSearchState.title,
-        officeSearchState.code,
+        officeSearchState.query,
+        officeSearchState.periodStart,
+        officeSearchState.periodEnd,
         officeSearchState.status,
         officeSearchState.modality,
         results.map((workshop) => [
           workshop.cod,
           workshop.title,
+          workshop.period,
           workshop.status,
           workshop.modality,
           workshop.hours,
@@ -1707,12 +1824,15 @@
           hasSearched: criteria && Object.prototype.hasOwnProperty.call(criteria, "hasSearched")
             ? Boolean(criteria.hasSearched)
             : officeSearchState.hasSearched,
-          title: criteria && Object.prototype.hasOwnProperty.call(criteria, "title")
-            ? (criteria.title || "")
-            : officeSearchState.title,
-          code: criteria && Object.prototype.hasOwnProperty.call(criteria, "code")
-            ? (criteria.code || "")
-            : officeSearchState.code,
+          query: criteria && Object.prototype.hasOwnProperty.call(criteria, "query")
+            ? (criteria.query || "")
+            : officeSearchState.query,
+          periodStart: criteria && Object.prototype.hasOwnProperty.call(criteria, "periodStart")
+            ? (criteria.periodStart || "")
+            : officeSearchState.periodStart,
+          periodEnd: criteria && Object.prototype.hasOwnProperty.call(criteria, "periodEnd")
+            ? (criteria.periodEnd || "")
+            : officeSearchState.periodEnd,
           status: criteria && criteria.status ? criteria.status : officeSearchState.status,
           modality: criteria && criteria.modality ? criteria.modality : officeSearchState.modality,
         };

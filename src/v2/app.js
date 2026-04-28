@@ -33,12 +33,17 @@
   const objectiveFailureModal = documentRef.querySelector("#objective-failure-modal");
   const objectiveFailureClose = documentRef.querySelector("#objective-failure-close");
   const objectiveFailureSubmit = documentRef.querySelector("#objective-failure-submit");
+  const thankYouGate = documentRef.querySelector("#thank-you-gate");
+  const quickGuideButton = documentRef.querySelector("#quick-guide-button");
+  const quickGuideModal = documentRef.querySelector("#quick-guide-modal");
+  const quickGuideModalDismiss = documentRef.querySelector("#quick-guide-modal-dismiss");
   const profileMenu = documentRef.querySelector(".profile-menu");
   const profileExitButton = documentRef.querySelector("#profile-exit-button");
   const carouselActions = Array.from(documentRef.querySelectorAll("[data-carousel-action]"));
   const carouselDots = Array.from(documentRef.querySelectorAll(".carousel-dot"));
-  const officesTitleInput = documentRef.querySelector("#offices-title-input");
-  const officesCodeInput = documentRef.querySelector("#offices-code-input");
+  const officesQueryInput = documentRef.querySelector("#offices-query-input");
+  const officesPeriodStartInput = documentRef.querySelector("#offices-period-start-input");
+  const officesPeriodEndInput = documentRef.querySelector("#offices-period-end-input");
   const officesSearchButton = documentRef.querySelector("#offices-search-button");
   const officesStatusInputs = Array.from(documentRef.querySelectorAll("[name='offices-status-filter']"));
   const officesModalityButtons = Array.from(documentRef.querySelectorAll("[data-offices-modality-filter]"));
@@ -48,6 +53,7 @@
   let carouselIntervalId = null;
   let hasQueuedMetricsExport = false;
   let currentViewName = "home";
+  let quickGuideLastFocusedElement = null;
 
   function getViewportSnapshot() {
     return {
@@ -354,10 +360,10 @@
 
         hasQueuedMetricsExport = true;
         downloadMetricsPayload(controller.finishMetrics());
-        renderer.showToast({
-          title: "Atividade encerrada:",
-          message: "As métricas da sessão foram exportadas.",
-        });
+
+        if (thankYouGate) {
+          thankYouGate.hidden = false;
+        }
       });
     }
 
@@ -375,19 +381,25 @@
   }
 
   function bindOfficesSearch() {
-    function normalizeOfficeCodeInputValue(value) {
-      return String(value || "").replace(/\D/g, "");
+    function normalizeOfficeDateInputValue(value) {
+      const digits = String(value || "").replace(/\D/g, "").slice(0, 4);
+
+      if (digits.length <= 2) {
+        return digits;
+      }
+
+      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
     }
 
-    function syncOfficeCodeInputValue() {
-      if (!officesCodeInput) {
+    function syncOfficeDateInputValue(input) {
+      if (!input) {
         return;
       }
 
-      const normalizedValue = normalizeOfficeCodeInputValue(officesCodeInput.value);
+      const normalizedValue = normalizeOfficeDateInputValue(input.value);
 
-      if (officesCodeInput.value !== normalizedValue) {
-        officesCodeInput.value = normalizedValue;
+      if (input.value !== normalizedValue) {
+        input.value = normalizedValue;
       }
     }
 
@@ -397,19 +409,21 @@
     }
 
     function submitOfficesSearch() {
-      syncOfficeCodeInputValue();
+      syncOfficeDateInputValue(officesPeriodStartInput);
+      syncOfficeDateInputValue(officesPeriodEndInput);
 
       const searchResult = renderer.setOfficeSearch({
         hasSearched: true,
-        title: officesTitleInput ? officesTitleInput.value : "",
-        code: officesCodeInput ? officesCodeInput.value : "",
+        query: officesQueryInput ? officesQueryInput.value : "",
+        periodStart: officesPeriodStartInput ? officesPeriodStartInput.value : "",
+        periodEnd: officesPeriodEndInput ? officesPeriodEndInput.value : "",
         status: getSelectedStatusFilter(),
       });
 
       if (searchResult && searchResult.isListingAllWorkshops) {
         renderer.showToast({
           title: "Listando oficinas filtradas",
-          message: "A busca não encontrou uma oficina específica, então exibimos as oficinas conforme os filtros selecionados.",
+          message: "Sem título, código ou período informados, exibimos as oficinas conforme os filtros selecionados.",
         });
       }
     }
@@ -418,7 +432,7 @@
       officesSearchButton.addEventListener("click", submitOfficesSearch);
     }
 
-    [officesTitleInput, officesCodeInput].forEach((input) => {
+    [officesQueryInput, officesPeriodStartInput, officesPeriodEndInput].forEach((input) => {
       if (!input) {
         return;
       }
@@ -431,23 +445,15 @@
       });
     });
 
-    if (officesTitleInput) {
-      officesTitleInput.addEventListener("input", () => {
-        if (officesCodeInput && officesCodeInput.value) {
-          officesCodeInput.value = "";
-        }
-      });
-    }
+    [officesPeriodStartInput, officesPeriodEndInput].forEach((input) => {
+      if (!input) {
+        return;
+      }
 
-    if (officesCodeInput) {
-      officesCodeInput.addEventListener("input", () => {
-        if (officesTitleInput && officesTitleInput.value) {
-          officesTitleInput.value = "";
-        }
-
-        syncOfficeCodeInputValue();
+      input.addEventListener("input", () => {
+        syncOfficeDateInputValue(input);
       });
-    }
+    });
 
     officesModalityButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -511,6 +517,61 @@
     });
   }
 
+  function openQuickGuideModal() {
+    if (!quickGuideModal) {
+      return;
+    }
+
+    quickGuideLastFocusedElement = documentRef.activeElement instanceof HTMLElement
+      ? documentRef.activeElement
+      : null;
+    quickGuideModal.hidden = false;
+
+    if (quickGuideModalDismiss) {
+      quickGuideModalDismiss.focus();
+    }
+  }
+
+  function closeQuickGuideModal() {
+    if (!quickGuideModal || quickGuideModal.hidden) {
+      return;
+    }
+
+    quickGuideModal.hidden = true;
+
+    if (quickGuideLastFocusedElement && documentRef.contains(quickGuideLastFocusedElement)) {
+      quickGuideLastFocusedElement.focus();
+    }
+
+    quickGuideLastFocusedElement = null;
+  }
+
+  function bindQuickGuideModal() {
+    if (quickGuideButton) {
+      quickGuideButton.addEventListener("click", () => {
+        openQuickGuideModal();
+      });
+    }
+
+    if (quickGuideModalDismiss) {
+      quickGuideModalDismiss.addEventListener("click", closeQuickGuideModal);
+    }
+
+    if (quickGuideModal) {
+      quickGuideModal.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLElement && event.target.dataset.quickGuideClose === "true") {
+          closeQuickGuideModal();
+        }
+      });
+    }
+
+    documentRef.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeQuickGuideModal();
+      }
+    });
+  }
+
   function bindMetricsExport() {
     function queueMetricsOnExit() {
       if (hasQueuedMetricsExport || !controller.hasResearchStarted()) {
@@ -522,12 +583,22 @@
     }
 
     flushQueuedMetricExports();
-    global.addEventListener("beforeunload", queueMetricsOnExit);
     global.addEventListener("pagehide", queueMetricsOnExit);
 
     global.__SGOA_APP__ = controller;
     global.__SGOA_METRICS__ = metrics;
     global.exportSgoaMetrics = () => controller.finishMetrics();
+  }
+
+  function bindReloadProtection() {
+    if (!global.SGOAReloadGuard) {
+      return;
+    }
+
+    global.SGOAReloadGuard.bindReloadGuard({
+      documentRef,
+      controller,
+    });
   }
 
   bindGlobalClickMetrics();
@@ -538,7 +609,9 @@
   bindOfficesSearch();
   bindManageModalityFilters();
   bindCarousel();
+  bindQuickGuideModal();
   bindMetricsExport();
+  bindReloadProtection();
   controller.subscribe((state) => {
     currentViewName = state.activeView;
     renderer.render(state);

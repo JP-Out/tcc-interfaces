@@ -1,5 +1,10 @@
 (function attachCommonData(global) {
-  function createResearchObjectiveProfile(profileId, periodTarget, exitViewLabel) {
+  function createResearchObjectiveProfile(profileId, periodTarget, exitViewLabel, exitObjectiveOverrides = {}) {
+    const exitObjectiveTitle = exitObjectiveOverrides.title
+      || `Acesse ${exitViewLabel} e encontre a opcao para sair e encerrar a atividade.`;
+    const exitObjectiveTarget = exitObjectiveOverrides.target
+      || { viewName: "participante", viewLabel: exitViewLabel };
+
     return {
       id: profileId,
       periodTarget,
@@ -72,9 +77,9 @@
             },
             {
               id: "3.3",
-              title: `Acesse ${exitViewLabel} e encontre a opcao para sair e encerrar a atividade.`,
+              title: exitObjectiveTitle,
               dependsOn: [],
-              target: { viewName: "participante", viewLabel: exitViewLabel },
+              target: exitObjectiveTarget,
             },
           ],
         },
@@ -86,8 +91,11 @@
     MAX_VISIBLE_RECORDS: 20,
     RESEARCH_TASK_ID: "research-objectives",
     RESEARCH_OBJECTIVE_PROFILES: {
-      v1: createResearchObjectiveProfile("v1-default", "11/05 a 31/05", "Área do Participante"),
-      v2: createResearchObjectiveProfile("v2-default", "05/04 a 25/04", "Área do Participante"),
+      v1: createResearchObjectiveProfile("v1-default", "01/06 a 15/06", "Área do Participante"),
+      v2: createResearchObjectiveProfile("v2-default", "16/06 a 30/06", "menu Perfil", {
+        title: "Abra o menu Perfil e encontre a opcao para sair e encerrar a atividade.",
+        target: { menuName: "Perfil", actionLabel: "Sair/Encerrar" },
+      }),
     },
     VIEW_LABELS: {
       home: "Informações Gerais",
@@ -126,7 +134,7 @@
       {
         cod: "ELM-1802",
         title: "Leitura de Diagramas Elétricos Industriais",
-        period: "05/04 a 25/04",
+        period: "25/04 a 20/05",
         status: "Aberta",
         modality: "Presencial",
         hours: "12 Hrs",
@@ -145,7 +153,7 @@
       {
         cod: "ELM-1804",
         title: "Montagem de Painéis de Controle",
-        period: "05/04 a 25/04",
+        period: "25/04 a 20/05",
         status: "Aberta",
         modality: "Presencial",
         hours: "24 Hrs",
@@ -164,7 +172,7 @@
       {
         cod: "ELM-1806",
         title: "Sensores e Atuadores Industriais",
-        period: "05/04 a 25/04",
+        period: "25/04 a 20/05",
         status: "Aberta",
         modality: "EaD",
         hours: "10 Hrs",
@@ -183,7 +191,7 @@
       {
         cod: "ELM-1808",
         title: "Manutenção de Motores Elétricos",
-        period: "05/04 a 25/04",
+        period: "25/04 a 20/05",
         status: "Aberta",
         modality: "Presencial",
         hours: "20 Hrs",
@@ -259,7 +267,7 @@
       {
         cod: "ELM-1816",
         title: "Hidráulica Industrial",
-        period: "11/05 a 31/05",
+        period: "16/04 a 14/05",
         status: "Aberta",
         modality: "EaD",
         hours: "32 Hrs",
@@ -271,7 +279,7 @@
       {
         cod: "ELM-1817",
         title: "CLP com Diagnóstico de Falhas",
-        period: "11/05 a 31/05",
+        period: "16/04 a 14/05",
         status: "Fechada",
         modality: "EaD",
         hours: "36 Hrs",
@@ -280,7 +288,7 @@
       {
         cod: "ELM-1818",
         title: "Chaves Fim de Curso e Sensoriamento",
-        period: "05/04 a 25/04",
+        period: "25/04 a 20/05",
         status: "Aberta",
         modality: "Presencial",
         hours: "10 Hrs",
@@ -289,8 +297,8 @@
       {
         cod: "ELM-1819",
         title: "Diagnóstico de Sistemas Eletromecânicos",
-        period: "11/05 a 31/05",
-        status: "Fechada",
+        period: "01/06 a 15/06",
+        status: "Aberta",
         modality: "EaD",
         hours: "28 Hrs",
         description: "Identificação de falhas em sistemas integrados elétricos e mecânicos.",
@@ -298,11 +306,47 @@
       {
         cod: "ELM-1820",
         title: "Manutenção Preditiva Industrial",
-        period: "26/04 a 10/05",
+        period: "16/06 a 30/06",
         status: "Aberta",
         modality: "EaD",
         hours: "16 Hrs",
         description: "Monitoramento de equipamentos para prevenção de falhas.",
+      },
+      {
+        cod: "ELM-1821",
+        title: "Instrumentação Básica de Processos",
+        period: "01/06 a 15/06",
+        status: "Aberta",
+        modality: "Presencial",
+        hours: "14 Hrs",
+        description: "Noções de medição, leitura de instrumentos e aplicação em processos industriais.",
+      },
+      {
+        cod: "ELM-1822",
+        title: "Comandos Elétricos Aplicados",
+        period: "01/06 a 15/06",
+        status: "Aberta",
+        modality: "EaD",
+        hours: "18 Hrs",
+        description: "Princípios de acionamento, proteção e organização de circuitos de comando.",
+      },
+      {
+        cod: "ELM-1823",
+        title: "Planejamento de Manutenção Industrial",
+        period: "16/06 a 30/06",
+        status: "Aberta",
+        modality: "Presencial",
+        hours: "20 Hrs",
+        description: "Organização de rotinas, prioridades e registros para manutenção de equipamentos.",
+      },
+      {
+        cod: "ELM-1824",
+        title: "Segurança em Sistemas Automatizados",
+        period: "16/06 a 30/06",
+        status: "Aberta",
+        modality: "EaD",
+        hours: "12 Hrs",
+        description: "Práticas de segurança, identificação de riscos e cuidados em sistemas automatizados.",
       },
     ],
   };

@@ -2,6 +2,10 @@ body[data-ui] .objective-failure-modal[hidden] {
   display: none;
 }
 
+body[data-ui]:has(.confirm-modal:not([hidden]), .history-modal:not([hidden]), .office-modal:not([hidden]), .quick-guide-modal:not([hidden])) .objective-guide-panel:not([hidden]) {
+  z-index: 560;
+}
+
 body[data-ui] .objective-failure-modal {
   color: #212731;
   font-family: "Glegoo", Georgia, serif;
