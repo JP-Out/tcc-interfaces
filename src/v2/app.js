@@ -53,6 +53,7 @@
   let carouselIntervalId = null;
   let hasQueuedMetricsExport = false;
   let currentViewName = "home";
+  let latestState = null;
   let quickGuideLastFocusedElement = null;
 
   function getViewportSnapshot() {
@@ -61,6 +62,42 @@
       height: global.innerHeight || documentRef.documentElement.clientHeight || 0,
       devicePixelRatio: global.devicePixelRatio || 1,
     };
+  }
+
+  function getOfficeModalTrackingViewName(state) {
+    if (!state || !state.isOfficeModalOpen || !state.selectedWorkshop) {
+      return "";
+    }
+
+    if (state.selectedWorkshopSource === "quick_access") {
+      return "home-modal-acesso-rapido";
+    }
+
+    if (state.selectedWorkshopSource === "manage") {
+      return "gerenciar-modal-minhas-oficinas";
+    }
+
+    return "oficinas-modal-explorar-oficinas";
+  }
+
+  function getCurrentTrackingViewName() {
+    const state = latestState || controller.getState();
+    const activeView = state.activeView || currentViewName || "home";
+    const officeModalViewName = getOfficeModalTrackingViewName(state);
+
+    if (officeModalViewName) {
+      return officeModalViewName;
+    }
+
+    if (quickGuideModal && !quickGuideModal.hidden) {
+      return "home-modal-guia-rapido";
+    }
+
+    if (profileMenu && profileMenu.open) {
+      return `${activeView}-menu-perfil`;
+    }
+
+    return activeView;
   }
 
   function bindGlobalClickMetrics() {
@@ -77,7 +114,7 @@
         metrics.trackClick({
           x: event.clientX,
           y: event.clientY,
-          viewName: currentViewName,
+          viewName: getCurrentTrackingViewName(),
         });
       }
     });
@@ -88,7 +125,7 @@
       metrics.trackMousePosition({
         x: event.clientX,
         y: event.clientY,
-        viewName: currentViewName,
+        viewName: getCurrentTrackingViewName(),
       });
     }, { passive: true });
 
@@ -613,6 +650,7 @@
   bindMetricsExport();
   bindReloadProtection();
   controller.subscribe((state) => {
+    latestState = state;
     currentViewName = state.activeView;
     renderer.render(state);
   });

@@ -1175,6 +1175,7 @@
 
         addParticipantRecord(`Acessou oficina “${workshop.title}”`);
 
+        handleWorkshopOpened(workshop, "manage");
         notify();
         return true;
       },

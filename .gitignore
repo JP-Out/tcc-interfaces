@@ -1,5 +1,6 @@
 tools/__pycache__/
 .codex
+.agents
 tools/**/__pycache__/
 tools/output/*
 !tools/output/.gitkeep
@@ -12,3 +13,5 @@ package.json
 .gitignore
 playwright.config.js
 tests/screenshots.spec.js
+open-v*-with-hostname.sh
+open-v*-with-hostname.bat

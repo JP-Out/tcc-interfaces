@@ -156,7 +156,7 @@ def generate_all_mouse_tracking_outputs(
     output_paths: list[Path] = []
 
     for session_source in session_sources:
-        session_output_dir = output_dir / session_source.session_stem
+        session_output_dir = output_dir / session_source.ui_version / session_source.session_stem
         output_paths.extend(
             generate_mouse_tracking_outputs(
                 session_source,

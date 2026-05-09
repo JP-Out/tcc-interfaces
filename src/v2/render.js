@@ -11,6 +11,19 @@
     return "Sistema de Gestão de Oficinas Acadêmicas";
   }
 
+  function syncScreenTitle(element, state, documentRef) {
+    if (state && state.activeView === "home") {
+      element.replaceChildren(
+        documentRef.createTextNode("Sistema de Gestão"),
+        documentRef.createElement("br"),
+        documentRef.createTextNode("de Oficinas Acadêmicas"),
+      );
+      return;
+    }
+
+    element.textContent = getTextContent(state);
+  }
+
   const ONBOARDING_TOUR_STEPS = [
     {
       id: "card",
@@ -1869,7 +1882,7 @@
         syncHeaderNavigation(state);
 
         if (elements.screenTitle) {
-          elements.screenTitle.textContent = getTextContent(state);
+          syncScreenTitle(elements.screenTitle, state, documentRef);
         }
 
         syncObjectiveTransitionState(state);

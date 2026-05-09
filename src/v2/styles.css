@@ -137,17 +137,32 @@ button img {
 .header-title-area h1 {
   margin: 0;
   color: var(--template-navy);
-  font-size: 2.73rem;
+  font-size: clamp(1rem, 2.2vw, 2rem);
   font-weight: 600;
-  line-height: 1.05;
+  line-height: 1.08;
   letter-spacing: 0;
+  max-width: 14.5em;
+  text-wrap: balance;
 }
 
 .header-title-area {
   display: flex;
   align-items: center;
-  gap: clamp(16px, 1.46vw, 28px);
+  gap: clamp(8px, 1.05vw, 12px);
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: min(590px, calc(50vw - 56px));
+}
+
+.header-logo {
+  width: clamp(82px, 6.7vw, 142px);
+  height: clamp(82px, 6.7vw, 137px);
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.app-shell:is([data-active-view="oficinas"], [data-active-view="gerenciar"]) .header-logo {
+  display: none;
 }
 
 .app-shell[data-active-view="oficinas"] .header-title-area::before,
@@ -4602,6 +4617,15 @@ body:has(.office-modal:not([hidden])) .toast-stack {
     font-size: 1.7rem;
   }
 
+  .header-title-area {
+    max-width: min(430px, calc(50vw - 36px));
+  }
+
+  .header-logo {
+    width: 82px;
+    height: 82px;
+  }
+
   .profile-button {
     font-size: 1.25rem;
     min-width: 178px;
@@ -4610,11 +4634,6 @@ body:has(.office-modal:not([hidden])) .toast-stack {
   .app-shell:is([data-active-view="oficinas"], [data-active-view="gerenciar"]) .profile-button {
     min-width: 180px;
     font-size: 1.25rem;
-  }
-
-  .app-shell:is([data-active-view="oficinas"], [data-active-view="gerenciar"]) .header-title-area::before {
-    width: 85px;
-    height: 85px;
   }
 
   .home-action-card {
@@ -4791,6 +4810,8 @@ body:has(.office-modal:not([hidden])) .toast-stack {
 
   .header-title-area {
     min-width: 0;
+    max-width: 100%;
+    flex: 1 1 100%;
   }
 
   .header-title-area h1 {
@@ -4798,9 +4819,9 @@ body:has(.office-modal:not([hidden])) .toast-stack {
     overflow-wrap: anywhere;
   }
 
-  .app-shell:is([data-active-view="oficinas"], [data-active-view="gerenciar"]) .header-title-area::before {
-    width: 85px;
-    height: 85px;
+  .header-logo {
+    width: 64px;
+    height: 64px;
   }
 
   .sidebar {

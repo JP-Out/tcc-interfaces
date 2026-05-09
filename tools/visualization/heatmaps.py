@@ -115,7 +115,12 @@ def generate_session_heatmaps(
                 ui_version=session_source.ui_version,
             )
             width, height = get_image_size(background_path) or DEFAULT_CANVAS_SIZE
-            output_path = output_dir / session_source.session_stem / f"{normalize_file_stem(view_name)}.svg"
+            output_path = (
+                output_dir
+                / session_source.ui_version
+                / session_source.session_stem
+                / f"{normalize_file_stem(view_name)}.svg"
+            )
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(
                 render_heatmap_svg(
