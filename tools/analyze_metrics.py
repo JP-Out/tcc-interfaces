@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from analysis_labels import get_interface_slug
 from input.discovery import discover_json_files
 from input.readers import load_session_sources
 from processing.aggregation import COMPARISON_FIELDNAMES, aggregate_version_metrics
@@ -22,7 +23,7 @@ ALL_SECTIONS = ["sessions", "comparison", "charts", "mouse", "heatmaps"]
 def parse_args() -> argparse.Namespace:
     tools_dir = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(
-        description="Processa um ou varios JSONs de metricas da pesquisa de usabilidade.",
+        description="Processa um ou vários JSONs de métricas da pesquisa de usabilidade.",
     )
     parser.add_argument(
         "inputs",
@@ -32,18 +33,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--recursive",
         action="store_true",
-        help="Busca JSONs em subpastas quando a entrada for um diretorio.",
+        help="Busca JSONs em subpastas quando a entrada for um diretório.",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        help="Diretorio raiz de saida. Por padrao cria uma pasta nova em tools/output.",
+        help="Diretório raiz de saída. Por padrão cria uma pasta nova em tools/output.",
     )
     parser.add_argument(
         "--screenshots-dir",
         type=Path,
         default=tools_dir / "assets" / "screenshots",
-        help="Diretorio base das screenshots usadas em mouse tracking e heatmaps.",
+        help="Diretório base das screenshots usadas em mouse tracking e heatmaps.",
     )
     parser.add_argument(
         "--only",
@@ -61,12 +62,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--show-points",
         action="store_true",
-        help="Mostra tambem os pontos individuais no SVG de mouse tracking.",
+        help="Mostra também os pontos individuais no SVG de mouse tracking.",
     )
     parser.add_argument(
         "--mouse-single-output",
         action="store_true",
-        help="Gera um unico SVG por sessao para mouse tracking.",
+        help="Gera um único SVG por sessão para mouse tracking.",
     )
     return parser.parse_args()
 
@@ -82,20 +83,20 @@ def main() -> int:
         print(f"[warn] {warning}")
 
     if not discovered_paths:
-        raise SystemExit("Nenhum arquivo JSON valido foi encontrado nas entradas informadas.")
+        raise SystemExit("Nenhum arquivo JSON válido foi encontrado nas entradas informadas.")
 
     session_sources, load_warnings = load_session_sources(discovered_paths)
     for warning in load_warnings:
         print(f"[warn] {warning}")
 
     if not session_sources:
-        raise SystemExit("Nenhuma sessao valida foi carregada.")
+        raise SystemExit("Nenhuma sessão válida foi carregada.")
 
     output_dir = build_output_dir(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"[run] Sessoes carregadas: {len(session_sources)}")
-    print(f"[run] Pasta de saida: {output_dir.resolve()}")
+    print(f"[run] Sessões carregadas: {len(session_sources)}")
+    print(f"[run] Pasta de saída: {output_dir.resolve()}")
 
     session_rows = [compute_session_metrics(session_source) for session_source in session_sources]
     comparison_rows = aggregate_version_metrics(session_rows)
@@ -104,7 +105,7 @@ def main() -> int:
     if "sessions" in selected_sections:
         session_csv_path = output_dir / "csv" / "session_metrics.csv"
         write_csv(session_csv_path, session_rows, SESSION_METRIC_FIELDNAMES)
-        print(f"[ok] CSV por sessao: {session_csv_path.resolve()}")
+        print(f"[ok] CSV por sessão: {session_csv_path.resolve()}")
 
     if "comparison" in selected_sections:
         comparison_csv_path = output_dir / "csv" / "version_comparison.csv"
@@ -113,7 +114,7 @@ def main() -> int:
 
     if "charts" in selected_sections:
         chart_paths = write_metric_charts(comparison_rows, output_dir=output_dir / "charts")
-        print(f"[ok] Graficos SVG gerados: {len(chart_paths)}")
+        print(f"[ok] Gráficos SVG gerados: {len(chart_paths)}")
 
     if "mouse" in selected_sections:
         mouse_paths = generate_all_mouse_tracking_outputs(
@@ -156,7 +157,7 @@ def generate_all_mouse_tracking_outputs(
     output_paths: list[Path] = []
 
     for session_source in session_sources:
-        session_output_dir = output_dir / session_source.ui_version / session_source.session_stem
+        session_output_dir = output_dir / get_interface_slug(session_source.ui_version) / session_source.session_stem
         output_paths.extend(
             generate_mouse_tracking_outputs(
                 session_source,

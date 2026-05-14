@@ -5,6 +5,7 @@ from html import escape
 from pathlib import Path
 from typing import Any, Iterable
 
+from analysis_labels import get_interface_label
 from input.readers import SessionSource
 from visualization.svg_utils import (
     build_grid,
@@ -464,7 +465,7 @@ def build_start_end_markers(points: list[MousePoint]) -> str:
         [
             f'<circle cx="{first.x}" cy="{first.y}" r="8" fill="#16a34a" stroke="#ffffff" stroke-width="3" />',
             f'<text x="{first.x + 14}" y="{first.y - 12}" fill="#166534" '
-            'font-family="Arial, sans-serif" font-size="13" font-weight="700">Inicio</text>',
+            'font-family="Arial, sans-serif" font-size="13" font-weight="700">Início</text>',
             f'<circle cx="{last.x}" cy="{last.y}" r="8" fill="#dc2626" stroke="#ffffff" stroke-width="3" />',
             f'<text x="{last.x + 14}" y="{last.y - 12}" fill="#991b1b" '
             'font-family="Arial, sans-serif" font-size="13" font-weight="700">Fim</text>',
@@ -489,7 +490,7 @@ def build_info_panel_for_view(
     panel_width = 330
     panel_x = max(width - panel_width - 24, 24)
     panel_y = max(height - 184, 24)
-    lines = [f"Interface: {payload.get('uiVersion', '-')}"]
+    lines = [f"Interface: {get_interface_label(payload.get('uiVersion'))}"]
 
     if view_name:
         lines.extend(
@@ -502,10 +503,10 @@ def build_info_panel_for_view(
     else:
         lines.extend(
             [
-                f"Sessao: {payload.get('sessionId', '-')}",
-                f"Duracao: {payload.get('durationMs', 0)} ms",
+                f"Sessão: {payload.get('sessionId', '-')}",
+                f"Duração: {payload.get('durationMs', 0)} ms",
                 f"Pontos do mouse: {len(points)}",
-                f"Cliques com posicao: {len(clicks)}",
+                f"Cliques com posição: {len(clicks)}",
                 f"Views observadas: {', '.join(views) if views else '-'}",
             ],
         )

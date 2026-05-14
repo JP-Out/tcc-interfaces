@@ -4,6 +4,7 @@ from collections import defaultdict
 from html import escape
 from pathlib import Path
 
+from analysis_labels import get_interface_label, get_interface_slug
 from input.readers import SessionSource
 from visualization.mouse_tracking import parse_click_events, parse_viewport_changes
 from visualization.svg_utils import (
@@ -69,20 +70,21 @@ def generate_version_heatmaps(
             grouped_sessions[key].add(session_source.session_stem)
 
     for (ui_version, view_name), points in sorted(grouped_points.items()):
+        interface_label = get_interface_label(ui_version)
         background_path = resolve_screenshot_path(
             screenshots_dir,
             view_name,
             ui_version=ui_version,
         )
         width, height = get_image_size(background_path) or DEFAULT_CANVAS_SIZE
-        output_path = output_dir / ui_version / f"{normalize_file_stem(view_name)}.svg"
+        output_path = output_dir / get_interface_slug(ui_version) / f"{normalize_file_stem(view_name)}.svg"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             render_heatmap_svg(
                 width=width,
                 height=height,
                 background_path=background_path,
-                title=f"Heatmap de cliques - {ui_version}",
+                title=f"Heatmap de cliques - {interface_label}",
                 subtitle=f"View: {view_name}",
                 points=points,
                 total_clicks=len(points),
@@ -117,7 +119,7 @@ def generate_session_heatmaps(
             width, height = get_image_size(background_path) or DEFAULT_CANVAS_SIZE
             output_path = (
                 output_dir
-                / session_source.ui_version
+                / get_interface_slug(session_source.ui_version)
                 / session_source.session_stem
                 / f"{normalize_file_stem(view_name)}.svg"
             )
@@ -127,8 +129,8 @@ def generate_session_heatmaps(
                     width=width,
                     height=height,
                     background_path=background_path,
-                    title=f"Heatmap de cliques - {session_source.ui_version}",
-                    subtitle=f"Sessao {session_source.session_stem} / view {view_name}",
+                    title=f"Heatmap de cliques - {get_interface_label(session_source.ui_version)}",
+                    subtitle=f"Sessão {session_source.session_stem} / view {view_name}",
                     points=points,
                     total_clicks=len(points),
                     session_count=1,
@@ -213,7 +215,7 @@ def render_heatmap_svg(
             'font-family="Arial, sans-serif" font-size="14">Cliques agregados: '
             f"{total_clicks}</text>",
             f'<text x="{panel_x + 22}" y="{panel_y + 114}" fill="#0f172a" '
-            'font-family="Arial, sans-serif" font-size="14">Sessoes consideradas: '
+            'font-family="Arial, sans-serif" font-size="14">Sessões consideradas: '
             f"{session_count}</text>",
             "</svg>",
         ],

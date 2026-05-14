@@ -4,13 +4,14 @@ from datetime import datetime
 from math import isfinite
 from typing import Any
 
+from analysis_labels import get_interface_label
 from input.readers import SessionSource, infer_ui_version
 
 
 SESSION_METRIC_FIELDNAMES = [
     "source_file",
     "session_id",
-    "ui_version",
+    "interface",
     "task_id",
     "started_at",
     "finished_at",
@@ -63,11 +64,13 @@ def compute_session_metrics(session_source: SessionSource) -> dict[str, Any]:
     screen_divisor = unique_screens if unique_screens > 0 else None
 
     navigation_path = _get_navigation_path(payload)
+    ui_version = infer_ui_version(payload, session_source.source_path)
 
     return {
-        "source_file": str(session_source.source_path.resolve()),
+        "source_file": session_source.source_path.name,
         "session_id": payload.get("sessionId") or session_source.session_stem,
-        "ui_version": infer_ui_version(payload, session_source.source_path),
+        "ui_version": ui_version,
+        "interface": get_interface_label(ui_version),
         "task_id": payload.get("taskId") or "",
         "started_at": payload.get("startedAt") or "",
         "finished_at": payload.get("finishedAt") or "",
